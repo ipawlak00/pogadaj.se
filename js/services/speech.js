@@ -36,34 +36,62 @@ const GTTS_VOICE = {
 };
 
 let currentAudio = null;
-const audioCache = new Map();   // cache audio po (voice|text) — oszczędza koszt znaków
+const audioCache = new Map();   // cache audio po (voice|rate|text) — oszczędza koszt znaków
 
-async function speakGoogle(text, { lang = 'pl-PL', rate = 1, pitch = 0, onEnd } = {}) {
+// Dzieli tekst na fragmenty: to co w cudzysłowie (przykłady angielskie) → 'en',
+// reszta → język główny. Dzięki temu Izabela czyta angielski angielskim głosem.
+function splitByQuotes(text, primary) {
+  const QUOTE = /["„“”»«]/;
+  const out = [];
+  let buf = '', inQ = false;
+  for (const ch of text) {
+    if (QUOTE.test(ch)) {
+      if (buf.trim()) out.push({ text: buf.trim(), lang: inQ ? 'en' : primary });
+      buf = ''; inQ = !inQ; continue;
+    }
+    buf += ch;
+  }
+  if (buf.trim()) out.push({ text: buf.trim(), lang: inQ ? 'en' : primary });
+  return out.length ? out : [{ text, lang: primary }];
+}
+
+async function gttsUrl(text, langKey, rate) {
+  const v = GTTS_VOICE[langKey] || GTTS_VOICE.pl;
+  const cacheKey = v.name + '|' + rate + '|' + text;
+  let url = audioCache.get(cacheKey);
+  if (!url) {
+    const res = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${ls(GTTS_KEY)}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ input: { text }, voice: v, audioConfig: { audioEncoding: 'MP3', speakingRate: rate || 1 } }),
+    });
+    if (!res.ok) throw new Error('Google TTS ' + res.status + ': ' + (await res.text()).slice(0, 200));
+    const data = await res.json();
+    url = 'data:audio/mp3;base64,' + data.audioContent;
+    audioCache.set(cacheKey, url);
+  }
+  return url;
+}
+
+async function speakGoogle(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
   try {
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-    const v = GTTS_VOICE[lang.slice(0, 2).toLowerCase()] || GTTS_VOICE.pl;
-    const cacheKey = v.name + '|' + text;
-    let url = audioCache.get(cacheKey);
-    if (!url) {
-      const res = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${ls(GTTS_KEY)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          input: { text },
-          voice: v,
-          audioConfig: { audioEncoding: 'MP3', speakingRate: rate || 1, pitch: (pitch && pitch <= 2 ? pitch : 0) },
-        }),
-      });
-      if (!res.ok) throw new Error('Google TTS ' + res.status + ': ' + (await res.text()).slice(0, 200));
-      const data = await res.json();
-      url = 'data:audio/mp3;base64,' + data.audioContent;
-      audioCache.set(cacheKey, url);
-    }
-    const audio = new Audio(url);
-    currentAudio = audio;
-    audio.onended = () => { if (currentAudio === audio) currentAudio = null; onEnd?.(); };
-    audio.onerror = () => onEnd?.();
-    await audio.play();
+    const primary = lang.slice(0, 2).toLowerCase();
+    // Mieszany PL+EN tylko gdy główny język to polski (przykłady w cudzysłowie)
+    const segments = primary === 'pl' ? splitByQuotes(text, 'pl') : [{ text, lang: primary }];
+    let i = 0;
+    const playNext = async () => {
+      if (i >= segments.length) { onEnd?.(); return; }
+      const seg = segments[i++];
+      try {
+        const url = await gttsUrl(seg.text, seg.lang, rate);
+        const audio = new Audio(url);
+        currentAudio = audio;
+        audio.onended = () => { if (currentAudio === audio) currentAudio = null; playNext(); };
+        audio.onerror = () => playNext();
+        await audio.play();
+      } catch (e) { console.warn('[GoogleTTS seg]', e); playNext(); }
+    };
+    await playNext();
   } catch (e) {
     console.warn('[GoogleTTS] fallback do głosu przeglądarki:', e);
     speakWeb(text, { lang, onEnd });

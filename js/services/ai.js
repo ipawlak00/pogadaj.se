@@ -51,6 +51,7 @@ const stubProvider = {
         correction: { spoken: `Po angielsku: „${mistake.good}". ${mistake.note}` },
         mistake,
         lang: beg ? 'pl' : 'en',
+        suggestions: [mistake.good, 'I think...', 'Because...'],
       };
     }
     return {
@@ -59,6 +60,7 @@ const stubProvider = {
         : `${pick(IZABELA.encouragements)} And what happened next? Tell me more!`,
       correction: null, mistake: null,
       lang: beg ? 'pl' : 'en',
+      suggestions: pick([['I like...', 'I want to...', 'My favourite...'], ['Yesterday I...', 'I usually...', 'In my free time...']]),
     };
   },
 
@@ -130,12 +132,16 @@ const geminiProvider = {
   async chat({ text }) {
     try {
       const r = await this._call(
-        `Uczeń właśnie powiedział: "${text}". Odpowiedz krótko (2-3 zdania) i kontynuuj rozmowę. Zwróć JSON: {"reply": "...", "lang": "pl"|"en", "correction": {"spoken":"..."}|null, "mistake": {"bad":"...","good":"...","note":"...","tag":"grammar|vocab|pronunciation"}|null}.`
+        `Uczeń właśnie powiedział (z mikrofonu): "${text}". Odpowiedz krótko (2-3 zdania), angielskie przykłady w cudzysłowie. Pamiętaj: uczeń tylko mówi, nie pisze. Zwróć pełny JSON wg formatu (z polami lang i suggestions).`
       );
-      return { reply: r.reply, correction: r.correction || null, mistake: r.mistake || null, lang: r.lang || (isBeginner() ? 'pl' : 'en') };
+      return {
+        reply: r.reply, correction: r.correction || null, mistake: r.mistake || null,
+        lang: r.lang || (isBeginner() ? 'pl' : 'en'),
+        suggestions: Array.isArray(r.suggestions) ? r.suggestions.slice(0, 4) : [],
+      };
     } catch (e) {
       console.warn('[Gemini chat]', e);
-      return { reply: 'Ups, chwilowo nie mogę połączyć się z moim mózgiem AI 😅 Sprawdź klucz API i spróbuj ponownie.', correction: null, mistake: null, lang: 'pl' };
+      return { reply: 'Ups, chwilowo nie mogę połączyć się z moim mózgiem AI 😅 Sprawdź klucz API i spróbuj ponownie.', correction: null, mistake: null, lang: 'pl', suggestions: [] };
     }
   },
   async hint({ task, text }) {

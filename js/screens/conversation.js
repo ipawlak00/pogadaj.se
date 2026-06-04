@@ -27,6 +27,7 @@ export function renderConversation(mount, lessonId) {
 
   const micBtn = el('button.mic-btn', { 'aria-label': 'Mów', onclick: toggleListen }, ['🎙']);
   const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center', text: 'Naciśnij mikrofon i mów 🎙' });
+  const suggestRow = el('div.suggest-row', { id: 'suggest-row' });
 
   const backChip = el('button.btn.btn--ghost', { onclick: () => navigate('#/lessons') }, ['← Lekcje']);
   const avatar = izabela({ mood: 'neutral', size: 64 });
@@ -45,6 +46,7 @@ export function renderConversation(mount, lessonId) {
         el('div', {}, [
           chatEl,
           lesson.type === 'task' ? taskBlock() : null,
+          suggestRow,
           el('div.composer', { style: 'flex-direction:column;align-items:center;gap:10px' }, [ micBtn, micLabel ]),
           el('p.faint', { style: 'margin-top:8px;font-size:.8rem;text-align:center', text: ai.provider === 'stub'
             ? 'Tryb demo (AI lokalne). Po podpięciu Gemini Izabela rozmawia w pełni naturalnie.' : '' }),
@@ -88,6 +90,16 @@ export function renderConversation(mount, lessonId) {
   function setSpeaking(on) { setAvSpeaking(avatar, on); }
   function setMicLabel(t) { const l = document.getElementById('mic-label'); if (l) l.textContent = t; }
 
+  // Podpowiedzi słów: chip pokazuje frazę, dotknięcie = Izabela czyta ją po angielsku
+  function renderSuggestions(list) {
+    suggestRow.replaceChildren();
+    if (!list || !list.length) return;
+    suggestRow.append(el('div.suggest-hint', { text: '💡 Możesz powiedzieć (dotknij, by usłyszeć):' }));
+    suggestRow.append(el('div.suggest-chips', {}, list.slice(0, 4).map((s) =>
+      el('button.suggest-chip', { onclick: () => speech.speak(s, { lang: 'en-US' }) }, [s]))));
+  }
+  renderSuggestions(lesson.suggestions || []);
+
   // ---------- Wejście ucznia: TYLKO MÓWIENIE ----------
   // Początkujący mówią po polsku → słuchamy pl-PL. Zaawansowani → en-US.
   function toggleListen() {
@@ -118,8 +130,9 @@ export function renderConversation(mount, lessonId) {
       return;
     }
 
-    const { reply, correction, mistake, lang } = await ai.chat({ text, lesson });
+    const { reply, correction, mistake, lang, suggestions } = await ai.chat({ text, lesson });
     respond(reply, correction, mistake, lang);
+    if (suggestions && suggestions.length) renderSuggestions(suggestions);
 
     // Cel lekcji konwersacyjnej: kilka tur
     if (lesson.type === 'conversation' && userTurns >= 4) finishLessonSoon();

@@ -16,8 +16,9 @@ export const LESSONS = [
     desc: 'Luźna pogawędka z Izabelą. Zero stresu, budujemy pewność siebie.',
     type: 'conversation',
     opener: "Hi there! So glad you're here. Tell me — what made you want to learn English? Take your time! 😊",
-    openerPL: "Cześć! Jestem Izabela 👋 Nie martw się — prowadzę po polsku. Spróbujmy razem powiedzieć coś po angielsku. Na rozgrzewkę przywitaj się: napisz albo powiedz „Hello, my name is…”. Śmiało, nie ma złych odpowiedzi!",
+    openerPL: "Cześć! Jestem Izabela 👋 Nie martw się — prowadzę po polsku. Spróbujmy razem powiedzieć coś po angielsku. Na rozgrzewkę przywitaj się — spróbuj powiedzieć: „Hello, my name is…”. Śmiało, nie ma złych odpowiedzi!",
     goal: 'Spróbuj powiedzieć kilka prostych zdań po angielsku.',
+    suggestions: ['Hello!', 'My name is...', 'I am from Poland', 'I like...'],
   },
   {
     id: 'active-correction',
@@ -37,6 +38,7 @@ export const LESSONS = [
       explanation: 'Past Simple: „go" → „went". Słowo „Yesterday" (wczoraj) zawsze sygnalizuje czas przeszły.',
     },
     goal: 'Rozwiąż zadanie — sam albo z głosową podpowiedzią Izabeli.',
+    suggestions: ['Agent, podpowiedz!', 'I think it is...', 'I am not sure'],
   },
   {
     id: 'cliffhanger',
