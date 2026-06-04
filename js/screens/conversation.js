@@ -17,7 +17,8 @@ export function renderConversation(mount, lessonId) {
   let listening = false;
   let recorder = null;
   let userTurns = 0;
-  let taskSolved = false;
+  let taskPhase = 'word';   // 'word' → powiedz słowo, 'sentence' → powtórz całe zdanie
+  let taskAttempts = 0;
 
   const chatEl = el('div.chat');
   const analystEl = el('div.card.analyst', {}, [
@@ -57,10 +58,11 @@ export function renderConversation(mount, lessonId) {
     ])
   );
 
-  // Otwarcie lekcji — Izabela wita (po polsku dla początkujących)
+  // Otwarcie lekcji — Izabela wita (po polsku dla początkujących i w zadaniach)
   const opener = beginner && lesson.openerPL ? lesson.openerPL : lesson.opener;
+  const openerLang = (beginner || lesson.type === 'task') ? 'pl-PL' : 'en-US';
   addMessage('izabela', opener);
-  speech.speak(opener, { lang: beginner ? 'pl-PL' : 'en-US' });
+  speech.speak(opener, { lang: openerLang });
 
   // ---------- Rendering wiadomości ----------
   function addMessage(who, text, correction) {
@@ -123,12 +125,8 @@ export function renderConversation(mount, lessonId) {
     addMessage('user', text);
     userTurns++;
 
-    // Głosowe Koło Ratunkowe w zadaniu: prośba o pomoc
-    if (lesson.type === 'task' && /podpowiedz|pomóż|help|nie wiem|hint|agent/i.test(text)) {
-      const { reply } = await ai.hint({ task: lesson.task, text });
-      respond(reply, null, null, 'pl');
-      return;
-    }
+    // Lekcja z zadaniem — odpowiedź MÓWIONA (osobny tok)
+    if (lesson.type === 'task') return handleTaskAnswer(text);
 
     const { reply, correction, mistake, lang, suggestions } = await ai.chat({ text, lesson });
     respond(reply, correction, mistake, lang);
@@ -136,6 +134,55 @@ export function renderConversation(mount, lessonId) {
 
     // Cel lekcji konwersacyjnej: kilka tur
     if (lesson.type === 'conversation' && userTurns >= 4) finishLessonSoon();
+  }
+
+  // Krótka wypowiedź Izabeli (z głosem). lang 'pl'|'en'; slow = wolniej.
+  function izabelaSay(text, { lang = 'pl', slow = false, mood = 'neutral', onEnd } = {}) {
+    setMood(avatar, mood);
+    addMessage('izabela', text);
+    setSpeaking(true);
+    speech.speak(text, {
+      lang: lang === 'en' ? 'en-US' : 'pl-PL', rate: slow ? 0.72 : 1,
+      onEnd: () => { setSpeaking(false); setMood(avatar, 'neutral'); onEnd?.(); },
+    });
+  }
+
+  const norm = (s) => (s || '').toLowerCase().replace(/[^a-ząćęłńóśźż ]/gi, ' ').replace(/\s+/g, ' ').trim();
+
+  // Tok zadania: faza 'word' (powiedz słowo) → faza 'sentence' (powtórz całe zdanie)
+  async function handleTaskAnswer(text) {
+    const t = lesson.task;
+    if (/podpowiedz|pomóż|help|nie wiem|hint|agent/i.test(text)) {
+      izabelaSay(t.hintSpoken, { lang: 'pl' });
+      return;
+    }
+    if (taskPhase === 'word') {
+      if (norm(text).split(' ').includes(norm(t.answer))) {
+        izabelaSay(`Ekstra! 🎉 Dokładnie — „${t.answer}". A teraz dawaj całe zdanie za mną, powtórz: „${t.fullSentence}"`, {
+          lang: 'pl', mood: 'happy',
+        });
+        taskPhase = 'sentence';
+        renderSuggestions([t.fullSentence]);
+      } else {
+        taskAttempts++;
+        if (taskAttempts >= 2) {
+          izabelaSay(`Spokojnie, zwolnijmy. Posłuchaj dokładnie: „${t.answer}". ${t.hintSpoken} Teraz Ty — powiedz to słowo.`, { lang: 'pl', slow: true, mood: 'oops' });
+        } else {
+          izabelaSay(`Jeszcze nie to 🙂 ${t.hintSpoken} Spróbuj powiedzieć samo brakujące słowo.`, { lang: 'pl', mood: 'oops' });
+        }
+      }
+    } else {
+      // faza zdania — sprawdzamy pokrycie słów
+      const heard = norm(text).split(' ');
+      const target = norm(t.fullSentence).split(' ');
+      const overlap = target.filter((w) => heard.includes(w)).length / target.length;
+      if (overlap >= 0.6) {
+        izabelaSay('Brawo! Całe zdanie, super Ci poszło! 🌟 Czujesz, jak to brzmi naturalnie?', { lang: 'pl', mood: 'happy', onEnd: completeLesson });
+      } else {
+        taskAttempts++;
+        izabelaSay(`Już prawie! Powtórzmy razem, wolniutko za mną: „${t.fullSentence}"`, { lang: 'pl', slow: true });
+      }
+    }
   }
 
   function respond(reply, correction, mistake, lang = 'en') {
@@ -168,34 +215,36 @@ export function renderConversation(mount, lessonId) {
     navigate('#/lessons');
   }
 
-  // ---------- Blok zadania (lekcja typu 'task') ----------
+  // ---------- Blok zadania (mówione, lekcja typu 'task') ----------
   function taskBlock() {
     const t = lesson.task;
-    const wrap = el('div.card', { style: 'margin:14px 0' }, [
-      el('div.muted', { style: 'margin-bottom:8px', text: 'Uzupełnij zdanie:' }),
-      el('div.display', { style: 'font-size:1.2rem;margin-bottom:6px', text: t.prompt }),
-      (beginner && t.promptPL) ? el('div.faint', { style: 'margin-bottom:14px', text: t.promptPL }) : el('div', { style: 'margin-bottom:8px' }),
-      el('div.row.wrap', {}, t.options.map((opt) =>
-        el('button.btn.btn--ghost', { onclick: () => checkAnswer(opt, wrap) }, [opt]))),
-      el('p.faint', { style: 'margin-top:10px', text: '💬 Utknąłeś? Powiedz do mikrofonu: „Agent, podpowiedz!"' }),
+    return el('div.card', { style: 'margin:14px 0' }, [
+      el('div.muted', { style: 'margin-bottom:8px', text: 'Powiedz brakujące słowo:' }),
+      // Zdanie po angielsku (z luką)
+      el('div.task-en', { text: t.sentence }),
+      // Polskie tłumaczenie — podkreślone słowo, klik = czyta wersję angielską
+      el('div.task-pl', {}, plSentence(t.sentencePL, t.answer)),
+      // 3 opcje — klik = głos czyta po angielsku i podaje znaczenie po polsku
+      el('div.task-opts', {}, t.options.map((o) =>
+        el('button.suggest-chip', {
+          onclick: () => speech.speak(`„${o.en}" — ${o.pl}`, { lang: 'pl-PL' }),
+        }, [o.en]))),
+      el('p.faint', { style: 'margin-top:12px', text: '🎤 Powiedz odpowiedź do mikrofonu. Utknąłeś? Powiedz „Agent, podpowiedz!"' }),
     ]);
-    return wrap;
+  }
 
-    function checkAnswer(opt, wrap) {
-      if (opt === t.answer) {
-        taskSolved = true;
-        addMessage('izabela', `"${opt}" — exactly! 🎯 ${t.explanation}`);
-        speech.speak(`${opt}. Exactly!`, { lang: 'en-US' });
-        wrap.replaceWith(el('div.card', { style: 'margin:14px 0;border-color:var(--cyan)' }, [
-          el('div', { html: `✅ <b>${t.prompt.replace('____', opt)}</b>` }),
-          el('div.note', { text: t.explanation }),
-          el('button.btn.btn--primary.btn--block', { style: 'margin-top:12px', onclick: completeLesson }, ['Zakończ lekcję ✓']),
-        ]));
-      } else {
-        toast('Prawie! Spróbuj jeszcze raz — albo poproś Izabelę o podpowiedź 😊', 'error');
-        addMistake({ bad: lesson.task.prompt.replace('____', opt), good: lesson.task.prompt.replace('____', t.answer), note: t.explanation, tag: 'grammar' });
-      }
-    }
+  // Buduje polskie zdanie z podkreślonym słowem (klik → czyta angielski odpowiednik)
+  function plSentence(s, answer) {
+    const m = s.match(/^(.*?)\*(.+?)\*(.*)$/);
+    if (!m) return [s];
+    return [
+      m[1],
+      el('button.task-underline', {
+        title: 'Posłuchaj po angielsku',
+        onclick: () => speech.speak(answer, { lang: 'en-US' }),
+      }, [m[2]]),
+      m[3],
+    ];
   }
 }
 
