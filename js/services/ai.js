@@ -90,40 +90,69 @@ const stubProvider = {
   },
 };
 
-// ---- Provider Gemini (szkielet — aktywny gdy AI_PROVIDER='gemini') ----
+// ---- Klucz Gemini: localStorage (na urządzeniu) lub CONFIG ----
+const KEY_STORE = 'pogadajse.geminiKey';
+function geminiKey() {
+  try { return (localStorage.getItem(KEY_STORE) || CONFIG.GEMINI.apiKey || '').trim(); }
+  catch { return (CONFIG.GEMINI.apiKey || '').trim(); }
+}
+export function setGeminiKey(key) {
+  try { key ? localStorage.setItem(KEY_STORE, key.trim()) : localStorage.removeItem(KEY_STORE); } catch {}
+}
+export function hasGeminiKey() { return !!geminiKey(); }
+
+// ---- Provider Gemini (aktywny gdy jest klucz) ----
 const geminiProvider = {
-  async _call(userParts, { json = true } = {}) {
-    const { apiKey, model, proxyUrl } = CONFIG.GEMINI;
+  async _call(userText, { json = true } = {}) {
+    const key = geminiKey();
+    const { model, proxyUrl } = CONFIG.GEMINI;
     const url = proxyUrl
-      || `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      || `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
     const profile = store.get().phonetic.profile;
-    const lvl = store.get().onboarding.level || 'A2';
+    const lvl = currentLevel();
+    const beg = isBeginner();
+    const langRule = beg
+      ? 'Uczeń jest POCZĄTKUJĄCY — prowadź rozmowę GŁÓWNIE PO POLSKU, łagodnie zachęcając do prostych angielskich słów/zdań. Tłumacz wszystko po polsku.'
+      : 'Prowadź rozmowę po angielsku na poziomie ucznia; korekty i wyjaśnienia po polsku.';
+    const sys = `${IZABELA.systemPrompt}\n\nKONTEKST: Poziom CEFR: ${lvl}. ${langRule} Profil fonetyczny ucznia: ${JSON.stringify(profile)}.`;
     const body = {
-      system_instruction: { parts: [{ text:
-        `${IZABELA.systemPrompt}\n\nKONTEKST: Poziom ucznia: ${lvl}. Profil fonetyczny: ${JSON.stringify(profile)}` }] },
-      contents: [{ role: 'user', parts: [{ text: userParts }] }],
-      generationConfig: json ? { responseMimeType: 'application/json' } : {},
+      system_instruction: { parts: [{ text: sys }] },
+      contents: [{ role: 'user', parts: [{ text: userText }] }],
+      generationConfig: json ? { responseMimeType: 'application/json', temperature: 0.8 } : { temperature: 0.8 },
     };
     const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (!res.ok) throw new Error('Gemini API: ' + res.status);
+    if (!res.ok) throw new Error('Gemini API ' + res.status + ': ' + (await res.text()).slice(0, 200));
     const data = await res.json();
     const txt = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     return json ? JSON.parse(txt) : txt;
   },
   async greet() { return stubProvider.greet(); },
-  async chat({ text }) { return this._call(`Uczeń powiedział: "${text}"`); },
-  async hint({ task, text }) {
-    const r = await this._call(`Uczeń utknął w zadaniu: "${task?.prompt}". Pyta: "${text || 'podpowiedz'}". Naprowadź go, nie podawaj gotowej odpowiedzi.`, { json: false });
-    return { reply: r };
+  async chat({ text }) {
+    try {
+      const r = await this._call(
+        `Uczeń właśnie powiedział: "${text}". Odpowiedz krótko (2-3 zdania) i kontynuuj rozmowę. Zwróć JSON: {"reply": "...", "lang": "pl"|"en", "correction": {"spoken":"..."}|null, "mistake": {"bad":"...","good":"...","note":"...","tag":"grammar|vocab|pronunciation"}|null}.`
+      );
+      return { reply: r.reply, correction: r.correction || null, mistake: r.mistake || null, lang: r.lang || (isBeginner() ? 'pl' : 'en') };
+    } catch (e) {
+      console.warn('[Gemini chat]', e);
+      return { reply: 'Ups, chwilowo nie mogę połączyć się z moim mózgiem AI 😅 Sprawdź klucz API i spróbuj ponownie.', correction: null, mistake: null, lang: 'pl' };
+    }
   },
-  async analyzeWord(args) { return stubProvider.analyzeWord(args); },     // wymowa lokalnie
+  async hint({ task, text }) {
+    try {
+      const r = await this._call(`Uczeń utknął w zadaniu: "${task?.prompt}". Mówi: "${text || 'podpowiedz'}". Naprowadź go PO POLSKU, nie podawaj gotowej odpowiedzi.`, { json: false });
+      return { reply: r };
+    } catch { return { reply: task?.hintSpoken || 'Spokojnie, pomyśl o czasie tej czynności 😊' }; }
+  },
+  async analyzeWord(args) { return stubProvider.analyzeWord(args); },     // wymowa lokalnie (na razie)
   async buildProfile(args) { return stubProvider.buildProfile(args); },
 };
 
-const provider = CONFIG.AI_PROVIDER === 'gemini' ? geminiProvider : stubProvider;
+const useGemini = hasGeminiKey();
+const provider = useGemini ? geminiProvider : stubProvider;
 
 export const ai = {
-  provider: CONFIG.AI_PROVIDER,
+  provider: useGemini ? 'gemini' : 'stub',
   greet: (...a) => provider.greet(...a),
   chat: (...a) => provider.chat(...a),
   hint: (...a) => provider.hint(...a),

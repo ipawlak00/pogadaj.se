@@ -1,4 +1,4 @@
-import { el, topbar, navigate, toast } from '../ui.js';
+import { el, topbar, navigate, toast, aiConnectButton } from '../ui.js';
 import { store } from '../state.js';
 import { auth } from '../services/auth.js';
 import { LESSONS } from '../data/lessons.js';
@@ -24,6 +24,7 @@ export function renderLessons(mount) {
         ]),
       ]),
       el('div.lesson-grid', {}, LESSONS.map((l, i) => lessonCard(l, i, done))),
+      el('div.row', { style: 'justify-content:center' }, [ aiConnectButton() ]),
       analystSummary(st.analyst),
     ])
   );

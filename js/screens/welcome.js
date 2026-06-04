@@ -1,4 +1,4 @@
-import { el, toast, navigate } from '../ui.js';
+import { el, toast, navigate, aiConnectButton } from '../ui.js';
 import { auth } from '../services/auth.js';
 import { store } from '../state.js';
 
@@ -28,9 +28,12 @@ export function renderWelcome(mount) {
       ]),
 
       el('div.auth-footer', { html: 'POWERED BY <b>IZABELACODE</b>' }),
-      el('button.btn.btn--ghost', { style: 'font-size:.75rem;padding:6px 14px;opacity:.7',
-        onclick: () => { store.reset(); location.hash = '#/'; location.reload(); }
-      }, ['↺ Zacznij od nowa (reset)']),
+      el('div.row', { style: 'gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px' }, [
+        aiConnectButton(),
+        el('button.btn.btn--ghost', { style: 'font-size:.75rem;padding:6px 14px;opacity:.7',
+          onclick: () => { store.reset(); location.hash = '#/'; location.reload(); }
+        }, ['↺ Zacznij od nowa (reset)']),
+      ]),
     ]),
     el('div.iza-badge', { title: 'Izabela' }, [
       el('img', { src: 'assets/izabela/avatar.png', alt: 'Izabela', onerror: function(){ this.replaceWith(el('span',{text:'👩‍🚀',style:'font-size:1.5rem'})); } }),

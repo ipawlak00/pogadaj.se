@@ -2,6 +2,8 @@
 //  UI — drobne helpery DOM (bez frameworka)
 // =============================================================
 
+import { setGeminiKey, hasGeminiKey } from './services/ai.js';
+
 // Twórca elementów: el('div.card', { onclick }, [children])
 export function el(selector, props = {}, children = []) {
   const [tag, ...classes] = selector.split('.');
@@ -38,3 +40,15 @@ export function topbar(rightNode) {
 }
 
 export const navigate = (hash) => { location.hash = hash; };
+
+// Przycisk podłączenia prawdziwego AI (Gemini). Klucz wpisuje użytkownik u siebie
+// — trafia tylko do localStorage tego urządzenia, nigdy do repo.
+export function aiConnectButton() {
+  const connected = hasGeminiKey();
+  return el('button.btn.btn--ghost', { style: 'font-size:.8rem',
+    onclick: () => {
+      const k = prompt('Wklej swój klucz Gemini API (z aistudio.google.com).\n\nKlucz zostaje TYLKO na tym urządzeniu — nie wysyłamy go nigdzie poza Google ani nie zapisujemy w kodzie.');
+      if (k && k.trim()) { setGeminiKey(k); location.reload(); }
+    },
+  }, [connected ? '🟢 Izabela AI: połączona (zmień klucz)' : '🔌 Połącz Izabelę z prawdziwym AI']);
+}
