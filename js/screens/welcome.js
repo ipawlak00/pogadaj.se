@@ -1,4 +1,4 @@
-import { el, toast, navigate, aiConnectButton } from '../ui.js';
+import { el, toast, navigate, aiConnectButton, voiceConnectButton } from '../ui.js';
 import { auth } from '../services/auth.js';
 import { store } from '../state.js';
 
@@ -30,6 +30,7 @@ export function renderWelcome(mount) {
       el('div.auth-footer', { html: 'POWERED BY <b>IZABELACODE</b>' }),
       el('div.row', { style: 'gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px' }, [
         aiConnectButton(),
+        voiceConnectButton(),
         el('button.btn.btn--ghost', { style: 'font-size:.75rem;padding:6px 14px;opacity:.7',
           onclick: () => { store.reset(); location.hash = '#/'; location.reload(); }
         }, ['↺ Zacznij od nowa (reset)']),

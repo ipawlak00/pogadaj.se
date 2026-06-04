@@ -1,13 +1,85 @@
 // =============================================================
-//  Speech — warstwa mowy (STT + TTS) na Web Speech API
+//  Speech — warstwa mowy (STT + TTS)
 // -------------------------------------------------------------
-//  Działa w przeglądarce bez kluczy. Później można podmienić STT
-//  na Whisper (przez proxy), zachowując ten sam interfejs.
+//  STT: Web Speech API.
+//  TTS: jeśli skonfigurowano ElevenLabs (klucz + Voice ID) → mówi
+//       sklonowanym głosem (PL+EN). Inaczej → wbudowany głos przeglądarki.
 // =============================================================
 
 import { CONFIG } from '../config.js';
 
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+// ---- ElevenLabs: dane logowania (tylko na urządzeniu) ----
+const EL_KEY = 'pogadajse.elevenKey';
+const EL_VOICE = 'pogadajse.elevenVoice';
+const ls = (k) => { try { return localStorage.getItem(k) || ''; } catch { return ''; } };
+export function setElevenCreds(key, voice) {
+  try {
+    key ? localStorage.setItem(EL_KEY, key.trim()) : localStorage.removeItem(EL_KEY);
+    voice ? localStorage.setItem(EL_VOICE, voice.trim()) : localStorage.removeItem(EL_VOICE);
+  } catch {}
+}
+export function hasEleven() { return !!(ls(EL_KEY) && ls(EL_VOICE)); }
+
+let currentAudio = null;
+const elCache = new Map();   // cache audio po (voice|text), oszczędza limit znaków
+
+async function speakEleven(text, { onEnd, rate } = {}) {
+  try {
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    const voice = ls(EL_VOICE);
+    const cacheKey = voice + '|' + text;
+    let url = elCache.get(cacheKey);
+    if (!url) {
+      const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}`, {
+        method: 'POST',
+        headers: { 'xi-api-key': ls(EL_KEY), 'Content-Type': 'application/json', 'Accept': 'audio/mpeg' },
+        body: JSON.stringify({
+          text,
+          model_id: 'eleven_multilingual_v2',
+          voice_settings: { stability: 0.45, similarity_boost: 0.8, style: 0.3, use_speaker_boost: true },
+        }),
+      });
+      if (!res.ok) throw new Error('ElevenLabs ' + res.status + ': ' + (await res.text()).slice(0, 160));
+      url = URL.createObjectURL(await res.blob());
+      elCache.set(cacheKey, url);
+    }
+    const audio = new Audio(url);
+    if (rate) audio.playbackRate = rate;
+    currentAudio = audio;
+    audio.onended = () => { if (currentAudio === audio) currentAudio = null; onEnd?.(); };
+    audio.onerror = () => onEnd?.();
+    await audio.play();
+  } catch (e) {
+    console.warn('[ElevenLabs] fallback do głosu przeglądarki:', e);
+    speakWeb(text, { onEnd });
+  }
+}
+
+function speakWeb(clean, { lang = CONFIG.SPEECH.ttsLang, rate = 1, pitch = 1.05, onEnd } = {}) {
+  if (!('speechSynthesis' in window) || !clean) { onEnd?.(); return; }
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(clean);
+  u.lang = lang; u.rate = rate; u.pitch = pitch;
+  const pickVoice = () => {
+    const pref = lang.slice(0, 2).toLowerCase();
+    const voices = window.speechSynthesis.getVoices();
+    const inLang = voices.filter((v) => v.lang?.toLowerCase().startsWith(pref));
+    const score = (v) => {
+      let s = 0;
+      if (/google|natural|neural/i.test(v.name)) s += 3;
+      if (/female|woman|kobieta|zofia|ewa|agnieszka|paulina|maja|zosia|samantha|aria|zira|jenny/i.test(v.name)) s += 2;
+      if (v.lang?.toLowerCase() === lang.toLowerCase()) s += 1;
+      return s;
+    };
+    u.voice = inLang.sort((a, b) => score(b) - score(a))[0] || voices[0] || null;
+    window.speechSynthesis.speak(u);
+  };
+  u.onend = () => onEnd?.();
+  if (window.speechSynthesis.getVoices().length) pickVoice();
+  else window.speechSynthesis.addEventListener('voiceschanged', pickVoice, { once: true });
+}
 
 export const speech = {
   isRecognitionSupported() { return !!SR; },
@@ -35,35 +107,18 @@ export const speech = {
   },
 
   // --- Synteza mowy (TTS) — głos Izabeli ---
-  // Wybieramy żeński głos dla danego języka jeśli dostępny.
-  speak(text, { lang = CONFIG.SPEECH.ttsLang, rate = 1, pitch = 1.05, onEnd } = {}) {
+  // Mówi: ElevenLabs (głos Izabeli) jeśli skonfigurowany, inaczej wbudowany głos.
+  speak(text, opts = {}) {
     const clean = forSpeech(text);
-    if (!('speechSynthesis' in window) || !clean) { onEnd?.(); return; }
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(clean);
-    u.lang = lang; u.rate = rate; u.pitch = pitch;
-
-    const pickVoice = () => {
-      const pref = lang.slice(0, 2).toLowerCase();
-      const voices = window.speechSynthesis.getVoices();
-      const inLang = voices.filter((v) => v.lang?.toLowerCase().startsWith(pref));
-      // Punktacja: naturalne głosy Google + żeńskie + dokładny język
-      const score = (v) => {
-        let s = 0;
-        if (/google|natural|neural/i.test(v.name)) s += 3;
-        if (/female|woman|kobieta|zofia|ewa|agnieszka|paulina|maja|zosia|samantha|aria|zira|jenny/i.test(v.name)) s += 2;
-        if (v.lang?.toLowerCase() === lang.toLowerCase()) s += 1;
-        return s;
-      };
-      u.voice = inLang.sort((a, b) => score(b) - score(a))[0] || voices[0] || null;
-      window.speechSynthesis.speak(u);
-    };
-    u.onend = () => onEnd?.();
-    if (window.speechSynthesis.getVoices().length) pickVoice();
-    else window.speechSynthesis.addEventListener('voiceschanged', pickVoice, { once: true });
+    if (!clean) { opts.onEnd?.(); return; }
+    if (hasEleven()) return speakEleven(clean, opts);
+    return speakWeb(clean, opts);
   },
 
-  stopSpeaking() { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); },
+  stopSpeaking() {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  },
 };
 
 // Usuwa emoji/piktogramy z tekstu PRZED czytaniem (tekst na ekranie zostaje bez zmian)
