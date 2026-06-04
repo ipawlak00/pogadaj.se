@@ -2,7 +2,6 @@ import { el, topbar, navigate, toast, aiConnectButton, voiceConnectButton } from
 import { store } from '../state.js';
 import { auth } from '../services/auth.js';
 import { LESSONS } from '../data/lessons.js';
-import { izabela } from '../components/izabela.js';
 
 export function renderLessons(mount) {
   const st = store.get();
@@ -17,7 +16,10 @@ export function renderLessons(mount) {
     topbar(userChip),
     el('div.stack.fade-in', {}, [
       el('div.row', { style: 'gap:14px' }, [
-        izabela({ mood: 'happy', size: 56 }),
+        el('div.iza-portrait.iza-portrait--sm', {}, [
+          el('img', { src: 'assets/izabela/izabela-lesson.png', alt: 'Izabela',
+            onerror: function () { this.replaceWith(el('span', { text: '👩‍🚀', style: 'font-size:2rem' })); } }),
+        ]),
         el('div', {}, [
           el('h1.display', { style: 'margin:0', text: 'Twoje darmowe lekcje' }),
           el('p.muted', { style: 'margin:6px 0 0', text: '3 lekcje na rozgrzewkę. Mów śmiało — Izabela poprawia z uśmiechem.' }),

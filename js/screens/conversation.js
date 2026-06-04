@@ -3,7 +3,6 @@ import { store } from '../state.js';
 import { speech } from '../services/speech.js';
 import { ai } from '../services/ai.js';
 import { getLesson } from '../data/lessons.js';
-import { izabela, setMood, setSpeaking as setAvSpeaking } from '../components/izabela.js';
 
 // Lekcja = sekwencja krótkich ćwiczeń mówienia. Izabela czyta po angielsku,
 // tłumaczy na polski, a uczeń powtarza. Gdy nie wychodzi — dzieli na kawałki.
@@ -28,10 +27,15 @@ export function renderConversation(mount, lessonId) {
   const REC_LANG = 'en-US';        // uczeń powtarza po angielsku
 
   // ---------- UI ----------
-  const avatar = izabela({ mood: 'neutral', size: 64 });
-  avatar.style.cursor = 'pointer';
-  avatar.title = 'Dotknij, aby powtórzyć';
+  // Pełna ilustrowana Izabela (zamiast okrągłego awatara)
+  const avatar = el('div.iza-portrait', { title: 'Dotknij, aby powtórzyć', style: 'cursor:pointer' }, [
+    el('img', { src: 'assets/izabela/izabela-lesson.png', alt: 'Izabela',
+      onerror: function () { this.replaceWith(el('span', { text: '👩‍🚀', style: 'font-size:2rem' })); } }),
+  ]);
   avatar.onclick = () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); };
+  // Mina/mówienie: na ilustracji sterujemy tylko poświatą
+  const setMood = () => {};
+  const setAvSpeaking = (_n, on) => avatar.classList.toggle('speaking', !!on);
 
   const chatEl = el('div.chat');
   const stepArea = el('div', { id: 'step-area' });
