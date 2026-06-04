@@ -16,7 +16,8 @@ export const LESSONS = [
     desc: 'Luźna pogawędka z Izabelą. Zero stresu, budujemy pewność siebie.',
     type: 'conversation',
     opener: "Hi there! So glad you're here. Tell me — what made you want to learn English? Take your time! 😊",
-    goal: 'Powiedz przynajmniej 4 zdania o sobie.',
+    openerPL: "Cześć! Jestem Izabela 👋 Nie martw się — prowadzę po polsku. Spróbujmy razem powiedzieć coś po angielsku. Na rozgrzewkę przywitaj się: napisz albo powiedz „Hello, my name is…”. Śmiało, nie ma złych odpowiedzi!",
+    goal: 'Spróbuj powiedzieć kilka prostych zdań po angielsku.',
   },
   {
     id: 'active-correction',
@@ -29,10 +30,11 @@ export const LESSONS = [
     opener: "Okej, troszkę poćwiczymy! Uzupełnij zdanie, a jak utkniesz — wciśnij mikrofon i poproś mnie o pomoc głosem. Let's go!",
     task: {
       prompt: 'Yesterday I ____ to the cinema with my friends.',
+      promptPL: 'Po polsku: „Wczoraj poszedłem do kina z przyjaciółmi.” — które słowo pasuje w lukę?',
       answer: 'went',
       options: ['go', 'went', 'gone', 'going'],
       hintSpoken: 'Pomyśl — to było wczoraj, czyli czas przeszły. Jaka jest druga forma od „go"? 😉',
-      explanation: 'Past Simple: „go" → „went". „Yesterday" zawsze sygnalizuje czas przeszły.',
+      explanation: 'Past Simple: „go" → „went". Słowo „Yesterday" (wczoraj) zawsze sygnalizuje czas przeszły.',
     },
     goal: 'Rozwiąż zadanie — sam albo z głosową podpowiedzią Izabeli.',
   },

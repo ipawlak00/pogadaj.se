@@ -32,21 +32,33 @@ function stubAnalyze(text) {
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+// Poziom ucznia → ile polskiego. Początkujący prowadzeni PO POLSKU.
+const BEGINNER_LEVELS = ['A1', 'A2'];
+export function currentLevel() { return store.get().onboarding.level || 'A2'; }
+export function isBeginner() { return BEGINNER_LEVELS.includes(currentLevel()); }
+
 const stubProvider = {
-  async greet() { return { reply: pick(IZABELA.greetings), correction: null, mistake: null }; },
+  async greet() { return { reply: pick(IZABELA.greetings), correction: null, mistake: null, lang: 'pl' }; },
 
   async chat({ text }) {
+    const beg = isBeginner();
     const mistake = stubAnalyze(text);
     if (mistake) {
       return {
-        reply: `${pick(['Ups, łap mnie!', 'Stop, stop 😄', 'O, mały haczyk!'])} Powiedz raczej „${mistake.good}". ${mistake.note} Okej — go on, I'm listening!`,
-        correction: { spoken: `Powiedz „${mistake.good}". ${mistake.note}` },
+        reply: beg
+          ? `${pick(['Ups, łap mnie!', 'Stop, stop 😄', 'O, mały haczyk!'])} Po angielsku mówimy „${mistake.good}". ${mistake.note} Spróbuj jeszcze raz, dasz radę!`
+          : `${pick(['Oops, caught me!', 'Hold on 😄'])} Say "${mistake.good}" instead. ${mistake.note} Okay — go on!`,
+        correction: { spoken: `Po angielsku: „${mistake.good}". ${mistake.note}` },
         mistake,
+        lang: beg ? 'pl' : 'en',
       };
     }
     return {
-      reply: `${pick(IZABELA.encouragements)} And what happened next? Tell me more!`,
+      reply: beg
+        ? `${pick(['Świetnie!', 'Brawo!', 'Idzie Ci super!'])} Powiedz mi coś więcej — spróbuj po angielsku, a jak zabraknie Ci słówka, spokojnie wtrąć po polsku, ja pomogę. 😊`
+        : `${pick(IZABELA.encouragements)} And what happened next? Tell me more!`,
       correction: null, mistake: null,
+      lang: beg ? 'pl' : 'en',
     };
   },
 

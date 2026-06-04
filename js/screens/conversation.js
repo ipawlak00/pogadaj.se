@@ -1,7 +1,7 @@
 import { el, topbar, toast, navigate } from '../ui.js';
 import { store } from '../state.js';
 import { speech } from '../services/speech.js';
-import { ai } from '../services/ai.js';
+import { ai, isBeginner } from '../services/ai.js';
 import { getLesson } from '../data/lessons.js';
 import { izabela, setMood, setSpeaking as setAvSpeaking } from '../components/izabela.js';
 
@@ -54,9 +54,11 @@ export function renderConversation(mount, lessonId) {
     ])
   );
 
-  // Otwarcie lekcji — Izabela wita
-  addMessage('izabela', lesson.opener);
-  speech.speak(stripPL(lesson.opener), { lang: 'en-US' });
+  // Otwarcie lekcji — Izabela wita (po polsku dla początkujących)
+  const beginner = isBeginner();
+  const opener = beginner && lesson.openerPL ? lesson.openerPL : lesson.opener;
+  addMessage('izabela', opener);
+  speech.speak(opener, { lang: beginner ? 'pl-PL' : 'en-US' });
 
   // ---------- Rendering wiadomości ----------
   function addMessage(who, text, correction) {
@@ -112,18 +114,18 @@ export function renderConversation(mount, lessonId) {
     // Głosowe Koło Ratunkowe w zadaniu: prośba o pomoc
     if (lesson.type === 'task' && /podpowiedz|pomóż|help|nie wiem|hint|agent/i.test(text)) {
       const { reply } = await ai.hint({ task: lesson.task, text });
-      respond(reply, null, null);
+      respond(reply, null, null, 'pl');
       return;
     }
 
-    const { reply, correction, mistake } = await ai.chat({ text, lesson });
-    respond(reply, correction, mistake);
+    const { reply, correction, mistake, lang } = await ai.chat({ text, lesson });
+    respond(reply, correction, mistake, lang);
 
     // Cel lekcji konwersacyjnej: kilka tur
     if (lesson.type === 'conversation' && userTurns >= 4) finishLessonSoon();
   }
 
-  function respond(reply, correction, mistake) {
+  function respond(reply, correction, mistake, lang = 'en') {
     // ostatnia wiadomość ucznia dostaje znacznik poprawki
     if (correction && messages.length) {
       const last = chatEl.querySelector('.msg--user:last-of-type');
@@ -134,7 +136,7 @@ export function renderConversation(mount, lessonId) {
     setMood(avatar, mistake ? 'oops' : 'happy');
     addMessage('izabela', reply);
     setSpeaking(true);
-    speech.speak(stripPL(reply), { lang: 'en-US', onEnd: () => { setSpeaking(false); setMood(avatar, 'neutral'); } });
+    speech.speak(reply, { lang: lang === 'en' ? 'en-US' : 'pl-PL', onEnd: () => { setSpeaking(false); setMood(avatar, 'neutral'); } });
   }
 
   let finishing = false;
@@ -158,7 +160,8 @@ export function renderConversation(mount, lessonId) {
     const t = lesson.task;
     const wrap = el('div.card', { style: 'margin:14px 0' }, [
       el('div.muted', { style: 'margin-bottom:8px', text: 'Uzupełnij zdanie:' }),
-      el('div.display', { style: 'font-size:1.2rem;margin-bottom:14px', text: t.prompt }),
+      el('div.display', { style: 'font-size:1.2rem;margin-bottom:6px', text: t.prompt }),
+      (beginner && t.promptPL) ? el('div.faint', { style: 'margin-bottom:14px', text: t.promptPL }) : el('div', { style: 'margin-bottom:8px' }),
       el('div.row.wrap', {}, t.options.map((opt) =>
         el('button.btn.btn--ghost', { onclick: () => checkAnswer(opt, wrap) }, [opt]))),
       el('p.faint', { style: 'margin-top:10px', text: '💬 Utknąłeś? Powiedz do mikrofonu: „Agent, podpowiedz!"' }),
@@ -224,9 +227,4 @@ function renderSummary(mount, lesson) {
       el('span.display', { style: 'font-size:1.3rem', text: val }),
     ]);
   }
-}
-
-// Usuwa polskie wstawki z TTS angielskiego (proste przybliżenie dla trybu demo)
-function stripPL(text) {
-  return text.replace(/[„""]/g, '"');
 }
