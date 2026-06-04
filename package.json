@@ -1,0 +1,11 @@
+{
+  "name": "pogadaj-se",
+  "version": "0.1.0",
+  "description": "Osobisty nauczyciel AI do mówienia po angielsku — rozmawiaj z Izabelą.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "python3 -m http.server 8080",
+    "check": "for f in $(find js -name '*.js'); do node --check \"$f\" || exit 1; done && echo OK"
+  }
+}

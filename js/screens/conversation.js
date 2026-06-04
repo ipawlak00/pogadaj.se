@@ -141,7 +141,7 @@ export function renderConversation(mount, lessonId) {
   function finishLessonSoon() {
     if (finishing) return; finishing = true;
     setTimeout(() => {
-      addMessage('izabela', "That was great chatting with you! 🎉 Świetnie Ci poszło. Klik „Zakończ lekcję", żeby zapisać postęp.");
+      addMessage('izabela', 'That was great chatting with you! 🎉 Świetnie Ci poszło. Kliknij „Zakończ lekcję", żeby zapisać postęp.');
       const done = el('button.btn.btn--primary.btn--block', { onclick: completeLesson }, ['Zakończ lekcję ✓']);
       chatEl.parentElement.querySelector('.composer').replaceWith(done);
     }, 800);
