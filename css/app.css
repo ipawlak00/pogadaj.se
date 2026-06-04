@@ -70,6 +70,13 @@
 .logo .dot { color: var(--accent); }
 .logo .se { color: inherit; }
 
+/* ---------- Scena-tło lekcji (przeplatające się grafiki) ---------- */
+.lesson-bg {
+  position: fixed; inset: 0; z-index: 0;
+  background-size: cover; background-position: center;
+  transition: background-image .5s ease;
+}
+
 /* ---------- Ilustrowana Izabela (portret w lekcji) ---------- */
 .iza-portrait { width: clamp(120px, 28vw, 180px); border-radius: 16px; overflow: hidden; flex: none;
   border: 2px solid var(--surface-border); box-shadow: var(--shadow-card); transition: box-shadow .2s, border-color .2s; }

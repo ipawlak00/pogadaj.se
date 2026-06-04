@@ -2,7 +2,7 @@ import { el, topbar, toast, navigate } from '../ui.js';
 import { store } from '../state.js';
 import { speech } from '../services/speech.js';
 import { ai } from '../services/ai.js';
-import { getLesson } from '../data/lessons.js';
+import { getLesson, SCENES } from '../data/lessons.js';
 
 // Lekcja = sekwencja krótkich ćwiczeń mówienia. Izabela czyta po angielsku,
 // tłumaczy na polski, a uczeń powtarza. Gdy nie wychodzi — dzieli na kawałki.
@@ -44,6 +44,20 @@ export function renderConversation(mount, lessonId) {
   const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center', text: 'Naciśnij mikrofon i powtórz 🎙' });
   const suggestRow = el('div.suggest-row', { id: 'suggest-row' });
   const replayBtn = el('button.btn.btn--ghost', { onclick: () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); } }, ['🔊 Powtórz']);
+
+  // Przewijające się tło-scena (na body, pod treścią; sprzątane przy wyjściu)
+  document.querySelectorAll('.lesson-bg').forEach((n) => n.remove());
+  const sceneBg = el('div.lesson-bg', { id: 'lesson-bg' });
+  document.body.append(sceneBg);
+  window.addEventListener('hashchange', () => sceneBg.remove(), { once: true });
+  let sceneTick = 0;
+  function nextScene() {
+    if (!SCENES.length) return;
+    const path = SCENES[sceneTick % SCENES.length];
+    sceneTick++;
+    sceneBg.style.backgroundImage = `linear-gradient(rgba(8,8,14,.82), rgba(8,8,14,.9)), url("${path}")`;
+  }
+  nextScene();
 
   mount.append(
     topbar(el('button.btn.btn--ghost', { onclick: () => navigate('#/lessons') }, ['← Lekcje'])),
@@ -97,6 +111,7 @@ export function renderConversation(mount, lessonId) {
     const r = await ai.lessonReply(history);
     setBusy(false);
     if (r.unsupported) { startStep(); return; }     // brak Gemini → kroki
+    nextScene();           // zmiana scenerii co turę
     history.push({ role: 'model', text: r.say });
     if (r.mistake) setMood(avatar, 'oops');
     addMessage('izabela', r.say);
@@ -169,6 +184,7 @@ export function renderConversation(mount, lessonId) {
     if (stepIdx >= steps.length) return finishLesson();
     attempts = 0; phase = ''; chunks = []; chunkIdx = 0; chunkDoneCb = null;
     setProgress();
+    nextScene();           // zmiana scenerii przy każdym kroku
     const step = steps[stepIdx];
     if (step.type === 'say') return startSay(step);
     if (step.type === 'fill') return startFill(step);
