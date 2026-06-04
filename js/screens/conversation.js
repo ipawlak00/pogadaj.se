@@ -3,6 +3,7 @@ import { store } from '../state.js';
 import { speech } from '../services/speech.js';
 import { ai } from '../services/ai.js';
 import { getLesson } from '../data/lessons.js';
+import { izabela, setMood, setSpeaking as setAvSpeaking } from '../components/izabela.js';
 
 export function renderConversation(mount, lessonId) {
   const lesson = getLesson(lessonId);
@@ -28,14 +29,13 @@ export function renderConversation(mount, lessonId) {
   const micBtn = el('button.btn.btn--pink.mic-mini', { 'aria-label': 'Mów', onclick: toggleListen }, ['🎙']);
 
   const backChip = el('button.btn.btn--ghost', { onclick: () => navigate('#/lessons') }, ['← Lekcje']);
+  const avatar = izabela({ mood: 'neutral', size: 64 });
 
   mount.append(
     topbar(backChip),
     el('div.stack.fade-in', {}, [
       el('div.row', { style: 'gap:14px' }, [
-        el('div.izabela', { id: 'iza-avatar', style: 'width:64px;height:64px;flex:none' }, [
-          el('img', { src: 'assets/izabela/avatar.png', alt: 'Izabela', onerror: function(){ this.replaceWith(el('span',{text:'👩‍🚀'})); } }),
-        ]),
+        avatar,
         el('div', {}, [
           el('h2.display', { style: 'margin:0', text: `${lesson.emoji} ${lesson.title}` }),
           el('p.faint', { style: 'margin:2px 0 0', text: lesson.goal }),
@@ -83,9 +83,7 @@ export function renderConversation(mount, lessonId) {
     );
   }
 
-  function setSpeaking(on) {
-    document.getElementById('iza-avatar')?.classList.toggle('izabela--speaking', on);
-  }
+  function setSpeaking(on) { setAvSpeaking(avatar, on); }
 
   // ---------- Wejście ucznia ----------
   async function sendText() {
@@ -132,9 +130,11 @@ export function renderConversation(mount, lessonId) {
       if (last) last.append(el('div.correction', { html: `💡 <b>Poprawka:</b> ${correction.spoken}` }));
     }
     if (mistake) addMistake(mistake);
+    // Izabela reaguje miną: "ups" gdy poprawia błąd, inaczej zadowolona
+    setMood(avatar, mistake ? 'oops' : 'happy');
     addMessage('izabela', reply);
     setSpeaking(true);
-    speech.speak(stripPL(reply), { lang: 'en-US', onEnd: () => setSpeaking(false) });
+    speech.speak(stripPL(reply), { lang: 'en-US', onEnd: () => { setSpeaking(false); setMood(avatar, 'neutral'); } });
   }
 
   let finishing = false;
