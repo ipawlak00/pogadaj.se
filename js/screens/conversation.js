@@ -11,6 +11,7 @@ export function renderConversation(mount, lessonId) {
 
   if (lesson.type === 'summary') return renderSummary(mount, lesson);
 
+  const beginner = isBeginner();   // dostępne dla taskBlock() i całej rozmowy
   const messages = [];     // { who:'izabela'|'user', text, correction? }
   const sessionMistakes = [];
   let listening = false;
@@ -57,7 +58,6 @@ export function renderConversation(mount, lessonId) {
   );
 
   // Otwarcie lekcji — Izabela wita (po polsku dla początkujących)
-  const beginner = isBeginner();
   const opener = beginner && lesson.openerPL ? lesson.openerPL : lesson.opener;
   addMessage('izabela', opener);
   speech.speak(opener, { lang: beginner ? 'pl-PL' : 'en-US' });
