@@ -73,7 +73,7 @@ a { color: var(--accent-bright); text-decoration: none; }
 .cosmos {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;            /* widoczne tło — treść aplikacji jest nad nim (z-index:1) */
   background:
     radial-gradient(1000px 700px at 82% -8%, rgba(138, 91, 214, 0.18) 0%, transparent 60%),
     radial-gradient(800px 600px at 8% 108%, rgba(255, 122, 24, 0.12) 0%, transparent 55%),
@@ -105,8 +105,9 @@ a { color: var(--accent-bright); text-decoration: none; }
     radial-gradient(circle at 34% 28%, #f3bd72, #c87a30 55%, #7a431a);
   box-shadow: inset -16px -10px 34px rgba(0,0,0,0.6), 0 0 46px rgba(255,138,30,0.22);
 }
-.planet--a { width: 96px; height: 96px; left: 13%; top: 32%; animation: floatY 14s ease-in-out infinite; }
-.planet--b { width: 70px; height: 70px; left: 22%; bottom: -18px; opacity: .9; animation: floatY 18s ease-in-out infinite reverse; }
+.planet--a { width: 120px; height: 120px; left: 11%; top: 28%; animation: floatY 13s ease-in-out infinite; }
+.planet--b { width: 64px; height: 64px; right: 12%; top: 22%; opacity: .85; animation: floatY 17s ease-in-out infinite reverse; }
+.planet--c { width: 44px; height: 44px; left: 30%; bottom: 12%; opacity: .8; animation: floatY 21s ease-in-out infinite; }
 
 /* Małe rakietki/spodki dryfujące w tle */
 .sky-rocket { position: absolute; opacity: .5; }

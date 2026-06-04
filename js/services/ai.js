@@ -69,8 +69,10 @@ const stubProvider = {
 
   // Analiza nagrania słowa w Paszporcie Fonetycznym (stub: na bazie transkrypcji)
   async analyzeWord({ target, heard }) {
-    const ok = heard && heard.toLowerCase().replace(/[^a-z]/g, '')
-                 .includes(target.word.toLowerCase().replace(/[^a-z]/g, '').slice(0, 4));
+    // Tryb demo: łagodne dopasowanie (prawdziwy scoring fonemów dojdzie z Gemini/Whisper)
+    const norm = (s) => (s || '').toLowerCase().replace(/[^a-z]/g, '');
+    const h = norm(heard), t = norm(target.word);
+    const ok = !!h && (h.includes(t.slice(0, 3)) || t.includes(h.slice(0, 3)) || h === t);
     return {
       ok,
       focus: target.focus,

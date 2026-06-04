@@ -25,8 +25,8 @@ export function renderConversation(mount, lessonId) {
     el('div', { id: 'analyst-list' }),
   ]);
 
-  const input = el('input', { type: 'text', placeholder: 'Napisz po angielsku albo użyj mikrofonu →', onkeydown: (e) => { if (e.key === 'Enter') sendText(); } });
-  const micBtn = el('button.btn.btn--pink.mic-mini', { 'aria-label': 'Mów', onclick: toggleListen }, ['🎙']);
+  const micBtn = el('button.mic-btn', { 'aria-label': 'Mów', onclick: toggleListen }, ['🎙']);
+  const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center', text: 'Naciśnij mikrofon i mów 🎙' });
 
   const backChip = el('button.btn.btn--ghost', { onclick: () => navigate('#/lessons') }, ['← Lekcje']);
   const avatar = izabela({ mood: 'neutral', size: 64 });
@@ -45,8 +45,8 @@ export function renderConversation(mount, lessonId) {
         el('div', {}, [
           chatEl,
           lesson.type === 'task' ? taskBlock() : null,
-          el('div.composer', {}, [ input, micBtn ]),
-          el('p.faint', { style: 'margin-top:8px;font-size:.8rem', text: ai.provider === 'stub'
+          el('div.composer', { style: 'flex-direction:column;align-items:center;gap:10px' }, [ micBtn, micLabel ]),
+          el('p.faint', { style: 'margin-top:8px;font-size:.8rem;text-align:center', text: ai.provider === 'stub'
             ? 'Tryb demo (AI lokalne). Po podpięciu Gemini Izabela rozmawia w pełni naturalnie.' : '' }),
         ]),
         analystEl,
@@ -86,26 +86,26 @@ export function renderConversation(mount, lessonId) {
   }
 
   function setSpeaking(on) { setAvSpeaking(avatar, on); }
+  function setMicLabel(t) { const l = document.getElementById('mic-label'); if (l) l.textContent = t; }
 
-  // ---------- Wejście ucznia ----------
-  async function sendText() {
-    const text = input.value.trim();
-    if (!text) return;
-    input.value = '';
-    await handleUtterance(text);
-  }
-
+  // ---------- Wejście ucznia: TYLKO MÓWIENIE ----------
+  // Początkujący mówią po polsku → słuchamy pl-PL. Zaawansowani → en-US.
   function toggleListen() {
     if (listening) { recorder?.stop(); return; }
-    listening = true; micBtn.classList.add('recording'); micBtn.textContent = '⏹';
+    listening = true; micBtn.classList.add('recording'); micBtn.textContent = '⏹'; setMicLabel('Słucham… mów teraz 🎤');
     let heard = '';
     recorder = speech.listen({
-      onResult: (t) => { heard = t; input.value = t; },
+      lang: beginner ? 'pl-PL' : 'en-US',
+      onResult: (t) => { heard = t; setMicLabel(`„${t}"`); },
       onError: (e) => { toast('Mikrofon: ' + (e.message || e), 'error'); resetMic(); },
-      onEnd: async () => { resetMic(); if (heard) { input.value = ''; await handleUtterance(heard); } },
+      onEnd: async () => {
+        resetMic();
+        if (heard) await handleUtterance(heard);
+        else setMicLabel('Nie dosłyszałam — naciśnij i powiedz jeszcze raz 🎙');
+      },
     });
   }
-  function resetMic() { listening = false; micBtn.classList.remove('recording'); micBtn.textContent = '🎙'; }
+  function resetMic() { listening = false; micBtn.classList.remove('recording'); micBtn.textContent = '🎙'; setMicLabel('Naciśnij mikrofon i mów 🎙'); }
 
   async function handleUtterance(text) {
     addMessage('user', text);

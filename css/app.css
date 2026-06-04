@@ -7,6 +7,8 @@
   margin: 0 auto;
   padding: 24px clamp(16px, 4vw, 40px) 80px;
   min-height: 100vh;
+  position: relative;
+  z-index: 1;            /* treść nad tłem .cosmos */
 }
 
 /* ---------- Komponenty bazowe ---------- */

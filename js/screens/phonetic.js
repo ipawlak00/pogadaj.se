@@ -11,6 +11,8 @@ export function renderPhonetic(mount) {
   let recorder = null;
   let recording = false;
   let lastSpoken = -1;
+  let attempts = 0;
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
   const screen = el('div.fade-in');
   mount.append(topbar(), screen);
@@ -62,23 +64,37 @@ export function renderPhonetic(mount) {
     recording = true; draw();
     let heard = '';
     recorder = speech.listen({
+      lang: 'en-US',
       onResult: (text) => { heard = text; setStatus(`Słyszę: „${text}"`); },
       onError: (err) => { toast('Mikrofon: ' + (err.message || err), 'error'); recording = false; draw(); },
       onEnd: async () => {
         recording = false;
         const w = words[idx];
         const res = await ai.analyzeWord({ target: w, heard });
-        results.push(res);
-        toast(res.feedback, res.ok ? '' : 'error');
-        next();
+
+        if (res.ok) {
+          // Udało się — pochwała i przejście dalej (po polsku, kumpelsko)
+          results.push(res);
+          const praise = pick(['Ekstra! Idealnie. 🎉', 'O, super to wyszło! 👏', 'Brawo ziomek, dokładnie tak!']);
+          setStatus('✅ ' + praise + ' Lecimy dalej…');
+          speech.speak('Super!', { lang: 'pl-PL' });
+          setTimeout(() => next(), 1300);
+        } else {
+          // Nie do końca — bez przeskakiwania, zachęcamy do kolejnej próby
+          attempts++;
+          draw();   // przywróć przycisk mikrofonu (🎙) do ponownej próby
+          setStatus(`🙂 Ej, prawie! Posłuchaj jeszcze raz i powtórz: „${w.word}". Spróbuj śmiało, masz to!`);
+          speech.speak(w.word, { lang: 'en-US', rate: 0.8 });
+        }
       },
     });
   }
 
+  // Świadome pominięcie (przycisk) — dopiero to przechodzi dalej
   function skip() { results.push({ ok: false, focus: words[idx].focus, skipped: true }); next(); }
 
   async function next() {
-    idx++;
+    idx++; attempts = 0;
     if (idx >= words.length) return finish();
     draw();
   }
