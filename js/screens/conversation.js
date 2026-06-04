@@ -26,56 +26,60 @@ export function renderConversation(mount, lessonId) {
 
   const REC_LANG = 'en-US';        // uczeń powtarza po angielsku
 
-  // ---------- UI ----------
-  // Pełna ilustrowana Izabela (zamiast okrągłego awatara)
-  const avatar = el('div.iza-portrait', { title: 'Dotknij, aby powtórzyć', style: 'cursor:pointer' }, [
-    el('img', { src: 'assets/izabela/izabela-lesson.png', alt: 'Izabela',
-      onerror: function () { this.replaceWith(el('span', { text: '👩‍🚀', style: 'font-size:2rem' })); } }),
+  // W lekcji chowamy startowy motyw (pomarańcz + planety) — spójny widok stacji
+  document.body.classList.add('in-lesson');
+  window.addEventListener('hashchange', () => document.body.classList.remove('in-lesson'), { once: true });
+
+  // ---------- UI: duża scena (lewo) + dialog (prawo) ----------
+  const sceneImg = el('img', { id: 'scene-img', alt: 'Izabela', src: 'assets/izabela/izabela-lesson.png' });
+  const stageCaption = el('div.stage-caption', { id: 'stage-caption' });
+  const stage = el('div.lesson-stage', { title: 'Dotknij, aby powtórzyć' }, [
+    sceneImg,
+    el('div.stage-name', { text: '👩‍🚀 Izabela' }),
+    stageCaption,
   ]);
-  avatar.onclick = () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); };
-  // Mina/mówienie: na ilustracji sterujemy tylko poświatą
+  stage.onclick = () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); };
   const setMood = () => {};
-  const setAvSpeaking = (_n, on) => avatar.classList.toggle('speaking', !!on);
+  const setAvSpeaking = (_n, on) => stage.classList.toggle('speaking', !!on);
 
   const chatEl = el('div.chat');
   const stepArea = el('div', { id: 'step-area' });
-  const progressEl = el('div.faint', { id: 'step-progress', style: 'text-align:center;font-size:.8rem;margin:4px 0' });
+  const progressEl = el('div.faint', { id: 'step-progress', style: 'font-size:.8rem;margin:0 0 4px' });
   const micBtn = el('button.mic-btn', { 'aria-label': 'Mów', onclick: toggleListen }, ['🎙']);
   const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center', text: 'Naciśnij mikrofon i powtórz 🎙' });
   const suggestRow = el('div.suggest-row', { id: 'suggest-row' });
   const replayBtn = el('button.btn.btn--ghost', { onclick: () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); } }, ['🔊 Powtórz']);
 
-  // Przewijające się tło-scena (na body, pod treścią; sprzątane przy wyjściu)
-  document.querySelectorAll('.lesson-bg').forEach((n) => n.remove());
-  const sceneBg = el('div.lesson-bg', { id: 'lesson-bg' });
-  document.body.append(sceneBg);
-  window.addEventListener('hashchange', () => sceneBg.remove(), { once: true });
   let sceneTick = 0;
   function nextScene() {
     if (!SCENES.length) return;
     const path = SCENES[sceneTick % SCENES.length];
     sceneTick++;
-    sceneBg.style.backgroundImage = `linear-gradient(rgba(8,8,14,.82), rgba(8,8,14,.9)), url("${path}")`;
+    sceneImg.onerror = () => { sceneImg.onerror = null; sceneImg.src = 'assets/izabela/izabela-lesson.png'; };
+    sceneImg.src = path;
+  }
+  function showCaption(text) {
+    stageCaption.textContent = text;
+    stageCaption.classList.remove('show'); void stageCaption.offsetWidth; stageCaption.classList.add('show');
   }
   nextScene();
 
   mount.append(
     topbar(el('button.btn.btn--ghost', { onclick: () => navigate('#/lessons') }, ['← Lekcje'])),
-    el('div.stack.fade-in', {}, [
-      el('div.row', { style: 'gap:14px' }, [
-        avatar,
-        el('div', {}, [
-          el('h2.display', { style: 'margin:0', text: `${lesson.emoji} ${lesson.title}` }),
-          el('p.faint', { style: 'margin:2px 0 0;font-size:.78rem', text: '🔊 Nie słychać? Dotknij Izabeli, aby powtórzyła.' }),
+    el('div.lesson-view.fade-in', {}, [
+      stage,
+      el('div.lesson-panel', {}, [
+        el('div.row', { style: 'justify-content:space-between;align-items:center' }, [
+          el('h2.display', { style: 'margin:0;font-size:1.2rem', text: `${lesson.emoji} ${lesson.title}` }),
+          progressEl,
         ]),
-      ]),
-      progressEl,
-      chatEl,
-      stepArea,
-      suggestRow,
-      el('div.composer', { style: 'flex-direction:column;align-items:center;gap:10px' }, [
-        micBtn, micLabel,
-        el('div.row', { style: 'gap:10px' }, [replayBtn]),
+        chatEl,
+        stepArea,
+        suggestRow,
+        el('div.composer', { style: 'flex-direction:column;align-items:center;gap:10px' }, [
+          micBtn, micLabel,
+          el('div.row', { style: 'gap:10px' }, [replayBtn]),
+        ]),
       ]),
     ])
   );
@@ -143,6 +147,7 @@ export function renderConversation(mount, lessonId) {
   // Mówi i zapamiętuje ostatnią kwestię. lang 'pl'|'en'; slow = wolniej.
   function speakLine(text, { lang = 'pl', slow = false, onEnd } = {}) {
     lastLine = { text, lang, slow };
+    showCaption(text);
     setSpeaking(true);
     speech.speak(text, { lang: lang === 'en' ? 'en-US' : 'pl-PL', rate: slow ? 0.7 : 1,
       onEnd: () => { setSpeaking(false); onEnd?.(); } });
