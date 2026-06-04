@@ -1,6 +1,7 @@
 import { el, topbar, toast, navigate } from '../ui.js';
 import { store } from '../state.js';
 import { speech } from '../services/speech.js';
+import { ai } from '../services/ai.js';
 import { getLesson } from '../data/lessons.js';
 import { izabela, setMood, setSpeaking as setAvSpeaking } from '../components/izabela.js';
 
@@ -18,6 +19,11 @@ export function renderConversation(mount, lessonId) {
   let chunks = [], chunkIdx = 0, chunkDoneCb = null;
   let lastLine = null;
   let listening = false, recorder = null;
+
+  // Tryb prowadzenia: AI (Gemini) gdy podłączony, inaczej proste kroki
+  const aiLed = ai.provider === 'gemini';
+  const history = [];              // [{role:'user'|'model', text}] dla Gemini
+  let busy = false;               // czeka na odpowiedź AI
 
   const REC_LANG = 'en-US';        // uczeń powtarza po angielsku
 
@@ -56,12 +62,51 @@ export function renderConversation(mount, lessonId) {
     ])
   );
 
-  // Start: intro lekcji → pierwszy krok
-  if (lesson.intro) {
+  // Start: AI prowadzi lekcję, albo proste kroki (fallback bez Gemini)
+  if (aiLed) {
+    progressEl.textContent = '🎙️ Lekcja na żywo z Izabelą';
+    startAiLesson();
+  } else if (lesson.intro) {
     addMessage('izabela', lesson.intro);
     speakLine(lesson.intro, { lang: 'pl', onEnd: startStep });
   } else {
     startStep();
+  }
+
+  // ---------- tryb AI (lekcja prowadzona przez Gemini) ----------
+  function setBusy(on) {
+    busy = on;
+    micBtn.disabled = on;
+    micBtn.style.opacity = on ? '0.5' : '1';
+    if (on) setMicLabel('Izabela myśli… 🤔');
+    else setMicLabel('Naciśnij mikrofon i mów 🎙');
+  }
+
+  async function startAiLesson() {
+    const topic = lesson.aiTopic || lesson.title;
+    history.push({ role: 'user', text: `Rozpocznij lekcję mówienia na temat: "${topic}". Przywitaj się bardzo krótko i od razu naucz pierwszej, prostej frazy (po angielsku w cudzysłowie + znaczenie po polsku + poproś o powtórzenie).` });
+    await aiTurn();
+  }
+
+  async function aiTurn() {
+    setBusy(true);
+    const r = await ai.lessonReply(history);
+    setBusy(false);
+    if (r.unsupported) { startStep(); return; }     // brak Gemini → kroki
+    history.push({ role: 'model', text: r.say });
+    if (r.mistake) setMood(avatar, 'oops');
+    addMessage('izabela', r.say);
+    speakLine(r.say, { lang: r.lang, onEnd: () => setMood(avatar, 'neutral') });
+    renderSuggestions(r.suggestions);
+    if (r.done) {
+      store.markLessonDone(lesson.id);
+      toast('Lekcja ukończona! 🌟');
+    }
+  }
+
+  async function handleAiAnswer(text) {
+    history.push({ role: 'user', text });
+    await aiTurn();
   }
 
   // ---------- pomocnicze ----------
@@ -193,6 +238,7 @@ export function renderConversation(mount, lessonId) {
   // ---------- obsługa odpowiedzi (mówionej) ----------
   function handleAnswer(text) {
     addMessage('user', text);
+    if (aiLed) return handleAiAnswer(text);
     if (phase === 'chunks') return handleChunks(text);
     const step = steps[stepIdx];
     if (step.type === 'say') return handleSay(step, text);
@@ -235,6 +281,7 @@ export function renderConversation(mount, lessonId) {
 
   // ---------- mikrofon (tylko mówienie) ----------
   function toggleListen() {
+    if (busy) return;
     if (listening) { recorder?.stop(); return; }
     listening = true; micBtn.classList.add('recording'); micBtn.textContent = '⏹'; setMicLabel('Słucham… mów teraz 🎤');
     let heard = '';

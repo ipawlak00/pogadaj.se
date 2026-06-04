@@ -37,6 +37,27 @@ const BEGINNER_LEVELS = ['A1', 'A2'];
 export function currentLevel() { return store.get().onboarding.level || 'A2'; }
 export function isBeginner() { return BEGINNER_LEVELS.includes(currentLevel()); }
 
+// System prompt dla TRYBU LEKCJI prowadzonej przez AI (adaptacyjnie, ~45 min)
+function lessonSystem() {
+  const lvl = currentLevel();
+  const beg = isBeginner();
+  const profile = store.get().phonetic.profile;
+  return `${IZABELA.systemPrompt}
+
+TRYB LEKCJI — prowadzisz interaktywną, DŁUGĄ lekcję mówienia (cel ~45 minut):
+- Poziom ucznia: ${lvl}. ${beg ? 'POCZĄTKUJĄCY — prowadź po polsku, ucz bardzo prostych, krótkich angielskich fraz.' : 'Prowadź po angielsku, dobieraj trudność do ucznia.'}
+- Ucz krok po kroku: NAJPIERW powiedz frazę po angielsku (w cudzysłowie „..."), POTEM jej znaczenie po polsku, POTEM poproś, żeby uczeń ją POWTÓRZYŁ na głos.
+- Wypowiedź ucznia pochodzi z rozpoznawania mowy i bywa niedokładna — bądź wyrozumiała, nie czepiaj się drobiazgów.
+- Gdy powtórzy dobrze: krótko pochwal i wprowadź kolejną frazę albo proste pytanie. Gdy nie wychodzi: rozbij frazę na krótsze KAWAŁKI i ćwicz fragment po fragmencie, mów wolniej.
+- Stopniowo zwiększaj trudność, zmieniaj podtematy, wplataj krótkie pytania do ucznia. Lekcja ma być długa i angażująca — NIE kończ jej szybko.
+- Jedna wypowiedź = 1-3 krótkie zdania.
+- "suggestions" to 2-4 krótkie angielskie frazy, które uczeń może teraz powiedzieć.
+Zwracaj WYŁĄCZNIE JSON:
+{"say":"...", "lang":"pl"|"en", "suggestions":["..."], "correction":{"spoken":"..."}|null, "mistake":{"bad":"...","good":"...","note":"...","tag":"grammar|vocab|pronunciation"}|null, "done":false}
+Ustaw "done":true dopiero, gdy lekcja naprawdę dobiega końca (po wielu ćwiczeniach).
+Profil fonetyczny ucznia: ${JSON.stringify(profile)}.`;
+}
+
 const stubProvider = {
   async greet() { return { reply: pick(IZABELA.greetings), correction: null, mistake: null, lang: 'pl' }; },
 
@@ -83,6 +104,9 @@ const stubProvider = {
         : `Hmm, brzmiało jak „${heard || '...'}". Spróbuj: ${target.hint}`,
     };
   },
+
+  // Lekcja AI niedostępna bez Gemini — sygnał do fallbacku na proste kroki
+  async lessonReply() { return { say: '', lang: 'pl', suggestions: [], done: true, unsupported: true }; },
 
   // Budowa profilu fonetycznego z wyników słówek
   async buildProfile({ results }) {
@@ -152,6 +176,36 @@ const geminiProvider = {
   },
   async analyzeWord(args) { return stubProvider.analyzeWord(args); },     // wymowa lokalnie (na razie)
   async buildProfile(args) { return stubProvider.buildProfile(args); },
+
+  // Wielo-turowe wywołanie (lekcja prowadzona przez AI)
+  async _callContents(contents, systemText) {
+    const key = geminiKey();
+    const { model, proxyUrl } = CONFIG.GEMINI;
+    const url = proxyUrl || `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    const body = {
+      system_instruction: { parts: [{ text: systemText }] },
+      contents,
+      generationConfig: { responseMimeType: 'application/json', temperature: 0.85 },
+    };
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!res.ok) throw new Error('Gemini API ' + res.status + ': ' + (await res.text()).slice(0, 200));
+    const data = await res.json();
+    return JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text || '{}');
+  },
+  async lessonReply(history) {
+    try {
+      const contents = history.map((h) => ({ role: h.role, parts: [{ text: h.text }] }));
+      const r = await this._callContents(contents, lessonSystem());
+      return {
+        say: r.say || r.reply || '', lang: r.lang || (isBeginner() ? 'pl' : 'en'),
+        suggestions: Array.isArray(r.suggestions) ? r.suggestions.slice(0, 4) : [],
+        correction: r.correction || null, mistake: r.mistake || null, done: !!r.done,
+      };
+    } catch (e) {
+      console.warn('[Gemini lesson]', e);
+      return { say: 'Ups, chwilowo nie mogę połączyć się z AI 😅 Sprawdź klucz i spróbuj jeszcze raz.', lang: 'pl', suggestions: [], done: false };
+    }
+  },
 };
 
 const useGemini = hasGeminiKey();
@@ -164,4 +218,5 @@ export const ai = {
   hint: (...a) => provider.hint(...a),
   analyzeWord: (...a) => provider.analyzeWord(...a),
   buildProfile: (...a) => provider.buildProfile(...a),
+  lessonReply: (...a) => provider.lessonReply(...a),
 };

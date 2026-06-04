@@ -17,6 +17,7 @@ export const LESSONS = [
     badge: 'free',
     desc: 'Najprostsze powitania i pierwsze słowa. Spokojnie, słowo po słowie.',
     type: 'lesson',
+    aiTopic: 'Powitania i przedstawianie się: hello, good morning, thank you, please, my name is, nice to meet you, I am from Poland. Bardzo podstawowy poziom.',
     intro: 'Cześć! Jestem Izabela. Zaczynamy zupełnie spokojnie. Ja powiem słowo po angielsku, potem co znaczy po polsku, a Ty powtórzysz za mną. Nie ma złych odpowiedzi! Gotowy? Lecimy!',
     steps: [
       { type: 'say', en: 'Hello', pl: 'Cześć' },
@@ -49,6 +50,7 @@ export const LESSONS = [
     badge: 'free',
     desc: 'Zwroty na co dzień: jak się masz, co lubisz, do zobaczenia.',
     type: 'lesson',
+    aiTopic: 'Codzienne zwroty: how are you, I am fine, I am tired, I like..., see you later, goodbye. Krótkie pytania o samopoczucie i upodobania. Poziom podstawowy.',
     intro: 'Super, że jesteś! Teraz kilka zwrotów, których używa się codziennie. Tak samo: słuchasz mnie i powtarzasz. Dasz radę!',
     steps: [
       { type: 'say', en: 'How are you?', pl: 'Jak się masz?' },
@@ -81,6 +83,7 @@ export const LESSONS = [
     badge: 'free',
     desc: 'Krótkie, przydatne zdania — poprosić, zapytać, powiedzieć o sobie.',
     type: 'lesson',
+    aiTopic: 'Proste, przydatne zdania w podróży i na co dzień: I want water, I am hungry, where is the toilet, how much is it, can you help me, proste zdania w czasie przeszłym (yesterday I went...). Poziom podstawowy.',
     intro: 'Lecimy dalej! Teraz całe krótkie zdania, które naprawdę przydają się w podróży i na co dzień. Słuchasz i powtarzasz za mną.',
     steps: [
       { type: 'say', en: 'I want water', pl: 'Chcę wody' },
