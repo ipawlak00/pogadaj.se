@@ -3,7 +3,7 @@
 // =============================================================
 
 import { setGeminiKey, hasGeminiKey } from './services/ai.js';
-import { setElevenCreds, hasEleven } from './services/speech.js';
+import { setGoogleTTSKey, hasGoogleTTS } from './services/speech.js';
 
 // Twórca elementów: el('div.card', { onclick }, [children])
 export function el(selector, props = {}, children = []) {
@@ -54,17 +54,15 @@ export function aiConnectButton() {
   }, [connected ? '🟢 Izabela AI: połączona (zmień klucz)' : '🔌 Połącz Izabelę z prawdziwym AI']);
 }
 
-// Przycisk podłączenia GŁOSU Izabeli (ElevenLabs — sklonowany głos).
-// Klucz i Voice ID zapisywane tylko na urządzeniu (localStorage).
+// Przycisk podłączenia GŁOSU Izabeli (Google Cloud Text-to-Speech).
+// Klucz zapisywany tylko na urządzeniu (localStorage).
 export function voiceConnectButton() {
-  const connected = hasEleven();
+  const connected = hasGoogleTTS();
   return el('button.btn.btn--ghost', { style: 'font-size:.8rem',
     onclick: () => {
-      const key = prompt('1/2 — Wklej swój ElevenLabs API key (z elevenlabs.io → profil → API key).\n\nZostaje tylko na tym urządzeniu.');
+      const key = prompt('Wklej swój klucz API Google Cloud Text-to-Speech.\n\n(Google Cloud Console → APIs & Services → Credentials → API key, z włączonym "Cloud Text-to-Speech API").\n\nZostaje tylko na tym urządzeniu.');
       if (!key || !key.trim()) return;
-      const voice = prompt('2/2 — Wklej Voice ID Twojego sklonowanego głosu (ElevenLabs → Voices → Twój głos → ID).');
-      if (!voice || !voice.trim()) return;
-      setElevenCreds(key, voice); location.reload();
+      setGoogleTTSKey(key); location.reload();
     },
-  }, [connected ? '🟢 Głos Izabeli: Twój głos (zmień)' : '🎤 Ustaw głos Izabeli (Twój głos)']);
+  }, [connected ? '🟢 Głos Izabeli: Google (zmień klucz)' : '🎙 Ustaw głos Izabeli (Google TTS)']);
 }

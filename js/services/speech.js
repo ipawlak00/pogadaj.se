@@ -22,15 +22,60 @@ export function setElevenCreds(key, voice) {
 }
 export function hasEleven() { return !!(ls(EL_KEY) && ls(EL_VOICE)); }
 
+// ---- Google Cloud Text-to-Speech (preferowane: jeden rachunek z Firebase/Gemini) ----
+const GTTS_KEY = 'pogadajse.gttsKey';
+export function setGoogleTTSKey(key) {
+  try { key ? localStorage.setItem(GTTS_KEY, key.trim()) : localStorage.removeItem(GTTS_KEY); } catch {}
+}
+export function hasGoogleTTS() { return !!ls(GTTS_KEY); }
+
+// Głosy Izabeli wg języka (żeńskie, naturalne WaveNet)
+const GTTS_VOICE = {
+  pl: { languageCode: 'pl-PL', name: 'pl-PL-Wavenet-A', ssmlGender: 'FEMALE' },
+  en: { languageCode: 'en-US', name: 'en-US-Wavenet-F', ssmlGender: 'FEMALE' },
+};
+
 let currentAudio = null;
-const elCache = new Map();   // cache audio po (voice|text), oszczędza limit znaków
+const audioCache = new Map();   // cache audio po (voice|text) — oszczędza koszt znaków
+
+async function speakGoogle(text, { lang = 'pl-PL', rate = 1, pitch = 0, onEnd } = {}) {
+  try {
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    const v = GTTS_VOICE[lang.slice(0, 2).toLowerCase()] || GTTS_VOICE.pl;
+    const cacheKey = v.name + '|' + text;
+    let url = audioCache.get(cacheKey);
+    if (!url) {
+      const res = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${ls(GTTS_KEY)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          input: { text },
+          voice: v,
+          audioConfig: { audioEncoding: 'MP3', speakingRate: rate || 1, pitch: (pitch && pitch <= 2 ? pitch : 0) },
+        }),
+      });
+      if (!res.ok) throw new Error('Google TTS ' + res.status + ': ' + (await res.text()).slice(0, 200));
+      const data = await res.json();
+      url = 'data:audio/mp3;base64,' + data.audioContent;
+      audioCache.set(cacheKey, url);
+    }
+    const audio = new Audio(url);
+    currentAudio = audio;
+    audio.onended = () => { if (currentAudio === audio) currentAudio = null; onEnd?.(); };
+    audio.onerror = () => onEnd?.();
+    await audio.play();
+  } catch (e) {
+    console.warn('[GoogleTTS] fallback do głosu przeglądarki:', e);
+    speakWeb(text, { lang, onEnd });
+  }
+}
 
 async function speakEleven(text, { onEnd, rate } = {}) {
   try {
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
     const voice = ls(EL_VOICE);
     const cacheKey = voice + '|' + text;
-    let url = elCache.get(cacheKey);
+    let url = audioCache.get(cacheKey);
     if (!url) {
       const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}`, {
         method: 'POST',
@@ -43,7 +88,7 @@ async function speakEleven(text, { onEnd, rate } = {}) {
       });
       if (!res.ok) throw new Error('ElevenLabs ' + res.status + ': ' + (await res.text()).slice(0, 160));
       url = URL.createObjectURL(await res.blob());
-      elCache.set(cacheKey, url);
+      audioCache.set(cacheKey, url);
     }
     const audio = new Audio(url);
     if (rate) audio.playbackRate = rate;
@@ -107,10 +152,11 @@ export const speech = {
   },
 
   // --- Synteza mowy (TTS) — głos Izabeli ---
-  // Mówi: ElevenLabs (głos Izabeli) jeśli skonfigurowany, inaczej wbudowany głos.
+  // Priorytet: Google Cloud TTS → ElevenLabs → wbudowany głos przeglądarki.
   speak(text, opts = {}) {
     const clean = forSpeech(text);
     if (!clean) { opts.onEnd?.(); return; }
+    if (hasGoogleTTS()) return speakGoogle(clean, opts);
     if (hasEleven()) return speakEleven(clean, opts);
     return speakWeb(clean, opts);
   },
