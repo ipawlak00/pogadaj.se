@@ -19,12 +19,21 @@
   <link rel="stylesheet" href="css/app.css" />
 </head>
 <body>
-  <!-- Tło: kosmos / mgławica / gwiazdy -->
+  <!-- Tło: kosmos / planety / rakietki (wg projektu logowania) -->
   <div class="cosmos" aria-hidden="true">
     <div class="stars"></div>
-    <div class="nebula nebula--1"></div>
-    <div class="nebula nebula--2"></div>
-    <div class="planet"></div>
+    <div class="planet planet--jupiter planet--a"></div>
+    <div class="planet planet--jupiter planet--b"></div>
+    <div class="sky-rocket sky-rocket--1">
+      <svg viewBox="0 0 60 30" width="60" height="30"><g fill="none" stroke="#8a8a96" stroke-width="2">
+        <ellipse cx="30" cy="18" rx="22" ry="7"/><path d="M16 14 A16 10 0 0 1 44 14"/><circle cx="30" cy="11" r="3"/>
+      </g></svg>
+    </div>
+    <div class="sky-rocket sky-rocket--2">
+      <svg viewBox="0 0 60 30" width="44" height="22"><g fill="none" stroke="#7a7a86" stroke-width="2">
+        <ellipse cx="30" cy="18" rx="22" ry="7"/><path d="M16 14 A16 10 0 0 1 44 14"/><circle cx="30" cy="11" r="3"/>
+      </g></svg>
+    </div>
   </div>
 
   <!-- Tu router montuje aktywny ekran -->

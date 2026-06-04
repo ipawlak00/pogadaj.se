@@ -16,7 +16,7 @@ export function renderWelcome(mount) {
       el('div.auth-card', {}, [
         el('div.field', {}, [ el('label', { text: 'Email' }), email ]),
         el('div.field', {}, [ el('label', { text: 'Hasło' }), pass ]),
-        el('button.btn.btn--primary.auth-submit', { onclick: enterAsGuest }, ['Zaloguj się ', el('span', { text: '→' })]),
+        el('button.btn.btn--primary.auth-submit', { onclick: enterAsGuest }, ['Zaloguj się', el('span.arrow', { text: '→' })]),
 
         el('div.auth-divider', { text: 'lub kontynuuj przez' }),
         el('div.auth-oauth', {}, [
@@ -28,6 +28,10 @@ export function renderWelcome(mount) {
       ]),
 
       el('div.auth-footer', { html: 'POWERED BY <b>IZABELACODE</b>' }),
+    ]),
+    el('div.iza-badge', { title: 'Izabela' }, [
+      el('img', { src: 'assets/izabela/avatar.png', alt: 'Izabela', onerror: function(){ this.replaceWith(el('span',{text:'👩‍🚀',style:'font-size:1.5rem'})); } }),
+      el('span.dot'),
     ])
   );
 

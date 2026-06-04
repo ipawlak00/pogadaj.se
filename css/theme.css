@@ -94,30 +94,29 @@ a { color: var(--accent-bright); text-decoration: none; }
   opacity: 0.7;
   animation: drift 120s linear infinite;
 }
-.nebula {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.35;
-}
-.nebula--1 { width: 480px; height: 480px; top: -120px; right: -80px; background: var(--violet); }
-.nebula--2 { width: 420px; height: 420px; bottom: -140px; left: -100px; background: var(--accent); }
-/* Planeta typu Jowisz — pasy bursztynowe */
+/* Planeta typu Jowisz — pasy bursztynowe (jak w projekcie logowania) */
 .planet {
   position: absolute;
-  width: 120px; height: 120px;
-  left: 8%; top: 30%;
   border-radius: 50%;
   background:
-    repeating-linear-gradient(95deg, #d98a3a 0 8px, #b5672a 8px 14px, #e9a85a 14px 20px),
-    radial-gradient(circle at 35% 30%, #f0b870, #8a4a18);
-  background-blend-mode: overlay;
-  box-shadow: inset -22px -14px 40px rgba(0,0,0,0.55), 0 0 50px rgba(255,138,30,0.25);
-  opacity: 0.7;
+    repeating-linear-gradient(92deg,
+      rgba(120,70,30,.55) 0 6px, rgba(255,180,90,.0) 6px 9px,
+      rgba(90,50,20,.5) 9px 15px, rgba(255,200,120,.0) 15px 18px),
+    radial-gradient(circle at 34% 28%, #f3bd72, #c87a30 55%, #7a431a);
+  box-shadow: inset -16px -10px 34px rgba(0,0,0,0.6), 0 0 46px rgba(255,138,30,0.22);
 }
+.planet--a { width: 96px; height: 96px; left: 13%; top: 32%; animation: floatY 14s ease-in-out infinite; }
+.planet--b { width: 70px; height: 70px; left: 22%; bottom: -18px; opacity: .9; animation: floatY 18s ease-in-out infinite reverse; }
+
+/* Małe rakietki/spodki dryfujące w tle */
+.sky-rocket { position: absolute; opacity: .5; }
+.sky-rocket--1 { left: 4%; top: 38%; animation: dr8 26s linear infinite; }
+.sky-rocket--2 { right: 14%; bottom: 14%; animation: dr8 34s linear infinite reverse; }
+@keyframes floatY { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
+@keyframes dr8 { 0% { transform: translate(0,0); } 50% { transform: translate(30px,-18px); } 100% { transform: translate(0,0); } }
 
 @keyframes drift { from { background-position: 0 0; } to { background-position: 600px 600px; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .stars { animation: none; }
+  .stars, .planet, .sky-rocket { animation: none; }
 }
