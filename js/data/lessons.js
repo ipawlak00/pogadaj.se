@@ -1,60 +1,108 @@
 // =============================================================
-//  3 darmowe lekcje testowe (Haczyk / lejek sprzedażowy)
+//  3 darmowe lekcje — wieloetapowe, dla początkujących
 // -------------------------------------------------------------
-//  1. Rozbicie lodów  — luźna rozmowa, budowanie pewności
-//  2. Aktywna korekta — rozmowa + zadanie z luką + Głosowe Koło Ratunkowe
-//  3. Cliffhanger     — podsumowanie braków + zachęta do subskrypcji
+//  Każda lekcja = sekwencja krótkich ćwiczeń MÓWIENIA (steps):
+//   - { type:'say', en, pl }                  → Izabela czyta EN, mówi znaczenie PL, uczeń powtarza
+//   - { type:'fill', sentence, sentencePL,    → uczeń mówi brakujące słowo, potem całe zdanie
+//       answer, fullSentence, options, hint }
+//  Słowo do podkreślenia w sentencePL oznaczamy *gwiazdkami*.
 // =============================================================
 
 export const LESSONS = [
   {
-    id: 'icebreaker',
+    id: 'first-steps',
     num: 1,
-    title: 'Rozbicie lodów',
-    emoji: '🧊',
+    title: 'Pierwsze kroki',
+    emoji: '👋',
     badge: 'free',
-    desc: 'Luźna pogawędka z Izabelą. Zero stresu, budujemy pewność siebie.',
-    type: 'conversation',
-    opener: "Hi there! So glad you're here. Tell me — what made you want to learn English? Take your time! 😊",
-    openerPL: "Cześć! Jestem Izabela 👋 Nie martw się — prowadzę po polsku. Spróbujmy razem powiedzieć coś po angielsku. Na rozgrzewkę przywitaj się — spróbuj powiedzieć: „Hello, my name is…”. Śmiało, nie ma złych odpowiedzi!",
-    goal: 'Spróbuj powiedzieć kilka prostych zdań po angielsku.',
-    suggestions: ['Hello!', 'My name is...', 'I am from Poland', 'I like...'],
+    desc: 'Najprostsze powitania i pierwsze słowa. Spokojnie, słowo po słowie.',
+    type: 'lesson',
+    intro: 'Cześć! Jestem Izabela. Zaczynamy zupełnie spokojnie. Ja powiem słowo po angielsku, potem co znaczy po polsku, a Ty powtórzysz za mną. Nie ma złych odpowiedzi! Gotowy? Lecimy!',
+    steps: [
+      { type: 'say', en: 'Hello', pl: 'Cześć' },
+      { type: 'say', en: 'Good morning', pl: 'Dzień dobry' },
+      { type: 'say', en: 'Thank you', pl: 'Dziękuję' },
+      { type: 'say', en: 'Please', pl: 'Proszę' },
+      { type: 'say', en: 'My name is Anna', pl: 'Mam na imię Anna' },
+      {
+        type: 'fill',
+        sentence: 'I ___ from Poland.',
+        sentencePL: 'Jestem *z* Polski.',
+        answer: 'am',
+        fullSentence: 'I am from Poland.',
+        options: [
+          { en: 'am', pl: 'jestem (ja)' },
+          { en: 'is', pl: 'jest (on/ona)' },
+          { en: 'are', pl: 'jesteś / są' },
+        ],
+        hint: 'Mówisz o sobie — „ja jestem". Po angielsku „I" łączymy z „am".',
+      },
+      { type: 'say', en: 'Nice to meet you', pl: 'Miło Cię poznać' },
+    ],
   },
+
   {
-    id: 'active-correction',
+    id: 'daily-phrases',
     num: 2,
-    title: 'Aktywna korekta błędów',
-    emoji: '🛰️',
+    title: 'Codzienne zwroty',
+    emoji: '☕',
     badge: 'free',
-    desc: 'Rozmawiamy + małe zadanie z luką. Utknąłeś? Powiedz „Agent, podpowiedz!".',
-    type: 'task',
-    opener: "Okej, mały trening mówienia! Pokażę Ci zdanie po angielsku, a na dole po polsku — podkreślone słowo to wskazówka. Twoim zadaniem jest POWIEDZIEĆ brakujące słowo. To zdanie z przeszłości, więc kojarz to z czymś, co już się wydarzyło. Śmiało, mów do mikrofonu!",
-    task: {
-      sentence: 'Yesterday I ___ to the cinema with my friends.',
-      sentencePL: 'Wczoraj *poszedłem* do kina z przyjaciółmi.',  // *…* = podkreślone, klik → czyta EN
-      answer: 'went',
-      fullSentence: 'Yesterday I went to the cinema with my friends.',
-      options: [
-        { en: 'go', pl: 'iść (teraz, codziennie)' },
-        { en: 'went', pl: 'poszedłem / poszłam — wczoraj, w przeszłości' },
-        { en: 'gone', pl: '(już) poszło, gdy coś się skończyło' },
-      ],
-      hintSpoken: 'To było wczoraj — czyli coś, co już się wydarzyło. Pomyśl: chcesz powiedzieć „iść", ale o czymś, co już zrobiłeś. Posłuchaj trzech opcji i wybierz tę, która pasuje do przeszłości.',
-      explanation: 'Mówimy o wczoraj, więc o przeszłości — dlatego „went". „Yesterday" (wczoraj) to sygnał, że coś już się wydarzyło.',
-    },
-    goal: 'Powiedz brakujące słowo, a potem całe zdanie za Izabelą.',
-    suggestions: ['Agent, podpowiedz!'],
+    desc: 'Zwroty na co dzień: jak się masz, co lubisz, do zobaczenia.',
+    type: 'lesson',
+    intro: 'Super, że jesteś! Teraz kilka zwrotów, których używa się codziennie. Tak samo: słuchasz mnie i powtarzasz. Dasz radę!',
+    steps: [
+      { type: 'say', en: 'How are you?', pl: 'Jak się masz?' },
+      { type: 'say', en: 'I am fine', pl: 'Mam się dobrze' },
+      { type: 'say', en: 'I am tired', pl: 'Jestem zmęczony' },
+      { type: 'say', en: 'I like coffee', pl: 'Lubię kawę' },
+      {
+        type: 'fill',
+        sentence: 'I ___ tea.',
+        sentencePL: '*Lubię* herbatę.',
+        answer: 'like',
+        fullSentence: 'I like tea.',
+        options: [
+          { en: 'like', pl: 'lubię' },
+          { en: 'have', pl: 'mam' },
+          { en: 'want', pl: 'chcę' },
+        ],
+        hint: 'Coś Ci smakuje, sprawia przyjemność — czyli to „lubisz".',
+      },
+      { type: 'say', en: 'See you later', pl: 'Do zobaczenia' },
+      { type: 'say', en: 'Goodbye', pl: 'Do widzenia' },
+    ],
   },
+
   {
-    id: 'cliffhanger',
+    id: 'simple-sentences',
     num: 3,
-    title: 'Twój raport z kosmosu',
-    emoji: '🚀',
+    title: 'Proste zdania',
+    emoji: '💬',
     badge: 'free',
-    desc: 'Izabela podsumowuje, co już umiesz i nad czym warto popracować dalej.',
-    type: 'summary',
-    opener: "Świetna robota! Zebrałam wszystko, co dziś zauważyłam. Zobacz swój raport — i to dopiero początek tego, co możemy razem ogarnąć... 👀",
-    goal: 'Zobacz podsumowanie i odblokuj pełny kurs.',
+    desc: 'Krótkie, przydatne zdania — poprosić, zapytać, powiedzieć o sobie.',
+    type: 'lesson',
+    intro: 'Lecimy dalej! Teraz całe krótkie zdania, które naprawdę przydają się w podróży i na co dzień. Słuchasz i powtarzasz za mną.',
+    steps: [
+      { type: 'say', en: 'I want water', pl: 'Chcę wody' },
+      { type: 'say', en: 'I am hungry', pl: 'Jestem głodny' },
+      {
+        type: 'fill',
+        sentence: 'Yesterday I ___ to the shop.',
+        sentencePL: 'Wczoraj *poszedłem* do sklepu.',
+        answer: 'went',
+        fullSentence: 'Yesterday I went to the shop.',
+        options: [
+          { en: 'go', pl: 'iść (teraz, codziennie)' },
+          { en: 'went', pl: 'poszedłem / poszłam (wczoraj)' },
+          { en: 'gone', pl: '(już) poszło, skończone' },
+        ],
+        hint: 'To było wczoraj — czyli coś, co już się wydarzyło, w przeszłości.',
+      },
+      { type: 'say', en: 'Where is the toilet?', pl: 'Gdzie jest toaleta?' },
+      { type: 'say', en: 'How much is it?', pl: 'Ile to kosztuje?' },
+      { type: 'say', en: 'Can you help me?', pl: 'Możesz mi pomóc?' },
+      { type: 'say', en: 'Have a nice day', pl: 'Miłego dnia' },
+    ],
   },
 ];
 

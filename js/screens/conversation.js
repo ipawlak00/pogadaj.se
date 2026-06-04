@@ -1,164 +1,99 @@
 import { el, topbar, toast, navigate } from '../ui.js';
 import { store } from '../state.js';
 import { speech } from '../services/speech.js';
-import { ai, isBeginner } from '../services/ai.js';
 import { getLesson } from '../data/lessons.js';
 import { izabela, setMood, setSpeaking as setAvSpeaking } from '../components/izabela.js';
 
+// Lekcja = sekwencja krótkich ćwiczeń mówienia. Izabela czyta po angielsku,
+// tłumaczy na polski, a uczeń powtarza. Gdy nie wychodzi — dzieli na kawałki.
 export function renderConversation(mount, lessonId) {
   const lesson = getLesson(lessonId);
   if (!lesson) { navigate('#/lessons'); return; }
+  const steps = lesson.steps || [];
 
-  if (lesson.type === 'summary') return renderSummary(mount, lesson);
+  // stan
+  let stepIdx = 0;
+  let phase = '';                 // 'repeat' | 'word' | 'sentence' | 'chunks'
+  let attempts = 0;
+  let chunks = [], chunkIdx = 0, chunkDoneCb = null;
+  let lastLine = null;
+  let listening = false, recorder = null;
 
-  const beginner = isBeginner();   // dostępne dla taskBlock() i całej rozmowy
-  const messages = [];     // { who:'izabela'|'user', text, correction? }
-  const sessionMistakes = [];
-  let listening = false;
-  let recorder = null;
-  let userTurns = 0;
-  let taskPhase = 'word';   // 'word' → powiedz słowo, 'sentence' → całe zdanie, 'chunks' → po kawałku
-  let taskAttempts = 0;
-  let chunks = [];
-  let chunkIdx = 0;
-  let lastLine = null;       // ostatnia wypowiedź Izabeli (do powtórzenia)
+  const REC_LANG = 'en-US';        // uczeń powtarza po angielsku
 
-  const chatEl = el('div.chat');
-  const analystEl = el('div.card.analyst', {}, [
-    el('h3.display', { text: '🧪 Analityk' }),
-    el('p.faint', { id: 'analyst-empty', text: 'Tu pojawią się Twoje błędy z tłumaczeniem — do późniejszej powtórki.' }),
-    el('div', { id: 'analyst-list' }),
-  ]);
-
-  const micBtn = el('button.mic-btn', { 'aria-label': 'Mów', onclick: toggleListen }, ['🎙']);
-  const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center', text: 'Naciśnij mikrofon i mów 🎙' });
-  const suggestRow = el('div.suggest-row', { id: 'suggest-row' });
-
-  const backChip = el('button.btn.btn--ghost', { onclick: () => navigate('#/lessons') }, ['← Lekcje']);
+  // ---------- UI ----------
   const avatar = izabela({ mood: 'neutral', size: 64 });
-  // Dotknij Izabelę, by powtórzyła ostatnią wypowiedź (gdy się nie dosłyszało)
   avatar.style.cursor = 'pointer';
   avatar.title = 'Dotknij, aby powtórzyć';
   avatar.onclick = () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); };
 
+  const chatEl = el('div.chat');
+  const stepArea = el('div', { id: 'step-area' });
+  const progressEl = el('div.faint', { id: 'step-progress', style: 'text-align:center;font-size:.8rem;margin:4px 0' });
+  const micBtn = el('button.mic-btn', { 'aria-label': 'Mów', onclick: toggleListen }, ['🎙']);
+  const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center', text: 'Naciśnij mikrofon i powtórz 🎙' });
+  const suggestRow = el('div.suggest-row', { id: 'suggest-row' });
+  const replayBtn = el('button.btn.btn--ghost', { onclick: () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); } }, ['🔊 Powtórz']);
+
   mount.append(
-    topbar(backChip),
+    topbar(el('button.btn.btn--ghost', { onclick: () => navigate('#/lessons') }, ['← Lekcje'])),
     el('div.stack.fade-in', {}, [
       el('div.row', { style: 'gap:14px' }, [
         avatar,
         el('div', {}, [
           el('h2.display', { style: 'margin:0', text: `${lesson.emoji} ${lesson.title}` }),
-          el('p.faint', { style: 'margin:2px 0 0', text: lesson.goal }),
           el('p.faint', { style: 'margin:2px 0 0;font-size:.78rem', text: '🔊 Nie słychać? Dotknij Izabeli, aby powtórzyła.' }),
         ]),
       ]),
-      el('div.convo-layout', {}, [
-        el('div', {}, [
-          chatEl,
-          lesson.type === 'task' ? taskBlock() : null,
-          suggestRow,
-          el('div.composer', { style: 'flex-direction:column;align-items:center;gap:10px' }, [ micBtn, micLabel ]),
-          el('p.faint', { style: 'margin-top:8px;font-size:.8rem;text-align:center', text: ai.provider === 'stub'
-            ? 'Tryb demo (AI lokalne). Po podpięciu Gemini Izabela rozmawia w pełni naturalnie.' : '' }),
-        ]),
-        analystEl,
+      progressEl,
+      chatEl,
+      stepArea,
+      suggestRow,
+      el('div.composer', { style: 'flex-direction:column;align-items:center;gap:10px' }, [
+        micBtn, micLabel,
+        el('div.row', { style: 'gap:10px' }, [replayBtn]),
       ]),
     ])
   );
 
-  // Otwarcie lekcji — Izabela wita (po polsku dla początkujących i w zadaniach)
-  const opener = beginner && lesson.openerPL ? lesson.openerPL : lesson.opener;
-  const openerLang = (beginner || lesson.type === 'task') ? 'pl' : 'en';
-  addMessage('izabela', opener);
-  speakLine(opener, { lang: openerLang });
+  // Start: intro lekcji → pierwszy krok
+  if (lesson.intro) {
+    addMessage('izabela', lesson.intro);
+    speakLine(lesson.intro, { lang: 'pl', onEnd: startStep });
+  } else {
+    startStep();
+  }
 
-  // ---------- Rendering wiadomości ----------
-  function addMessage(who, text, correction) {
-    messages.push({ who, text, correction });
+  // ---------- pomocnicze ----------
+  function addMessage(who, text) {
     const node = el(`div.msg.msg--${who}`, {}, [
       el('div.who', { text: who === 'izabela' ? 'Izabela' : 'Ty' }),
       el('div', { text }),
-      correction ? el('div.correction', { html: `💡 <b>Poprawka:</b> ${correction.spoken}` }) : null,
     ]);
     chatEl.append(node);
     chatEl.scrollTop = chatEl.scrollHeight;
   }
-
-  function addMistake(m) {
-    sessionMistakes.push(m);
-    store.addMistake(m);
-    document.getElementById('analyst-empty')?.classList.add('hidden');
-    document.getElementById('analyst-list').prepend(
-      el('div.mistake.fade-in', {}, [
-        el('div.tag', { text: m.tag || 'błąd' }),
-        el('div', {}, [ el('span.bad', { text: m.bad }), ' → ', el('span.good', { text: m.good }) ]),
-        el('div.note', { text: m.note }),
-      ])
-    );
-  }
-
   function setSpeaking(on) { setAvSpeaking(avatar, on); }
-  function setMicLabel(t) { const l = document.getElementById('mic-label'); if (l) l.textContent = t; }
+  function setMicLabel(t) { micLabel.textContent = t; }
 
-  // Mówi i zapamiętuje ostatnią kwestię (do powtórzenia). lang: 'pl'|'en'
+  // Mówi i zapamiętuje ostatnią kwestię. lang 'pl'|'en'; slow = wolniej.
   function speakLine(text, { lang = 'pl', slow = false, onEnd } = {}) {
     lastLine = { text, lang, slow };
     setSpeaking(true);
-    speech.speak(text, {
-      lang: lang === 'en' ? 'en-US' : 'pl-PL', rate: slow ? 0.7 : 1,
-      onEnd: () => { setSpeaking(false); onEnd?.(); },
-    });
+    speech.speak(text, { lang: lang === 'en' ? 'en-US' : 'pl-PL', rate: slow ? 0.7 : 1,
+      onEnd: () => { setSpeaking(false); onEnd?.(); } });
   }
-
-  // Podpowiedzi słów: chip pokazuje frazę, dotknięcie = Izabela czyta ją po angielsku
-  function renderSuggestions(list) {
-    suggestRow.replaceChildren();
-    if (!list || !list.length) return;
-    suggestRow.append(el('div.suggest-hint', { text: '💡 Możesz powiedzieć (dotknij, by usłyszeć):' }));
-    suggestRow.append(el('div.suggest-chips', {}, list.slice(0, 4).map((s) =>
-      el('button.suggest-chip', { onclick: () => speech.speak(s, { lang: 'en-US' }) }, [s]))));
-  }
-  renderSuggestions(lesson.suggestions || []);
-
-  // ---------- Wejście ucznia: TYLKO MÓWIENIE ----------
-  // Początkujący mówią po polsku → słuchamy pl-PL. Zaawansowani → en-US.
-  function toggleListen() {
-    if (listening) { recorder?.stop(); return; }
-    listening = true; micBtn.classList.add('recording'); micBtn.textContent = '⏹'; setMicLabel('Słucham… mów teraz 🎤');
-    let heard = '';
-    recorder = speech.listen({
-      lang: beginner ? 'pl-PL' : 'en-US',
-      onResult: (t) => { heard = t; setMicLabel(`„${t}"`); },
-      onError: (e) => { toast('Mikrofon: ' + (e.message || e), 'error'); resetMic(); },
-      onEnd: async () => {
-        resetMic();
-        if (heard) await handleUtterance(heard);
-        else setMicLabel('Nie dosłyszałam — naciśnij i powiedz jeszcze raz 🎙');
-      },
-    });
-  }
-  function resetMic() { listening = false; micBtn.classList.remove('recording'); micBtn.textContent = '🎙'; setMicLabel('Naciśnij mikrofon i mów 🎙'); }
-
-  async function handleUtterance(text) {
-    addMessage('user', text);
-    userTurns++;
-
-    // Lekcja z zadaniem — odpowiedź MÓWIONA (osobny tok)
-    if (lesson.type === 'task') return handleTaskAnswer(text);
-
-    const { reply, correction, mistake, lang, suggestions } = await ai.chat({ text, lesson });
-    respond(reply, correction, mistake, lang);
-    if (suggestions && suggestions.length) renderSuggestions(suggestions);
-
-    // Cel lekcji konwersacyjnej: kilka tur
-    if (lesson.type === 'conversation' && userTurns >= 4) finishLessonSoon();
-  }
-
-  // Krótka wypowiedź Izabeli (z głosem). lang 'pl'|'en'; slow = wolniej.
   function izabelaSay(text, { lang = 'pl', slow = false, mood = 'neutral', onEnd } = {}) {
     setMood(avatar, mood);
     addMessage('izabela', text);
     speakLine(text, { lang, slow, onEnd: () => { setMood(avatar, 'neutral'); onEnd?.(); } });
+  }
+  function renderSuggestions(list) {
+    suggestRow.replaceChildren();
+    if (!list || !list.length) return;
+    suggestRow.append(el('div.suggest-hint', { text: '💡 Dotknij, by usłyszeć po angielsku:' }));
+    suggestRow.append(el('div.suggest-chips', {}, list.slice(0, 4).map((s) =>
+      el('button.suggest-chip', { onclick: () => speech.speak(s, { lang: 'en-US' }) }, [s]))));
   }
 
   const norm = (s) => (s || '').toLowerCase().replace(/[^a-ząćęłńóśźż ]/gi, ' ').replace(/\s+/g, ' ').trim();
@@ -168,61 +103,86 @@ export function renderConversation(mount, lessonId) {
     if (!target.length) return 0;
     return target.filter((w) => heard.includes(w)).length / target.length;
   };
+  const wordCount = (s) => norm(s).split(' ').filter(Boolean).length;
   const chunkSentence = (s) => {
     const w = s.split(/\s+/), out = [];
     for (let i = 0; i < w.length; i += 3) out.push(w.slice(i, i + 3).join(' '));
     return out;
   };
+  const plainPL = (s) => (s || '').replace(/\*/g, '');
 
-  // Tok zadania: 'word' (powiedz słowo) → 'sentence' (całe zdanie) → 'chunks' (po kawałku)
-  async function handleTaskAnswer(text) {
-    const t = lesson.task;
-    if (/podpowiedz|pomóż|help|nie wiem|hint|agent/i.test(text)) {
-      izabelaSay(t.hintSpoken, { lang: 'pl' });
-      return;
-    }
+  function setProgress() {
+    progressEl.textContent = `Krok ${Math.min(stepIdx + 1, steps.length)} z ${steps.length}`;
+  }
 
-    if (taskPhase === 'word') {
-      if (norm(text).split(' ').includes(norm(t.answer))) {
-        // Dobrze — przechodzimy do powtarzania całego zdania (wolno)
-        izabelaSay(`Ekstra! 🎉 Dokładnie — „${t.answer}". A teraz dawaj całe zdanie za mną, wolniutko: „${t.fullSentence}"`, { lang: 'pl', slow: true, mood: 'happy' });
-        taskPhase = 'sentence';
-        taskAttempts = 0;
-        renderSuggestions([t.fullSentence]);
-      } else {
-        taskAttempts++;
-        if (taskAttempts >= 2) {
-          izabelaSay(`Spokojnie, powolutku. Posłuchaj: „${t.answer}". ${t.hintSpoken} Teraz Ty — powiedz to jedno słowo.`, { lang: 'pl', slow: true, mood: 'oops' });
-        } else {
-          izabelaSay(`Jeszcze nie to 🙂 ${t.hintSpoken}`, { lang: 'pl', mood: 'oops' });
-        }
-      }
-      return;
-    }
+  // ---------- silnik kroków ----------
+  function startStep() {
+    if (stepIdx >= steps.length) return finishLesson();
+    attempts = 0; phase = ''; chunks = []; chunkIdx = 0; chunkDoneCb = null;
+    setProgress();
+    const step = steps[stepIdx];
+    if (step.type === 'say') return startSay(step);
+    if (step.type === 'fill') return startFill(step);
+    nextStep();
+  }
+  function nextStep() { stepIdx++; startStep(); }
 
-    if (taskPhase === 'sentence') {
-      if (overlapOf(text, t.fullSentence) >= 0.6) {
-        izabelaSay('Brawo! Całe zdanie, super Ci poszło! 🌟 Czujesz, jak to brzmi?', { lang: 'pl', mood: 'happy', onEnd: completeLesson });
-      } else {
-        // Nie idzie całe — rozbijamy na kawałki
-        chunks = chunkSentence(t.fullSentence);
-        chunkIdx = 0;
-        taskPhase = 'chunks';
-        izabelaSay(`Dobra, to po kawałku — łatwiej! Powtarzaj za mną. Najpierw: „${chunks[chunkIdx]}"`, { lang: 'pl', slow: true });
-        renderSuggestions([chunks[chunkIdx]]);
-      }
-      return;
-    }
+  function finishLesson() {
+    store.markLessonDone(lesson.id);
+    setProgress();
+    izabelaSay('To wszystko w tej lekcji — świetna robota! 🎉 Jesteś coraz lepszy. Do zobaczenia następnym razem!', {
+      lang: 'pl', mood: 'happy', onEnd: () => { toast('Lekcja ukończona! 🌟'); setTimeout(() => navigate('#/lessons'), 600); },
+    });
+  }
 
-    // taskPhase === 'chunks' — kawałek po kawałku, aż powtórzy
+  // --- krok typu 'say' (powtórz słowo/frazę) ---
+  function startSay(step) {
+    phase = 'repeat';
+    stepArea.replaceChildren(el('div.card.center.stack', { style: 'gap:8px' }, [
+      el('div.task-en', { text: step.en }),
+      el('div.task-pl', { text: step.pl }),
+      el('button.btn.btn--ghost', { style: 'margin:0 auto', onclick: () => speech.speak(step.en, { lang: 'en-US' }) }, ['🔊 Posłuchaj po angielsku']),
+    ]));
+    renderSuggestions([step.en]);
+    izabelaSay(`Posłuchaj: „${step.en}". Po polsku to: ${step.pl}. Teraz powtórz za mną: „${step.en}".`, { lang: 'pl', slow: true });
+  }
+
+  // --- krok typu 'fill' (powiedz brakujące słowo, potem całe zdanie) ---
+  function startFill(step) {
+    phase = 'word';
+    stepArea.replaceChildren(el('div.card', {}, [
+      el('div.muted', { style: 'margin-bottom:8px', text: 'Powiedz brakujące słowo:' }),
+      el('div.task-en', { text: step.sentence }),
+      el('div.task-pl', {}, plSentence(step.sentencePL, step.answer)),
+      el('div.task-opts', {}, step.options.map((o) =>
+        el('button.suggest-chip', { onclick: () => speech.speak(`„${o.en}" — ${o.pl}`, { lang: 'pl-PL' }) }, [o.en]))),
+      el('button.btn.btn--ghost', { style: 'margin-top:12px', onclick: () => izabelaSay(step.hint, { lang: 'pl' }) }, ['💡 Podpowiedź']),
+    ]));
+    renderSuggestions([step.answer]);
+    izabelaSay(`Posłuchaj zdania: „${step.fullSentence}". Po polsku znaczy to: ${plainPL(step.sentencePL)}. Brakuje jednego słowa — powiedz, które pasuje.`, { lang: 'pl', slow: true });
+  }
+
+  function plSentence(s, answer) {
+    const m = s.match(/^(.*?)\*(.+?)\*(.*)$/);
+    if (!m) return [s];
+    return [m[1],
+      el('button.task-underline', { title: 'Posłuchaj po angielsku', onclick: () => speech.speak(answer, { lang: 'en-US' }) }, [m[2]]),
+      m[3]];
+  }
+
+  // --- nauka po kawałku (gdy całość nie wychodzi) ---
+  function startChunks(sentence, doneCb) {
+    chunks = chunkSentence(sentence); chunkIdx = 0; chunkDoneCb = doneCb; phase = 'chunks';
+    izabelaSay(`Dobra, to po kawałku — będzie łatwiej! Powtarzaj za mną. Najpierw: „${chunks[0]}"`, { lang: 'pl', slow: true });
+    renderSuggestions([chunks[0]]);
+  }
+  function handleChunks(text) {
     if (overlapOf(text, chunks[chunkIdx]) >= 0.6) {
       chunkIdx++;
       if (chunkIdx >= chunks.length) {
-        taskPhase = 'sentence';
-        izabelaSay(`Super! Wszystkie kawałki masz. A teraz spróbuj całe zdanie naraz: „${t.fullSentence}"`, { lang: 'pl', slow: true, mood: 'happy' });
-        renderSuggestions([t.fullSentence]);
+        izabelaSay('Super, wszystkie kawałki Ci wyszły! 🎉', { lang: 'pl', mood: 'happy', onEnd: () => chunkDoneCb && chunkDoneCb() });
       } else {
-        izabelaSay(`Świetnie! Teraz kolejny kawałek: „${chunks[chunkIdx]}"`, { lang: 'pl', slow: true, mood: 'happy' });
+        izabelaSay(`Świetnie! Teraz: „${chunks[chunkIdx]}"`, { lang: 'pl', slow: true, mood: 'happy' });
         renderSuggestions([chunks[chunkIdx]]);
       }
     } else {
@@ -230,107 +190,60 @@ export function renderConversation(mount, lessonId) {
     }
   }
 
-  function respond(reply, correction, mistake, lang = 'en') {
-    // ostatnia wiadomość ucznia dostaje znacznik poprawki
-    if (correction && messages.length) {
-      const last = chatEl.querySelector('.msg--user:last-of-type');
-      if (last) last.append(el('div.correction', { html: `💡 <b>Poprawka:</b> ${correction.spoken}` }));
+  // ---------- obsługa odpowiedzi (mówionej) ----------
+  function handleAnswer(text) {
+    addMessage('user', text);
+    if (phase === 'chunks') return handleChunks(text);
+    const step = steps[stepIdx];
+    if (step.type === 'say') return handleSay(step, text);
+    if (step.type === 'fill') return handleFill(step, text);
+  }
+
+  function handleSay(step, text) {
+    if (overlapOf(text, step.en) >= 0.6) {
+      izabelaSay(`Brawo! „${step.en}" — dokładnie tak! 🌟`, { lang: 'pl', mood: 'happy', onEnd: nextStep });
+    } else {
+      attempts++;
+      if (wordCount(step.en) > 2 && attempts >= 1) {
+        startChunks(step.en, nextStep);
+      } else {
+        izabelaSay(`Spokojnie 🙂 Posłuchaj wolniutko: „${step.en}". Spróbuj jeszcze raz za mną.`, { lang: 'pl', slow: true, mood: 'oops' });
+      }
     }
-    if (mistake) addMistake(mistake);
-    // Izabela reaguje miną: "ups" gdy poprawia błąd, inaczej zadowolona
-    setMood(avatar, mistake ? 'oops' : 'happy');
-    addMessage('izabela', reply);
-    speakLine(reply, { lang, onEnd: () => setMood(avatar, 'neutral') });
   }
 
-  let finishing = false;
-  function finishLessonSoon() {
-    if (finishing) return; finishing = true;
-    setTimeout(() => {
-      addMessage('izabela', 'That was great chatting with you! 🎉 Świetnie Ci poszło. Kliknij „Zakończ lekcję", żeby zapisać postęp.');
-      const done = el('button.btn.btn--primary.btn--block', { onclick: completeLesson }, ['Zakończ lekcję ✓']);
-      chatEl.parentElement.querySelector('.composer').replaceWith(done);
-    }, 800);
+  function handleFill(step, text) {
+    if (phase === 'word') {
+      if (norm(text).split(' ').includes(norm(step.answer))) {
+        phase = 'sentence';
+        izabelaSay(`Ekstra! 🎉 Dokładnie — „${step.answer}". A teraz całe zdanie za mną, wolniutko: „${step.fullSentence}"`, { lang: 'pl', slow: true, mood: 'happy' });
+        renderSuggestions([step.fullSentence]);
+      } else {
+        attempts++;
+        izabelaSay(attempts >= 2
+          ? `Powolutku — posłuchaj: „${step.answer}". ${step.hint} Teraz Ty, samo to słowo.`
+          : `Jeszcze nie to 🙂 ${step.hint}`, { lang: 'pl', slow: attempts >= 2, mood: 'oops' });
+      }
+    } else if (phase === 'sentence') {
+      if (overlapOf(text, step.fullSentence) >= 0.6) {
+        izabelaSay('Brawo! Całe zdanie, super Ci poszło! 🌟', { lang: 'pl', mood: 'happy', onEnd: nextStep });
+      } else {
+        startChunks(step.fullSentence, nextStep);
+      }
+    }
   }
 
-  function completeLesson() {
-    store.markLessonDone(lesson.id);
-    toast('Lekcja ukończona! 🌟');
-    navigate('#/lessons');
+  // ---------- mikrofon (tylko mówienie) ----------
+  function toggleListen() {
+    if (listening) { recorder?.stop(); return; }
+    listening = true; micBtn.classList.add('recording'); micBtn.textContent = '⏹'; setMicLabel('Słucham… mów teraz 🎤');
+    let heard = '';
+    recorder = speech.listen({
+      lang: REC_LANG,
+      onResult: (t) => { heard = t; setMicLabel(`„${t}"`); },
+      onError: (e) => { toast('Mikrofon: ' + (e.message || e), 'error'); resetMic(); },
+      onEnd: () => { resetMic(); if (heard) handleAnswer(heard); else setMicLabel('Nie dosłyszałam — naciśnij i powiedz jeszcze raz 🎙'); },
+    });
   }
-
-  // ---------- Blok zadania (mówione, lekcja typu 'task') ----------
-  function taskBlock() {
-    const t = lesson.task;
-    return el('div.card', { style: 'margin:14px 0' }, [
-      el('div.muted', { style: 'margin-bottom:8px', text: 'Powiedz brakujące słowo:' }),
-      // Zdanie po angielsku (z luką)
-      el('div.task-en', { text: t.sentence }),
-      // Polskie tłumaczenie — podkreślone słowo, klik = czyta wersję angielską
-      el('div.task-pl', {}, plSentence(t.sentencePL, t.answer)),
-      // 3 opcje — klik = głos czyta po angielsku i podaje znaczenie po polsku
-      el('div.task-opts', {}, t.options.map((o) =>
-        el('button.suggest-chip', {
-          onclick: () => speech.speak(`„${o.en}" — ${o.pl}`, { lang: 'pl-PL' }),
-        }, [o.en]))),
-      el('p.faint', { style: 'margin-top:12px', text: '🎤 Powiedz odpowiedź do mikrofonu. Utknąłeś? Powiedz „Agent, podpowiedz!"' }),
-    ]);
-  }
-
-  // Buduje polskie zdanie z podkreślonym słowem (klik → czyta angielski odpowiednik)
-  function plSentence(s, answer) {
-    const m = s.match(/^(.*?)\*(.+?)\*(.*)$/);
-    if (!m) return [s];
-    return [
-      m[1],
-      el('button.task-underline', {
-        title: 'Posłuchaj po angielsku',
-        onclick: () => speech.speak(answer, { lang: 'en-US' }),
-      }, [m[2]]),
-      m[3],
-    ];
-  }
-}
-
-// ---------- Lekcja 3: Podsumowanie / Cliffhanger ----------
-function renderSummary(mount, lesson) {
-  const st = store.get();
-  const mistakes = st.analyst;
-  const tags = mistakes.reduce((a, m) => { a[m.tag] = (a[m.tag] || 0) + 1; return a; }, {});
-  const phon = st.phonetic.profile;
-
-  mount.append(
-    topbar(el('button.btn.btn--ghost', { onclick: () => navigate('#/lessons') }, ['← Lekcje'])),
-    el('div.stack.fade-in', { style: 'max-width:640px;margin:0 auto' }, [
-      el('div.center', {}, [
-        el('div', { style: 'font-size:3rem', text: '🚀' }),
-        el('h1.display', { style: 'margin:6px 0', text: 'Twój raport z kosmosu' }),
-        el('p.muted', { text: lesson.opener }),
-      ]),
-      el('div.card.stack', {}, [
-        el('h3.display', { style: 'margin:0', text: '📊 Co zauważyłam' }),
-        statRow('Zebrane błędy do powtórki', mistakes.length),
-        statRow('Gramatyka', tags.grammar || 0),
-        statRow('Słownictwo', tags.vocab || 0),
-        statRow('Wymowa (z paszportu)', phon?.challenges?.length || 0),
-        phon?.challenges?.length
-          ? el('div.pill', { text: `🎯 Dźwięki do szlifu: ${phon.challenges.join(', ')}` })
-          : null,
-      ]),
-      el('div.card.center.stack', { style: 'border-color:var(--pink)' }, [
-        el('h2.display', { style: 'margin:0', text: 'To dopiero rozgrzewka... 👀' }),
-        el('p.muted', { text: 'W pełnej wersji rozmawiamy bez limitu, a Izabela prowadzi Cię aż do płynności. Odblokuj pełny kurs na stronie.' }),
-        el('a.btn.btn--pink.btn--lg', { href: 'https://pogadaj.se', target: '_blank' }, ['Odblokuj pełny dostęp →']),
-        el('button.btn.btn--ghost', { onclick: () => { store.markLessonDone(lesson.id); navigate('#/lessons'); } }, ['Wróć do lekcji']),
-      ]),
-    ])
-  );
-  store.markLessonDone(lesson.id);
-
-  function statRow(label, val) {
-    return el('div.row', { style: 'justify-content:space-between' }, [
-      el('span.muted', { text: label }),
-      el('span.display', { style: 'font-size:1.3rem', text: val }),
-    ]);
-  }
+  function resetMic() { listening = false; micBtn.classList.remove('recording'); micBtn.textContent = '🎙'; setMicLabel('Naciśnij mikrofon i powtórz 🎙'); }
 }
