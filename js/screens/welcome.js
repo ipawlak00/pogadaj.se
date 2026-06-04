@@ -1,19 +1,44 @@
-import { el, topbar, navigate } from '../ui.js';
-import { IZABELA } from '../data/izabela.js';
+import { el, toast, navigate } from '../ui.js';
+import { auth } from '../services/auth.js';
+import { store } from '../state.js';
 
+// Ekran logowania / powitania — wg projektu z Firebase (czerń + pomarańcz).
+// NA TERAZ: każdy przycisk logowania wpuszcza jako gościa, by przejrzeć aplikację.
 export function renderWelcome(mount) {
+  const email = el('input', { type: 'email', placeholder: 'twój@email.com', autocomplete: 'email' });
+  const pass = el('input', { type: 'password', placeholder: 'Hasło', autocomplete: 'current-password' });
+
   mount.append(
-    topbar(),
-    el('div.stack.center.fade-in', { style: 'max-width:620px;margin:6vh auto;gap:24px' }, [
-      el('div.izabela', { style: 'margin:0 auto' }, [
-        el('img', { src: 'assets/izabela/avatar.svg', alt: 'Izabela', onerror: function(){ this.replaceWith(el('span',{text:'👩‍🚀',style:'font-size:3rem'})); } }),
+    el('div.auth-wrap.fade-in', {}, [
+      el('h1.auth-title', {}, ['POGADAJ', el('span.planet-dot'), 'SE']),
+      el('div.auth-sub', { text: 'GADAJ I UCZ SIĘ Z NAMI!' }),
+
+      el('div.auth-card', {}, [
+        el('div.field', {}, [ el('label', { text: 'Email' }), email ]),
+        el('div.field', {}, [ el('label', { text: 'Hasło' }), pass ]),
+        el('button.btn.btn--primary.auth-submit', { onclick: enterAsGuest }, ['Zaloguj się ', el('span', { text: '→' })]),
+
+        el('div.auth-divider', { text: 'lub kontynuuj przez' }),
+        el('div.auth-oauth', {}, [
+          el('button.btn.oauth-btn', { onclick: enterAsGuest }, ['🔵 Google']),
+          el('button.btn.oauth-btn', { onclick: enterAsGuest }, ['🍎 Apple']),
+        ]),
+
+        el('button.btn.auth-create', { onclick: enterAsGuest }, ['Stwórz darmowe konto  👤+']),
       ]),
-      el('h1.display', { style: 'font-size:clamp(2.2rem,7vw,3.4rem);margin:0', html: 'Nie ucz się angielskiego.<br><span style="color:var(--accent)">Pogadaj.</span>' }),
-      el('p.muted', { style: 'font-size:1.15rem;margin:0', text: `Cześć, jestem ${IZABELA.name} — Twoja nauczycielka AI. Przełamiemy razem blokadę w mówieniu. W kosmosie nikt nie usłyszy Twoich błędów. 🚀` }),
-      el('div.row.center', { style: 'justify-content:center;gap:12px;flex-wrap:wrap' }, [
-        el('button.btn.btn--primary.btn--lg', { onclick: () => navigate('#/onboarding') }, ['Zaczynamy ✨']),
-      ]),
-      el('p.faint', { style: 'margin-top:8px', text: '3 darmowe lekcje • bez karty • mów, nie klikaj' }),
+
+      el('div.auth-footer', { html: 'POWERED BY <b>IZABELACODE</b>' }),
     ])
   );
+
+  async function enterAsGuest() {
+    try {
+      await auth.signInWithGoogle();   // tryb local → tworzy konto-gościa
+      toast('Wchodzisz w trybie podglądu — baw się dobrze! 🚀');
+      // Jeśli onboarding już był zrobiony, leć prosto do intro/lekcji; inaczej onboarding.
+      navigate(store.get().onboarding.completed ? '#/intro' : '#/onboarding');
+    } catch (e) {
+      toast(e.message || 'Coś poszło nie tak', 'error');
+    }
+  }
 }

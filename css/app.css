@@ -26,7 +26,7 @@
 .btn:hover { transform: translateY(-1px); }
 .btn:active { transform: translateY(0); }
 .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-.btn--primary { background: linear-gradient(135deg, var(--accent), var(--violet)); box-shadow: var(--glow-accent); }
+.btn--primary { background: linear-gradient(135deg, #ff6a00, #ff9a2e); box-shadow: var(--glow-accent); color: #1a0d00; }
 .btn--ghost { background: transparent; border-color: var(--surface-border); }
 .btn--pink { background: linear-gradient(135deg, var(--pink), var(--violet)); box-shadow: var(--glow-pink); }
 .btn--lg { padding: 16px 32px; font-size: 1.1rem; }
@@ -63,9 +63,10 @@
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 28px;
 }
-.logo { font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; letter-spacing: -0.03em; }
+.logo { font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; letter-spacing: -0.03em;
+  background: var(--grad-brand); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .logo .dot { color: var(--accent); }
-.logo .se { color: var(--pink); }
+.logo .se { color: inherit; }
 
 /* ---------- Izabela (awatar) ---------- */
 .izabela {
@@ -170,6 +171,59 @@
 }
 .toast--error { border-color: var(--error); }
 @keyframes toastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; } }
+
+/* ---------- Ekran logowania / powitania ---------- */
+.auth-wrap { max-width: 460px; margin: 4vh auto 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.auth-title {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(2.6rem, 11vw, 4.4rem); letter-spacing: -0.02em; line-height: 1;
+  text-transform: uppercase; margin: 0;
+  background: var(--grad-brand); -webkit-background-clip: text; background-clip: text; color: transparent;
+  display: flex; align-items: center; gap: .12em;
+}
+.auth-title .planet-dot {
+  width: .32em; height: .32em; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffd27a, #c25a12);
+  box-shadow: 0 0 16px rgba(255,138,30,.7); display: inline-block;
+}
+.auth-sub {
+  font-family: var(--font-display); font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: #fff; font-size: clamp(.95rem, 3.5vw, 1.25rem);
+  margin: 4px 0 26px;
+}
+.auth-card { width: 100%; background: rgba(18,18,26,.85); border: 1px solid rgba(255,255,255,.06);
+  border-radius: 22px; padding: 28px 24px; box-shadow: var(--shadow-card); backdrop-filter: blur(8px); }
+.field { margin-bottom: 18px; }
+.field label { display: block; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text-faint); margin-bottom: 8px; font-weight: 600; }
+.field input { width: 100%; padding: 15px 18px; border-radius: 12px; background: #1c1c26;
+  border: 1px solid rgba(255,255,255,.07); color: var(--text); font-size: 1rem; font-family: var(--font-body); }
+.field input::placeholder { color: #5a5a6a; }
+.field input:focus { outline: none; border-color: var(--accent); }
+.auth-submit { width: 100%; justify-content: center; text-transform: uppercase; letter-spacing: .04em;
+  font-size: 1.05rem; padding: 15px; margin-top: 4px; }
+.auth-divider { display: flex; align-items: center; gap: 12px; margin: 22px 0 16px;
+  color: var(--text-faint); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; }
+.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.08); }
+.auth-oauth { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.oauth-btn { justify-content: center; background: #1c1c26; border: 1px solid rgba(255,255,255,.08);
+  text-transform: uppercase; letter-spacing: .05em; font-size: .85rem; font-weight: 600; padding: 14px; }
+.oauth-btn:hover { border-color: rgba(255,255,255,.2); }
+.auth-create { width: 100%; justify-content: center; background: #1c1c26; border: 1px solid rgba(255,255,255,.08);
+  color: var(--accent-bright); text-transform: uppercase; letter-spacing: .05em; font-size: .9rem;
+  font-weight: 700; padding: 15px; margin-top: 14px; }
+.auth-create:hover { border-color: var(--accent); }
+.auth-footer { margin-top: 22px; color: var(--text-faint); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; }
+.auth-footer b { color: var(--accent-bright); font-weight: 700; }
+
+/* ---------- Intro: odtwarzacz wideo Izabeli ---------- */
+.intro-video-wrap { max-width: 760px; margin: 4vh auto 0; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.intro-video {
+  width: 100%; border-radius: var(--radius-lg); overflow: hidden;
+  border: 1px solid var(--surface-border); box-shadow: var(--shadow-card); background: #000;
+}
+.intro-video video { width: 100%; display: block; }
+.intro-skip { position: absolute; top: 16px; right: 16px; z-index: 5; }
 
 /* ---------- Animacja intro (wejście Izabeli) ---------- */
 .intro-wrap { position: relative; min-height: 80vh; display: flex; flex-direction: column; align-items: center; }
@@ -285,6 +339,8 @@
 
 /* ---------- Utility ---------- */
 .fade-in { animation: fadeIn .35s ease; }
+.pulse { animation: btnPulse 1.4s ease-in-out infinite; }
+@keyframes btnPulse { 0%,100% { transform: scale(1); box-shadow: var(--glow-accent); } 50% { transform: scale(1.04); box-shadow: 0 0 36px rgba(255,122,24,.7); } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
 .hidden { display: none !important; }
 .spacer-sm { height: 8px; } .spacer { height: 20px; } .spacer-lg { height: 40px; }

@@ -4,21 +4,22 @@
    ============================================================= */
 
 :root {
-  /* Tła */
-  --bg-900: #060818;   /* najgłębszy kosmos */
-  --bg-800: #0a0e27;   /* baza */
-  --bg-700: #11173a;   /* karty */
-  --bg-600: #1a2150;   /* hover/elementy */
-  --surface-glass: rgba(26, 33, 80, 0.55);
-  --surface-border: rgba(120, 150, 255, 0.16);
+  /* Tła — głęboka czerń kosmosu (brand Izabela Code) */
+  --bg-900: #040406;   /* najgłębszy kosmos */
+  --bg-800: #0a0a0e;   /* baza */
+  --bg-700: #16161f;   /* karty */
+  --bg-600: #20202c;   /* hover/elementy */
+  --surface-glass: rgba(22, 22, 30, 0.62);
+  --surface-border: rgba(255, 150, 60, 0.16);
 
-  /* Akcenty */
-  --accent: #5b8cff;       /* błękit główny */
-  --accent-bright: #7aa2ff;
-  --accent-soft: #3a4a8c;
-  --violet: #9b6bff;       /* mgławica */
+  /* Akcenty — pomarańcz/bursztyn */
+  --accent: #ff7a18;       /* pomarańcz główny */
+  --accent-bright: #ffa23a;
+  --amber: #ffc24b;        /* żółty do gradientu napisu */
+  --accent-soft: #7a3a0e;
+  --violet: #8a5bd6;       /* mgławica (akcent kosmiczny) */
   --cyan: #46e0d8;         /* sukces / "mówisz dobrze" */
-  --pink: #ff7eb6;         /* akcent Izabeli */
+  --pink: #ff7eb6;         /* delikatny akcent Izabeli */
 
   /* Semantyka */
   --ok: #46e0d8;
@@ -37,9 +38,10 @@
   --radius-pill: 999px;
 
   /* Cienie / poświaty */
-  --glow-accent: 0 0 24px rgba(91, 140, 255, 0.45);
+  --glow-accent: 0 0 26px rgba(255, 122, 24, 0.45);
   --glow-pink: 0 0 24px rgba(255, 126, 182, 0.35);
-  --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --shadow-card: 0 16px 48px rgba(0, 0, 0, 0.55);
+  --grad-brand: linear-gradient(90deg, #ff5e00, #ff8a1e 45%, #ffc24b);
 
   /* Typografia */
   --font-display: 'Space Grotesk', system-ui, sans-serif;
@@ -73,9 +75,9 @@ a { color: var(--accent-bright); text-decoration: none; }
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(1200px 800px at 80% -10%, #1b2358 0%, transparent 60%),
-    radial-gradient(900px 700px at 10% 110%, #221a52 0%, transparent 55%),
-    linear-gradient(180deg, var(--bg-900), var(--bg-800));
+    radial-gradient(1000px 700px at 82% -8%, rgba(138, 91, 214, 0.18) 0%, transparent 60%),
+    radial-gradient(800px 600px at 8% 108%, rgba(255, 122, 24, 0.12) 0%, transparent 55%),
+    linear-gradient(180deg, #000 0%, var(--bg-900) 40%, var(--bg-800) 100%);
   overflow: hidden;
 }
 .stars {
@@ -100,14 +102,18 @@ a { color: var(--accent-bright); text-decoration: none; }
 }
 .nebula--1 { width: 480px; height: 480px; top: -120px; right: -80px; background: var(--violet); }
 .nebula--2 { width: 420px; height: 420px; bottom: -140px; left: -100px; background: var(--accent); }
+/* Planeta typu Jowisz — pasy bursztynowe */
 .planet {
   position: absolute;
-  width: 280px; height: 280px;
-  right: -120px; bottom: -120px;
+  width: 120px; height: 120px;
+  left: 8%; top: 30%;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #6e7bd6, #2a2f66 60%, #14163a);
-  box-shadow: inset -30px -20px 60px rgba(0,0,0,0.5), 0 0 80px rgba(91,140,255,0.25);
-  opacity: 0.5;
+  background:
+    repeating-linear-gradient(95deg, #d98a3a 0 8px, #b5672a 8px 14px, #e9a85a 14px 20px),
+    radial-gradient(circle at 35% 30%, #f0b870, #8a4a18);
+  background-blend-mode: overlay;
+  box-shadow: inset -22px -14px 40px rgba(0,0,0,0.55), 0 0 50px rgba(255,138,30,0.25);
+  opacity: 0.7;
 }
 
 @keyframes drift { from { background-position: 0 0; } to { background-position: 600px 600px; } }

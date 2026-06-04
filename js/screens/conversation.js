@@ -34,7 +34,7 @@ export function renderConversation(mount, lessonId) {
     el('div.stack.fade-in', {}, [
       el('div.row', { style: 'gap:14px' }, [
         el('div.izabela', { id: 'iza-avatar', style: 'width:64px;height:64px;flex:none' }, [
-          el('img', { src: 'assets/izabela/avatar.svg', alt: 'Izabela', onerror: function(){ this.replaceWith(el('span',{text:'👩‍🚀'})); } }),
+          el('img', { src: 'assets/izabela/avatar.png', alt: 'Izabela', onerror: function(){ this.replaceWith(el('span',{text:'👩‍🚀'})); } }),
         ]),
         el('div', {}, [
           el('h2.display', { style: 'margin:0', text: `${lesson.emoji} ${lesson.title}` }),
