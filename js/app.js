@@ -35,14 +35,17 @@ function resolve() {
     case '#/lessons': return guarded(st, () => renderLessons(appEl));
     case '#/':
     default:
-      // Jeśli użytkownik już przeszedł onboarding — wpuść od razu do lekcji
-      if (st.onboarding.completed && st.phonetic.completed) return renderLessons(appEl);
-      return renderWelcome(appEl);
+      // Niezalogowany → ekran logowania. Zalogowany → dalej wg etapu.
+      if (!st.user) return renderWelcome(appEl);
+      if (!st.onboarding.completed) return redirect('#/onboarding');
+      if (!st.phonetic.completed) return redirect('#/phonetic');
+      return renderLessons(appEl);
   }
 }
 
-// Guard: do lekcji wpuszczamy dopiero po onboardingu i paszporcie
+// Guard: wymaga zalogowania + ukończonego onboardingu i paszportu
 function guarded(st, render) {
+  if (!st.user) return redirect('#/');
   if (!st.onboarding.completed) return redirect('#/onboarding');
   if (!st.phonetic.completed) return redirect('#/phonetic');
   return render();

@@ -10,7 +10,7 @@ export function renderLessons(mount) {
 
   const userChip = el('div.row', {}, [
     el('span.pill', { text: `👋 ${st.user?.name || 'Gość'}` }),
-    el('button.btn.btn--ghost', { onclick: () => { auth.signOut(); navigate('#/'); } }, ['Wyloguj']),
+    el('button.btn.btn--ghost', { onclick: () => { auth.signOut(); location.hash = '#/'; location.reload(); } }, ['Wyloguj']),
   ]);
 
   mount.append(
