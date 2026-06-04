@@ -87,7 +87,7 @@ export function renderOnboarding(mount) {
       await auth.signInWithGoogle();
       store.completeOnboarding(data.goal, data.level);
       toast('Witaj na pokładzie! 🌌');
-      navigate('#/phonetic');
+      navigate('#/intro');
     } catch (e) {
       toast(e.message || 'Logowanie nie powiodło się', 'error');
     }

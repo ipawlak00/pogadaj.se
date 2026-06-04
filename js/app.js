@@ -8,6 +8,7 @@ import { store } from './state.js';
 
 import { renderWelcome } from './screens/welcome.js';
 import { renderOnboarding } from './screens/onboarding.js';
+import { renderIntro } from './screens/intro.js';
 import { renderPhonetic } from './screens/phonetic.js';
 import { renderLessons } from './screens/lessons.js';
 import { renderConversation } from './screens/conversation.js';
@@ -25,6 +26,9 @@ function resolve() {
 
   switch (hash) {
     case '#/onboarding': return renderOnboarding(appEl);
+    case '#/intro':
+      if (!st.onboarding.completed) return redirect('#/onboarding');
+      return renderIntro(appEl);
     case '#/phonetic':
       if (!st.onboarding.completed) return redirect('#/onboarding');
       return renderPhonetic(appEl);
