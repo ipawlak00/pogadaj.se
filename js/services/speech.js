@@ -82,8 +82,10 @@ async function speakGoogle(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
     const playNext = async () => {
       if (i >= segments.length) { onEnd?.(); return; }
       const seg = segments[i++];
+      // Angielski czytamy wyraźnie wolniej (uczeń ma nadążyć i powtórzyć)
+      const segRate = seg.lang === 'en' ? (rate || 1) * 0.82 : (rate || 1);
       try {
-        const url = await gttsUrl(seg.text, seg.lang, rate);
+        const url = await gttsUrl(seg.text, seg.lang, segRate);
         const audio = new Audio(url);
         currentAudio = audio;
         audio.onended = () => { if (currentAudio === audio) currentAudio = null; playNext(); };

@@ -17,8 +17,11 @@ export function renderConversation(mount, lessonId) {
   let listening = false;
   let recorder = null;
   let userTurns = 0;
-  let taskPhase = 'word';   // 'word' → powiedz słowo, 'sentence' → powtórz całe zdanie
+  let taskPhase = 'word';   // 'word' → powiedz słowo, 'sentence' → całe zdanie, 'chunks' → po kawałku
   let taskAttempts = 0;
+  let chunks = [];
+  let chunkIdx = 0;
+  let lastLine = null;       // ostatnia wypowiedź Izabeli (do powtórzenia)
 
   const chatEl = el('div.chat');
   const analystEl = el('div.card.analyst', {}, [
@@ -33,6 +36,10 @@ export function renderConversation(mount, lessonId) {
 
   const backChip = el('button.btn.btn--ghost', { onclick: () => navigate('#/lessons') }, ['← Lekcje']);
   const avatar = izabela({ mood: 'neutral', size: 64 });
+  // Dotknij Izabelę, by powtórzyła ostatnią wypowiedź (gdy się nie dosłyszało)
+  avatar.style.cursor = 'pointer';
+  avatar.title = 'Dotknij, aby powtórzyć';
+  avatar.onclick = () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); };
 
   mount.append(
     topbar(backChip),
@@ -42,6 +49,7 @@ export function renderConversation(mount, lessonId) {
         el('div', {}, [
           el('h2.display', { style: 'margin:0', text: `${lesson.emoji} ${lesson.title}` }),
           el('p.faint', { style: 'margin:2px 0 0', text: lesson.goal }),
+          el('p.faint', { style: 'margin:2px 0 0;font-size:.78rem', text: '🔊 Nie słychać? Dotknij Izabeli, aby powtórzyła.' }),
         ]),
       ]),
       el('div.convo-layout', {}, [
@@ -60,9 +68,9 @@ export function renderConversation(mount, lessonId) {
 
   // Otwarcie lekcji — Izabela wita (po polsku dla początkujących i w zadaniach)
   const opener = beginner && lesson.openerPL ? lesson.openerPL : lesson.opener;
-  const openerLang = (beginner || lesson.type === 'task') ? 'pl-PL' : 'en-US';
+  const openerLang = (beginner || lesson.type === 'task') ? 'pl' : 'en';
   addMessage('izabela', opener);
-  speech.speak(opener, { lang: openerLang });
+  speakLine(opener, { lang: openerLang });
 
   // ---------- Rendering wiadomości ----------
   function addMessage(who, text, correction) {
@@ -91,6 +99,16 @@ export function renderConversation(mount, lessonId) {
 
   function setSpeaking(on) { setAvSpeaking(avatar, on); }
   function setMicLabel(t) { const l = document.getElementById('mic-label'); if (l) l.textContent = t; }
+
+  // Mówi i zapamiętuje ostatnią kwestię (do powtórzenia). lang: 'pl'|'en'
+  function speakLine(text, { lang = 'pl', slow = false, onEnd } = {}) {
+    lastLine = { text, lang, slow };
+    setSpeaking(true);
+    speech.speak(text, {
+      lang: lang === 'en' ? 'en-US' : 'pl-PL', rate: slow ? 0.7 : 1,
+      onEnd: () => { setSpeaking(false); onEnd?.(); },
+    });
+  }
 
   // Podpowiedzi słów: chip pokazuje frazę, dotknięcie = Izabela czyta ją po angielsku
   function renderSuggestions(list) {
@@ -140,48 +158,75 @@ export function renderConversation(mount, lessonId) {
   function izabelaSay(text, { lang = 'pl', slow = false, mood = 'neutral', onEnd } = {}) {
     setMood(avatar, mood);
     addMessage('izabela', text);
-    setSpeaking(true);
-    speech.speak(text, {
-      lang: lang === 'en' ? 'en-US' : 'pl-PL', rate: slow ? 0.72 : 1,
-      onEnd: () => { setSpeaking(false); setMood(avatar, 'neutral'); onEnd?.(); },
-    });
+    speakLine(text, { lang, slow, onEnd: () => { setMood(avatar, 'neutral'); onEnd?.(); } });
   }
 
   const norm = (s) => (s || '').toLowerCase().replace(/[^a-ząćęłńóśźż ]/gi, ' ').replace(/\s+/g, ' ').trim();
+  const overlapOf = (heardStr, targetStr) => {
+    const heard = norm(heardStr).split(' ');
+    const target = norm(targetStr).split(' ').filter(Boolean);
+    if (!target.length) return 0;
+    return target.filter((w) => heard.includes(w)).length / target.length;
+  };
+  const chunkSentence = (s) => {
+    const w = s.split(/\s+/), out = [];
+    for (let i = 0; i < w.length; i += 3) out.push(w.slice(i, i + 3).join(' '));
+    return out;
+  };
 
-  // Tok zadania: faza 'word' (powiedz słowo) → faza 'sentence' (powtórz całe zdanie)
+  // Tok zadania: 'word' (powiedz słowo) → 'sentence' (całe zdanie) → 'chunks' (po kawałku)
   async function handleTaskAnswer(text) {
     const t = lesson.task;
     if (/podpowiedz|pomóż|help|nie wiem|hint|agent/i.test(text)) {
       izabelaSay(t.hintSpoken, { lang: 'pl' });
       return;
     }
+
     if (taskPhase === 'word') {
       if (norm(text).split(' ').includes(norm(t.answer))) {
-        izabelaSay(`Ekstra! 🎉 Dokładnie — „${t.answer}". A teraz dawaj całe zdanie za mną, powtórz: „${t.fullSentence}"`, {
-          lang: 'pl', mood: 'happy',
-        });
+        // Dobrze — przechodzimy do powtarzania całego zdania (wolno)
+        izabelaSay(`Ekstra! 🎉 Dokładnie — „${t.answer}". A teraz dawaj całe zdanie za mną, wolniutko: „${t.fullSentence}"`, { lang: 'pl', slow: true, mood: 'happy' });
         taskPhase = 'sentence';
+        taskAttempts = 0;
         renderSuggestions([t.fullSentence]);
       } else {
         taskAttempts++;
         if (taskAttempts >= 2) {
-          izabelaSay(`Spokojnie, zwolnijmy. Posłuchaj dokładnie: „${t.answer}". ${t.hintSpoken} Teraz Ty — powiedz to słowo.`, { lang: 'pl', slow: true, mood: 'oops' });
+          izabelaSay(`Spokojnie, powolutku. Posłuchaj: „${t.answer}". ${t.hintSpoken} Teraz Ty — powiedz to jedno słowo.`, { lang: 'pl', slow: true, mood: 'oops' });
         } else {
-          izabelaSay(`Jeszcze nie to 🙂 ${t.hintSpoken} Spróbuj powiedzieć samo brakujące słowo.`, { lang: 'pl', mood: 'oops' });
+          izabelaSay(`Jeszcze nie to 🙂 ${t.hintSpoken}`, { lang: 'pl', mood: 'oops' });
         }
       }
-    } else {
-      // faza zdania — sprawdzamy pokrycie słów
-      const heard = norm(text).split(' ');
-      const target = norm(t.fullSentence).split(' ');
-      const overlap = target.filter((w) => heard.includes(w)).length / target.length;
-      if (overlap >= 0.6) {
-        izabelaSay('Brawo! Całe zdanie, super Ci poszło! 🌟 Czujesz, jak to brzmi naturalnie?', { lang: 'pl', mood: 'happy', onEnd: completeLesson });
+      return;
+    }
+
+    if (taskPhase === 'sentence') {
+      if (overlapOf(text, t.fullSentence) >= 0.6) {
+        izabelaSay('Brawo! Całe zdanie, super Ci poszło! 🌟 Czujesz, jak to brzmi?', { lang: 'pl', mood: 'happy', onEnd: completeLesson });
       } else {
-        taskAttempts++;
-        izabelaSay(`Już prawie! Powtórzmy razem, wolniutko za mną: „${t.fullSentence}"`, { lang: 'pl', slow: true });
+        // Nie idzie całe — rozbijamy na kawałki
+        chunks = chunkSentence(t.fullSentence);
+        chunkIdx = 0;
+        taskPhase = 'chunks';
+        izabelaSay(`Dobra, to po kawałku — łatwiej! Powtarzaj za mną. Najpierw: „${chunks[chunkIdx]}"`, { lang: 'pl', slow: true });
+        renderSuggestions([chunks[chunkIdx]]);
       }
+      return;
+    }
+
+    // taskPhase === 'chunks' — kawałek po kawałku, aż powtórzy
+    if (overlapOf(text, chunks[chunkIdx]) >= 0.6) {
+      chunkIdx++;
+      if (chunkIdx >= chunks.length) {
+        taskPhase = 'sentence';
+        izabelaSay(`Super! Wszystkie kawałki masz. A teraz spróbuj całe zdanie naraz: „${t.fullSentence}"`, { lang: 'pl', slow: true, mood: 'happy' });
+        renderSuggestions([t.fullSentence]);
+      } else {
+        izabelaSay(`Świetnie! Teraz kolejny kawałek: „${chunks[chunkIdx]}"`, { lang: 'pl', slow: true, mood: 'happy' });
+        renderSuggestions([chunks[chunkIdx]]);
+      }
+    } else {
+      izabelaSay(`Jeszcze raz, wolniutko za mną: „${chunks[chunkIdx]}"`, { lang: 'pl', slow: true });
     }
   }
 
@@ -195,8 +240,7 @@ export function renderConversation(mount, lessonId) {
     // Izabela reaguje miną: "ups" gdy poprawia błąd, inaczej zadowolona
     setMood(avatar, mistake ? 'oops' : 'happy');
     addMessage('izabela', reply);
-    setSpeaking(true);
-    speech.speak(reply, { lang: lang === 'en' ? 'en-US' : 'pl-PL', onEnd: () => { setSpeaking(false); setMood(avatar, 'neutral'); } });
+    speakLine(reply, { lang, onEnd: () => setMood(avatar, 'neutral') });
   }
 
   let finishing = false;
