@@ -37,23 +37,40 @@ export const speech = {
   // --- Synteza mowy (TTS) — głos Izabeli ---
   // Wybieramy żeński głos dla danego języka jeśli dostępny.
   speak(text, { lang = CONFIG.SPEECH.ttsLang, rate = 1, pitch = 1.05, onEnd } = {}) {
-    if (!('speechSynthesis' in window) || !text) { onEnd?.(); return; }
+    const clean = forSpeech(text);
+    if (!('speechSynthesis' in window) || !clean) { onEnd?.(); return; }
     window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
+    const u = new SpeechSynthesisUtterance(clean);
     u.lang = lang; u.rate = rate; u.pitch = pitch;
 
     const pickVoice = () => {
+      const pref = lang.slice(0, 2).toLowerCase();
       const voices = window.speechSynthesis.getVoices();
-      const byLang = voices.filter((v) => v.lang?.toLowerCase().startsWith(lang.slice(0, 2)));
-      const female = byLang.find((v) => /female|woman|zira|google|samantha|aria/i.test(v.name));
-      u.voice = female || byLang[0] || voices[0] || null;
+      const inLang = voices.filter((v) => v.lang?.toLowerCase().startsWith(pref));
+      // Punktacja: naturalne głosy Google + żeńskie + dokładny język
+      const score = (v) => {
+        let s = 0;
+        if (/google|natural|neural/i.test(v.name)) s += 3;
+        if (/female|woman|kobieta|zofia|ewa|agnieszka|paulina|maja|zosia|samantha|aria|zira|jenny/i.test(v.name)) s += 2;
+        if (v.lang?.toLowerCase() === lang.toLowerCase()) s += 1;
+        return s;
+      };
+      u.voice = inLang.sort((a, b) => score(b) - score(a))[0] || voices[0] || null;
       window.speechSynthesis.speak(u);
     };
     u.onend = () => onEnd?.();
-    // Głosy ładują się asynchronicznie w niektórych przeglądarkach
     if (window.speechSynthesis.getVoices().length) pickVoice();
     else window.speechSynthesis.addEventListener('voiceschanged', pickVoice, { once: true });
   },
 
   stopSpeaking() { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); },
 };
+
+// Usuwa emoji/piktogramy z tekstu PRZED czytaniem (tekst na ekranie zostaje bez zmian)
+function forSpeech(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}‍️⃣]/gu, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
