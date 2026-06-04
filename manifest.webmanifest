@@ -1,0 +1,16 @@
+{
+  "name": "pogadaj.se — mów po angielsku z AI",
+  "short_name": "pogadaj.se",
+  "description": "Osobisty nauczyciel AI do mówienia po angielsku. Rozmawiaj z Izabelą.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0e27",
+  "theme_color": "#0a0e27",
+  "lang": "pl",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "assets/izabela/avatar.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
