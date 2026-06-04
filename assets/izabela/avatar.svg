@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="bg" cx="40%" cy="35%" r="80%">
+      <stop offset="0%" stop-color="#2a3270"/>
+      <stop offset="100%" stop-color="#11173a"/>
+    </radialGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6b4326"/>
+      <stop offset="100%" stop-color="#4a2d18"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#bg)"/>
+  <!-- placeholder awatara Izabeli; docelowo render z prototypu animacji -->
+  <g>
+    <!-- włosy tył -->
+    <path d="M52 95 Q50 40 100 38 Q150 40 148 95 L150 160 Q125 150 100 150 Q75 150 50 160 Z" fill="url(#hair)"/>
+    <!-- twarz -->
+    <ellipse cx="100" cy="100" rx="42" ry="48" fill="#f0c9a8"/>
+    <!-- grzywka -->
+    <path d="M58 78 Q70 50 100 48 Q130 50 142 78 Q120 66 100 68 Q80 66 58 78 Z" fill="url(#hair)"/>
+    <!-- okulary -->
+    <circle cx="82" cy="98" r="16" fill="none" stroke="#d9b88a" stroke-width="3"/>
+    <circle cx="118" cy="98" r="16" fill="none" stroke="#d9b88a" stroke-width="3"/>
+    <line x1="98" y1="98" x2="102" y2="98" stroke="#d9b88a" stroke-width="3"/>
+    <!-- oczy -->
+    <circle cx="82" cy="98" r="4" fill="#3a2a1a"/>
+    <circle cx="118" cy="98" r="4" fill="#3a2a1a"/>
+    <!-- brwi -->
+    <path d="M70 82 Q82 78 94 82" stroke="#4a2d18" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M106 82 Q118 78 130 82" stroke="#4a2d18" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <!-- usta -->
+    <path d="M88 124 Q100 132 112 124" stroke="#b5654a" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <!-- kołnierz skafandra -->
+    <path d="M58 158 Q100 142 142 158 L142 180 L58 180 Z" fill="#e8eaf2"/>
+    <rect x="92" y="156" width="16" height="14" rx="3" fill="#5b8cff"/>
+  </g>
+</svg>

@@ -1,0 +1,117 @@
+/* =============================================================
+   pogadaj.se — Motyw kosmiczny (design tokens)
+   Ciemny granat/błękit + akcenty mgławicy. Czysto, profesjonalnie.
+   ============================================================= */
+
+:root {
+  /* Tła */
+  --bg-900: #060818;   /* najgłębszy kosmos */
+  --bg-800: #0a0e27;   /* baza */
+  --bg-700: #11173a;   /* karty */
+  --bg-600: #1a2150;   /* hover/elementy */
+  --surface-glass: rgba(26, 33, 80, 0.55);
+  --surface-border: rgba(120, 150, 255, 0.16);
+
+  /* Akcenty */
+  --accent: #5b8cff;       /* błękit główny */
+  --accent-bright: #7aa2ff;
+  --accent-soft: #3a4a8c;
+  --violet: #9b6bff;       /* mgławica */
+  --cyan: #46e0d8;         /* sukces / "mówisz dobrze" */
+  --pink: #ff7eb6;         /* akcent Izabeli */
+
+  /* Semantyka */
+  --ok: #46e0d8;
+  --warn: #ffcf5c;
+  --error: #ff6b81;
+
+  /* Tekst */
+  --text: #eef2ff;
+  --text-dim: #aab3d8;
+  --text-faint: #6b75a3;
+
+  /* Kształty */
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+
+  /* Cienie / poświaty */
+  --glow-accent: 0 0 24px rgba(91, 140, 255, 0.45);
+  --glow-pink: 0 0 24px rgba(255, 126, 182, 0.35);
+  --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.45);
+
+  /* Typografia */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  /* Layout */
+  --maxw: 1100px;
+  --gap: 16px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: var(--bg-800);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, .display { font-family: var(--font-display); letter-spacing: -0.02em; }
+
+a { color: var(--accent-bright); text-decoration: none; }
+
+/* ---------- Tło kosmiczne ---------- */
+.cosmos {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(1200px 800px at 80% -10%, #1b2358 0%, transparent 60%),
+    radial-gradient(900px 700px at 10% 110%, #221a52 0%, transparent 55%),
+    linear-gradient(180deg, var(--bg-900), var(--bg-800));
+  overflow: hidden;
+}
+.stars {
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 70% 60%, #cdd6ff, transparent),
+    radial-gradient(1px 1px at 40% 80%, #fff, transparent),
+    radial-gradient(2px 2px at 90% 20%, #fff, transparent),
+    radial-gradient(1px 1px at 55% 15%, #aab3ff, transparent),
+    radial-gradient(1px 1px at 15% 70%, #fff, transparent);
+  background-repeat: repeat;
+  background-size: 600px 600px;
+  opacity: 0.7;
+  animation: drift 120s linear infinite;
+}
+.nebula {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+}
+.nebula--1 { width: 480px; height: 480px; top: -120px; right: -80px; background: var(--violet); }
+.nebula--2 { width: 420px; height: 420px; bottom: -140px; left: -100px; background: var(--accent); }
+.planet {
+  position: absolute;
+  width: 280px; height: 280px;
+  right: -120px; bottom: -120px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #6e7bd6, #2a2f66 60%, #14163a);
+  box-shadow: inset -30px -20px 60px rgba(0,0,0,0.5), 0 0 80px rgba(91,140,255,0.25);
+  opacity: 0.5;
+}
+
+@keyframes drift { from { background-position: 0 0; } to { background-position: 600px 600px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .stars { animation: none; }
+}

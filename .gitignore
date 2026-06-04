@@ -1,0 +1,16 @@
+# Zależności
+node_modules/
+
+# Firebase
+.firebase/
+firebase-debug.log*
+.firebaserc
+
+# Sekrety — NIGDY nie commitujemy kluczy!
+*.env
+.env*
+**/secrets.js
+
+# System
+.DS_Store
+Thumbs.db
