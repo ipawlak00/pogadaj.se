@@ -60,11 +60,13 @@ window.addEventListener('hashchange', render);
 window.addEventListener('DOMContentLoaded', render);
 render();
 
-// PWA: rejestracja service workera (poza dev)
-if ('serviceWorker' in navigator && !isDev()) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js').catch(() => {});
-  });
+// PWA: na czas aktywnego developmentu CACHE WYŁĄCZONY.
+// Wyrejestrowujemy ewentualny stary service worker i czyścimy cache,
+// żeby zmiany były zawsze widoczne (inaczej Pages serwuje starą wersję).
+// TODO: po ustabilizowaniu apki włączyć z powrotem rejestrację SW (PWA/offline).
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
+  if ('caches' in window) caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
 }
 
 if (isDev()) console.info(`%c${CONFIG.appName} v${CONFIG.version}`, 'color:#5b8cff', `· AI:${CONFIG.AI_PROVIDER} · Auth:${CONFIG.AUTH_PROVIDER}`);
