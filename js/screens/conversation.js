@@ -17,14 +17,17 @@ export function renderConversation(mount, lessonId) {
   let attempts = 0;
   let chunks = [], chunkIdx = 0, chunkDoneCb = null;
   let lastLine = null;
-  let listening = false, recorder = null;
+  let listening = false, recorder = null, recHandle = null, processing = false;
 
   // Tryb prowadzenia: AI (Gemini) gdy podłączony, inaczej proste kroki
   const aiLed = ai.provider === 'gemini';
   const history = [];              // [{role:'user'|'model', text}] dla Gemini
   let busy = false;               // czeka na odpowiedź AI
 
-  let recLang = 'en-US';           // język, w którym mówi uczeń (przełączalny PL/EN)
+  // Mowa ucznia: gdy jest Gemini, nagrywamy audio i transkrybujemy (łapie MIKS PL+EN).
+  // Bez Gemini — zapasowo rozpoznawanie przeglądarki (jeden język).
+  const useGeminiStt = aiLed && speech.canRecord();
+  const FALLBACK_REC_LANG = 'pl-PL';   // tylko gdy brak Gemini
 
   // W lekcji chowamy startowy motyw (pomarańcz + planety) — spójny widok stacji
   document.body.classList.add('in-lesson');
@@ -46,21 +49,11 @@ export function renderConversation(mount, lessonId) {
   const stepArea = el('div', { id: 'step-area' });
   const progressEl = el('div.faint', { id: 'step-progress', style: 'font-size:.8rem;margin:0 0 4px' });
   const micBtn = el('button.mic-btn', { 'aria-label': 'Mów', onclick: toggleListen }, ['Mów']);
-  const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center', text: 'Naciśnij mikrofon i mów (możesz też zadać pytanie)' });
+  const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center', text: 'Naciśnij mikrofon i mów (po polsku lub angielsku — możesz mieszać)' });
   const suggestRow = el('div.suggest-row', { id: 'suggest-row' });
   const replayBtn = el('button.btn.btn--ghost', { onclick: () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); } }, ['Powtórz']);
   const skipBtn = el('button.btn.btn--ghost', { onclick: skipTask }, ['Pomiń']);
   const stopBtn = el('button.btn.btn--ghost', { onclick: () => { speech.stopSpeaking(); setSpeaking(false); } }, ['Przerwij']);
-
-  // Przełącznik języka, w którym mówi uczeń (Izabela słucha PL i EN)
-  const plBtn = el('button.lang-opt', { onclick: () => setRecLang('pl-PL') }, ['polsku']);
-  const enBtn = el('button.lang-opt.active', { onclick: () => setRecLang('en-US') }, ['angielsku']);
-  function setRecLang(l) {
-    recLang = l;
-    plBtn.classList.toggle('active', l === 'pl-PL');
-    enBtn.classList.toggle('active', l === 'en-US');
-  }
-  const langToggle = el('div.lang-toggle', {}, [el('span.faint', { text: 'Mówię po:' }), enBtn, plBtn]);
 
   // Jedna, stała scena na całą lekcję (nie migocze co krok). Losowana raz.
   function nextScene() {
@@ -88,7 +81,6 @@ export function renderConversation(mount, lessonId) {
         stepArea,
         suggestRow,
         el('div.composer', { style: 'flex-direction:column;align-items:center;gap:10px' }, [
-          langToggle,
           micBtn, micLabel,
           el('div.row', { style: 'gap:10px;flex-wrap:wrap;justify-content:center' }, [replayBtn, stopBtn, skipBtn]),
         ]),
@@ -329,19 +321,63 @@ export function renderConversation(mount, lessonId) {
   }
 
   // ---------- mikrofon (mówienie + pytania, można przerwać Izabelę) ----------
-  function toggleListen() {
-    if (busy) return;
-    if (listening) { recorder?.stop(); return; }
+  // Mów w dowolnym języku — możesz swobodnie mieszać polski i angielski w jednym
+  // zdaniu, Izabela wyłapie jedno i drugie.
+  async function toggleListen() {
+    if (busy || processing) return;
+    if (listening) return stopListening();
     speech.stopSpeaking();              // naciśnięcie mikrofonu PRZERYWA Izabelę
     setSpeaking(false);
+    if (useGeminiStt) return startRecording();
+    return startBrowserListen();
+  }
+
+  function stopListening() {
+    if (recHandle) return stopRecording();   // ścieżka Gemini (nagranie)
+    recorder?.stop();                         // ścieżka przeglądarki
+  }
+
+  // --- Ścieżka Gemini: nagranie audio → transkrypcja (łapie miks PL+EN) ---
+  async function startRecording() {
+    try { recHandle = await speech.recordAudio(); }
+    catch (e) { toast('Mikrofon: ' + (e.message || e), 'error'); resetMic(); return; }
+    listening = true;
+    micBtn.classList.add('recording'); micBtn.textContent = 'Stop';
+    setMicLabel('Słucham… mów po polsku lub angielsku (dotknij, by zakończyć)');
+  }
+
+  async function stopRecording() {
+    const h = recHandle; recHandle = null;
+    listening = false; processing = true;
+    micBtn.classList.remove('recording'); micBtn.textContent = 'Mów';
+    micBtn.disabled = true; micBtn.style.opacity = '0.5';
+    setMicLabel('Rozpoznaję, co powiedziałeś…');
+    h.stop();
+    let audio = null;
+    try { audio = await h.done; } catch (e) { /* ignore */ }
+    let text = null;
+    if (audio && audio.base64) { try { text = await ai.transcribe(audio); } catch (e) { /* ignore */ } }
+    processing = false; resetMic();
+    if (text) handleAnswer(text);
+    else setMicLabel('Nie dosłyszałam — naciśnij i powiedz jeszcze raz');
+  }
+
+  // --- Ścieżka zapasowa (bez Gemini): rozpoznawanie przeglądarki, jeden język ---
+  function startBrowserListen() {
     listening = true; micBtn.classList.add('recording'); micBtn.textContent = 'Stop'; setMicLabel('Słucham… mów teraz');
     let heard = '';
     recorder = speech.listen({
-      lang: recLang,
+      lang: FALLBACK_REC_LANG,
       onResult: (t) => { heard = t; setMicLabel(`„${t}"`); },
       onError: (e) => { toast('Mikrofon: ' + (e.message || e), 'error'); resetMic(); },
       onEnd: () => { resetMic(); if (heard) handleAnswer(heard); else setMicLabel('Nie dosłyszałam — naciśnij i powiedz jeszcze raz'); },
     });
   }
-  function resetMic() { listening = false; micBtn.classList.remove('recording'); micBtn.textContent = 'Mów'; setMicLabel('Naciśnij mikrofon i mów (możesz też zadać pytanie)'); }
+
+  function resetMic() {
+    listening = false; recorder = null; recHandle = null;
+    micBtn.disabled = false; micBtn.style.opacity = '1';
+    micBtn.classList.remove('recording'); micBtn.textContent = 'Mów';
+    setMicLabel('Naciśnij mikrofon i mów (po polsku lub angielsku — możesz mieszać)');
+  }
 }

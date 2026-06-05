@@ -137,6 +137,7 @@ const stubProvider = {
 
   // Lekcja AI niedostępna bez Gemini — sygnał do fallbacku na proste kroki
   async lessonReply() { return { say: '', lang: 'pl', suggestions: [], done: true, unsupported: true }; },
+  async transcribe() { return null; },     // brak Gemini → użyjemy rozpoznawania przeglądarki
 
   // Analiza wymowy niedostępna bez Gemini → sygnał do fallbacku (Web Speech)
   async analyzePronunciation() { return null; },
@@ -273,6 +274,18 @@ Zwróć JSON:
       return { say: 'Ups, chwilowo nie mogę połączyć się z AI. Sprawdź klucz i spróbuj jeszcze raz.', lang: 'pl', suggestions: [], done: false };
     }
   },
+
+  // Transkrypcja mowy ucznia — Gemini słucha nagrania i wyłapuje MIKS PL+EN
+  async transcribe({ base64, mimeType }) {
+    try {
+      const sys = 'Jesteś precyzyjnym systemem transkrypcji mowy. Zwracasz wyłącznie poprawny JSON, bez markdown.';
+      const prompt = `Przepisz DOKŁADNIE, co osoba powiedziała na nagraniu. Osoba uczy się angielskiego i MOŻE MIESZAĆ polski z angielskim w jednym zdaniu — zapisz każde słowo w języku, w jakim je wypowiedziano (angielskie słowa po angielsku, polskie po polsku). Nie tłumacz, nie poprawiaj gramatyki, nie dodawaj nic od siebie. Jeśli nic nie słychać, zwróć pusty tekst.
+Zwróć JSON: {"text": "dokładna transkrypcja"}`;
+      const contents = [{ role: 'user', parts: [{ text: prompt }, { inline_data: { mime_type: mimeType || 'audio/webm', data: base64 } }] }];
+      const r = await this._callContents(contents, sys);
+      return (r.text || '').trim();
+    } catch (e) { reportAiError(e); return null; }
+  },
 };
 
 const useGemini = hasGeminiKey();
@@ -287,4 +300,5 @@ export const ai = {
   analyzePronunciation: (...a) => provider.analyzePronunciation(...a),
   buildProfile: (...a) => provider.buildProfile(...a),
   lessonReply: (...a) => provider.lessonReply(...a),
+  transcribe: (...a) => provider.transcribe(...a),
 };
