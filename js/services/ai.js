@@ -21,10 +21,23 @@ function reportAiError(e) {
   const msg = String(e && (e.message || e));
   let hint = '';
   if (/\b403\b|PERMISSION|API_KEY|referer|referrer|blocked/i.test(msg)) hint = ' — klucz nieprawidłowy lub ma ograniczenia (HTTP referrer / API niewłączone).';
-  else if (/\b429\b|quota|RESOURCE_EXHAUSTED/i.test(msg)) hint = ' — przekroczony limit (quota). Odczekaj lub włącz rozliczenia.';
+  else if (/\b429\b|quota|RESOURCE_EXHAUSTED/i.test(msg)) hint = ' — przekroczony darmowy limit Gemini. Odczekaj ~minutę (limit/min) lub do jutra (limit dzienny), albo włącz rozliczenia.';
   else if (/\b404\b|not found|NOT_FOUND/i.test(msg)) hint = ' — model niedostępny na tym kluczu.';
   else if (/\b400\b/i.test(msg)) hint = ' — błędne zapytanie/klucz.';
   toast('Gemini: ' + msg + hint, 'error');
+}
+
+// Wywołanie Gemini z ponawianiem przy przejściowych błędach (429/503 — limit na minutę).
+async function geminiFetch(url, body) {
+  let lastErr;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt) await new Promise((r) => setTimeout(r, attempt * 2500));   // 0s, 2.5s, 5s
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (res.ok) return res.json();
+    lastErr = new Error('Gemini API ' + res.status + ': ' + (await res.text()).slice(0, 200));
+    if (res.status !== 429 && res.status !== 503) break;   // ponawiamy tylko przejściowe
+  }
+  throw lastErr;
 }
 
 // ---- Heurystyki stub: typowe błędy Polaków po angielsku ----
@@ -180,9 +193,7 @@ const geminiProvider = {
       contents: [{ role: 'user', parts: [{ text: userText }] }],
       generationConfig: json ? { responseMimeType: 'application/json', temperature: 0.8 } : { temperature: 0.8 },
     };
-    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (!res.ok) throw new Error('Gemini API ' + res.status + ': ' + (await res.text()).slice(0, 200));
-    const data = await res.json();
+    const data = await geminiFetch(url, body);
     const txt = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     return json ? JSON.parse(txt) : txt;
   },
@@ -245,9 +256,7 @@ Zwróć JSON:
       contents,
       generationConfig: { responseMimeType: 'application/json', temperature: 0.85 },
     };
-    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (!res.ok) throw new Error('Gemini API ' + res.status + ': ' + (await res.text()).slice(0, 200));
-    const data = await res.json();
+    const data = await geminiFetch(url, body);
     return JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text || '{}');
   },
   async lessonReply(history) {
