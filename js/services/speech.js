@@ -166,6 +166,72 @@ async function speakEleven(text, { onEnd, rate } = {}) {
   }
 }
 
+// ---- Gemini natywny TTS (naturalny głos na kluczu Gemini — bez Google Cloud TTS) ----
+const GEMINI_TTS_MODEL = 'gemini-2.5-flash-preview-tts';
+const GEMINI_VOICE = 'Leda';                 // ciepły, kobiecy głos
+const GEMINI_KEY_STORE = 'pogadajse.geminiKey';
+function genLangKey() { return (ls(GEMINI_KEY_STORE) || (CONFIG.GEMINI.apiKey || '')).trim(); }
+const hasGeminiTTS = () => !!genLangKey();
+
+// Surowe PCM (L16, mono) z Gemini → WAV data-blob do odtworzenia w przeglądarce
+function pcmToWavUrl(base64, sampleRate) {
+  const bin = atob(base64), len = bin.length;
+  const buf = new ArrayBuffer(44 + len), view = new DataView(buf);
+  const wr = (off, s) => { for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)); };
+  wr(0, 'RIFF'); view.setUint32(4, 36 + len, true); wr(8, 'WAVE');
+  wr(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  wr(36, 'data'); view.setUint32(40, len, true);
+  for (let i = 0; i < len; i++) view.setUint8(44 + i, bin.charCodeAt(i));
+  return URL.createObjectURL(new Blob([view], { type: 'audio/wav' }));
+}
+
+async function geminiTtsUrl(text) {
+  const cacheKey = 'gem|' + GEMINI_VOICE + '|' + text;
+  const cached = audioCache.get(cacheKey);
+  if (cached) return cached;
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TTS_MODEL}:generateContent?key=${genLangKey()}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text }] }],
+      generationConfig: { responseModalities: ['AUDIO'],
+        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_VOICE } } } },
+    }),
+  });
+  if (!res.ok) throw new Error('Gemini TTS ' + res.status + ': ' + (await res.text()).slice(0, 200));
+  const data = await res.json();
+  const parts = data.candidates?.[0]?.content?.parts || [];
+  const inline = parts.map((p) => p.inlineData || p.inline_data).find((d) => d && d.data);
+  if (!inline) throw new Error('Gemini TTS: brak audio w odpowiedzi');
+  const mime = inline.mimeType || inline.mime_type || 'audio/L16;rate=24000';
+  const sr = parseInt((mime.match(/rate=(\d+)/) || [])[1] || '24000', 10);
+  const url = pcmToWavUrl(inline.data, sr);
+  audioCache.set(cacheKey, url);
+  return url;
+}
+
+async function speakGemini(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
+  try {
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    const url = await geminiTtsUrl(text);
+    const audio = new Audio(url);
+    if (rate && rate < 1) audio.playbackRate = Math.max(0.85, rate);   // delikatne zwolnienie
+    currentAudio = audio;
+    audio.onended = () => { if (currentAudio === audio) currentAudio = null; onEnd?.(); };
+    audio.onerror = () => onEnd?.();
+    await audio.play();
+  } catch (e) {
+    console.warn('[GeminiTTS] fallback:', e);
+    if (!ttsErrorShown) {
+      ttsErrorShown = true;
+      toast('Głos Gemini nie zadziałał (' + (e.message || e) + '). Używam zapasowego.', 'error');
+    }
+    if (hasGoogleTTS()) return speakGoogle(text, { lang, rate, onEnd });
+    return speakWeb(text, { lang, onEnd });
+  }
+}
+
 function speakWeb(clean, { lang = CONFIG.SPEECH.ttsLang, rate = 1, pitch = 1.0, onEnd } = {}) {
   if (!('speechSynthesis' in window) || !clean) { onEnd?.(); return; }
   window.speechSynthesis.cancel();
@@ -221,13 +287,15 @@ export const speech = {
   },
 
   // --- Synteza mowy (TTS) — głos Izabeli ---
-  // Priorytet: Google Cloud TTS → ElevenLabs → wbudowany głos przeglądarki.
+  // Priorytet: Gemini (naturalny, ten sam klucz co AI) → Google Cloud TTS
+  //            → ElevenLabs → wbudowany głos przeglądarki.
   speak(text, opts = {}) {
     const clean = forSpeech(text);
     if (!clean) { opts.onEnd?.(); return; }
+    if (hasGeminiTTS()) { announceEngine('Głos: Gemini (naturalny, kobiecy)'); return speakGemini(clean, opts); }
     if (hasGoogleTTS()) { announceEngine('Głos: Google TTS (naturalny)'); return speakGoogle(clean, opts); }
     if (hasEleven()) { announceEngine('Głos: ElevenLabs (naturalny)'); return speakEleven(clean, opts); }
-    announceEngine('Głos: przeglądarka (zapasowy, robotyczny). Klucz Google TTS NIE jest zapisany na tym urządzeniu — ustaw go na ekranie logowania („Ustaw głos Izabeli").', 'error');
+    announceEngine('Głos: przeglądarka (zapasowy, robotyczny). Podłącz Izabelę z AI (Gemini), aby brzmiała naturalnie.', 'error');
     return speakWeb(clean, opts);
   },
 
