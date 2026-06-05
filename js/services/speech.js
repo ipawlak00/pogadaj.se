@@ -46,6 +46,8 @@ const GTTS_VOICES = {
 };
 const chosenVoice = { pl: null, en: null };   // zapamiętany działający głos
 let ttsErrorShown = false;                      // pokaż błąd Google TTS tylko raz
+let engineAnnounced = false;                    // raz na sesję: który silnik głosu gra
+function announceEngine(msg, kind) { if (engineAnnounced) return; engineAnnounced = true; toast(msg, kind); }
 
 let currentAudio = null;
 const audioCache = new Map();   // cache audio po (voice|rate|text) — oszczędza koszt znaków
@@ -223,8 +225,9 @@ export const speech = {
   speak(text, opts = {}) {
     const clean = forSpeech(text);
     if (!clean) { opts.onEnd?.(); return; }
-    if (hasGoogleTTS()) return speakGoogle(clean, opts);
-    if (hasEleven()) return speakEleven(clean, opts);
+    if (hasGoogleTTS()) { announceEngine('Głos: Google TTS (naturalny)'); return speakGoogle(clean, opts); }
+    if (hasEleven()) { announceEngine('Głos: ElevenLabs (naturalny)'); return speakEleven(clean, opts); }
+    announceEngine('Głos: przeglądarka (zapasowy, robotyczny). Klucz Google TTS NIE jest zapisany na tym urządzeniu — ustaw go na ekranie logowania („Ustaw głos Izabeli").', 'error');
     return speakWeb(clean, opts);
   },
 
