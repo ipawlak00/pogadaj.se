@@ -32,7 +32,7 @@ export function hasGoogleTTS() { return !!ls(GTTS_KEY); }
 // Głosy Izabeli wg języka (żeńskie, naturalne WaveNet)
 const GTTS_VOICE = {
   pl: { languageCode: 'pl-PL', name: 'pl-PL-Wavenet-A', ssmlGender: 'FEMALE' },
-  en: { languageCode: 'en-US', name: 'en-US-Wavenet-F', ssmlGender: 'FEMALE' },
+  en: { languageCode: 'en-US', name: 'en-US-Neural2-F', ssmlGender: 'FEMALE' },
 };
 
 let currentAudio = null;
@@ -132,7 +132,7 @@ async function speakEleven(text, { onEnd, rate } = {}) {
   }
 }
 
-function speakWeb(clean, { lang = CONFIG.SPEECH.ttsLang, rate = 1, pitch = 1.05, onEnd } = {}) {
+function speakWeb(clean, { lang = CONFIG.SPEECH.ttsLang, rate = 1, pitch = 1.0, onEnd } = {}) {
   if (!('speechSynthesis' in window) || !clean) { onEnd?.(); return; }
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(clean);
@@ -141,14 +141,19 @@ function speakWeb(clean, { lang = CONFIG.SPEECH.ttsLang, rate = 1, pitch = 1.05,
     const pref = lang.slice(0, 2).toLowerCase();
     const voices = window.speechSynthesis.getVoices();
     const inLang = voices.filter((v) => v.lang?.toLowerCase().startsWith(pref));
+    const pool = inLang.length ? inLang : voices;
+    // Cel: najbardziej ludzki, ŻEŃSKI głos. Sieciowe (naturalne) > lokalne (robot).
     const score = (v) => {
+      const n = (v.name || '').toLowerCase();
       let s = 0;
-      if (/google|natural|neural/i.test(v.name)) s += 3;
-      if (/female|woman|kobieta|zofia|ewa|agnieszka|paulina|maja|zosia|samantha|aria|zira|jenny/i.test(v.name)) s += 2;
+      if (v.localService === false) s += 5;                          // głos sieciowy/neuronowy
+      if (/natural|neural|online|wavenet|studio|google/.test(n)) s += 4;
+      if (/female|woman|kobieta|zofia|agnieszka|ewa|paulina|maja|zosia|alicja|samantha|aria|zira|jenny|ava|emma|libby|michelle/.test(n)) s += 2;
+      if (/espeak|festival|pico|robot/.test(n)) s -= 5;              // ewidentnie syntetyczne
       if (v.lang?.toLowerCase() === lang.toLowerCase()) s += 1;
       return s;
     };
-    u.voice = inLang.sort((a, b) => score(b) - score(a))[0] || voices[0] || null;
+    u.voice = pool.slice().sort((a, b) => score(b) - score(a))[0] || voices[0] || null;
     window.speechSynthesis.speak(u);
   };
   u.onend = () => onEnd?.();
