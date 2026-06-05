@@ -7,6 +7,7 @@
 // =============================================================
 
 import { CONFIG } from '../config.js';
+import { toast } from '../ui.js';
 
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -29,11 +30,22 @@ export function setGoogleTTSKey(key) {
 }
 export function hasGoogleTTS() { return !!ls(GTTS_KEY); }
 
-// Głosy Izabeli wg języka (żeńskie, naturalne WaveNet)
-const GTTS_VOICE = {
-  pl: { languageCode: 'pl-PL', name: 'pl-PL-Wavenet-A', ssmlGender: 'FEMALE' },
-  en: { languageCode: 'en-US', name: 'en-US-Neural2-F', ssmlGender: 'FEMALE' },
+// Głosy Izabeli wg języka — od najbardziej naturalnego do zapasowego.
+// Pierwszy, który zadziała na danym kluczu/projekcie, zostaje zapamiętany.
+const GTTS_VOICES = {
+  pl: [
+    { languageCode: 'pl-PL', name: 'pl-PL-Chirp3-HD-Leda' },           // najnaturalniejszy (HD)
+    { languageCode: 'pl-PL', name: 'pl-PL-Wavenet-A', ssmlGender: 'FEMALE' },
+    { languageCode: 'pl-PL', name: 'pl-PL-Standard-A', ssmlGender: 'FEMALE' },
+  ],
+  en: [
+    { languageCode: 'en-US', name: 'en-US-Chirp3-HD-Leda' },
+    { languageCode: 'en-US', name: 'en-US-Neural2-F', ssmlGender: 'FEMALE' },
+    { languageCode: 'en-US', name: 'en-US-Wavenet-F', ssmlGender: 'FEMALE' },
+  ],
 };
+const chosenVoice = { pl: null, en: null };   // zapamiętany działający głos
+let ttsErrorShown = false;                      // pokaż błąd Google TTS tylko raz
 
 let currentAudio = null;
 const audioCache = new Map();   // cache audio po (voice|rate|text) — oszczędza koszt znaków
@@ -55,21 +67,36 @@ function splitByQuotes(text, primary) {
   return out.length ? out : [{ text, lang: primary }];
 }
 
+async function gttsOnce(text, v, rate) {
+  // Głosy Chirp3-HD nie wspierają speakingRate — pomijamy je dla nich.
+  const isChirp = /chirp/i.test(v.name);
+  const audioConfig = isChirp ? { audioEncoding: 'MP3' } : { audioEncoding: 'MP3', speakingRate: rate || 1 };
+  const res = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${ls(GTTS_KEY)}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ input: { text }, voice: v, audioConfig }),
+  });
+  if (!res.ok) throw new Error('Google TTS ' + res.status + ': ' + (await res.text()).slice(0, 220));
+  const data = await res.json();
+  return 'data:audio/mp3;base64,' + data.audioContent;
+}
+
 async function gttsUrl(text, langKey, rate) {
-  const v = GTTS_VOICE[langKey] || GTTS_VOICE.pl;
-  const cacheKey = v.name + '|' + rate + '|' + text;
-  let url = audioCache.get(cacheKey);
-  if (!url) {
-    const res = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${ls(GTTS_KEY)}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ input: { text }, voice: v, audioConfig: { audioEncoding: 'MP3', speakingRate: rate || 1 } }),
-    });
-    if (!res.ok) throw new Error('Google TTS ' + res.status + ': ' + (await res.text()).slice(0, 200));
-    const data = await res.json();
-    url = 'data:audio/mp3;base64,' + data.audioContent;
-    audioCache.set(cacheKey, url);
+  const key = langKey === 'en' ? 'en' : 'pl';
+  // Jeśli już wiemy, który głos działa — użyj tylko jego.
+  const candidates = chosenVoice[key] ? [chosenVoice[key]] : GTTS_VOICES[key];
+  let lastErr = null;
+  for (const v of candidates) {
+    const cacheKey = v.name + '|' + rate + '|' + text;
+    const cached = audioCache.get(cacheKey);
+    if (cached) { chosenVoice[key] = v; return cached; }
+    try {
+      const url = await gttsOnce(text, v, rate);
+      chosenVoice[key] = v;                 // zapamiętaj działający głos
+      audioCache.set(cacheKey, url);
+      return url;
+    } catch (e) { lastErr = e; /* spróbuj kolejny głos z drabinki */ }
   }
-  return url;
+  throw lastErr || new Error('Google TTS: brak działającego głosu');
 }
 
 async function speakGoogle(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
@@ -78,24 +105,29 @@ async function speakGoogle(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
     const primary = lang.slice(0, 2).toLowerCase();
     // Mieszany PL+EN tylko gdy główny język to polski (przykłady w cudzysłowie)
     const segments = primary === 'pl' ? splitByQuotes(text, 'pl') : [{ text, lang: primary }];
+    // Zsyntetyzuj wszystkie fragmenty z góry — jeśli KTÓRYKOLWIEK padnie, lecimy
+    // na zapasowy głos (żeby uczeń zawsze coś usłyszał), a błąd pokazujemy raz.
+    const urls = [];
+    for (const seg of segments) {
+      const segRate = seg.lang === 'en' ? (rate || 1) * 0.82 : (rate || 1);   // angielski wolniej
+      urls.push(await gttsUrl(seg.text, seg.lang, segRate));
+    }
     let i = 0;
-    const playNext = async () => {
-      if (i >= segments.length) { onEnd?.(); return; }
-      const seg = segments[i++];
-      // Angielski czytamy wyraźnie wolniej (uczeń ma nadążyć i powtórzyć)
-      const segRate = seg.lang === 'en' ? (rate || 1) * 0.82 : (rate || 1);
-      try {
-        const url = await gttsUrl(seg.text, seg.lang, segRate);
-        const audio = new Audio(url);
-        currentAudio = audio;
-        audio.onended = () => { if (currentAudio === audio) currentAudio = null; playNext(); };
-        audio.onerror = () => playNext();
-        await audio.play();
-      } catch (e) { console.warn('[GoogleTTS seg]', e); playNext(); }
+    const playNext = () => {
+      if (i >= urls.length) { onEnd?.(); return; }
+      const audio = new Audio(urls[i++]);
+      currentAudio = audio;
+      audio.onended = () => { if (currentAudio === audio) currentAudio = null; playNext(); };
+      audio.onerror = () => playNext();
+      audio.play().catch(() => playNext());
     };
-    await playNext();
+    playNext();
   } catch (e) {
     console.warn('[GoogleTTS] fallback do głosu przeglądarki:', e);
+    if (!ttsErrorShown) {
+      ttsErrorShown = true;
+      toast('Głos Google nie zadziałał (' + (e.message || e) + '). Używam zapasowego. Sprawdź, czy ten klucz ma włączone „Cloud Text-to-Speech API".', 'error');
+    }
     speakWeb(text, { lang, onEnd });
   }
 }
