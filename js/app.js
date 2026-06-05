@@ -53,9 +53,21 @@ function guarded(st, render) {
 
 function redirect(hash) { location.hash = hash; /* hashchange wywoła render */ }
 
+// Motyw zależny od ekranu: planety + pomarańcz TYLKO na logowaniu,
+// reszta apki = pokład statku (chłodny błękit). Steruje tym data-route na <body>.
+function routeKey(hash, st) {
+  if (/^#\/lesson\//.test(hash)) return 'lesson';
+  if (hash === '#/onboarding') return 'onboarding';
+  if (hash === '#/intro') return 'intro';
+  if (hash === '#/phonetic') return 'phonetic';
+  if (hash === '#/lessons') return 'lessons';
+  return st.user ? 'lessons' : 'welcome';   // '#/' zależnie od logowania
+}
+
 function render() {
   clear(appEl);
   window.scrollTo(0, 0);
+  document.body.dataset.route = routeKey(location.hash || '#/', store.get());
   resolve();
 }
 

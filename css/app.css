@@ -34,6 +34,20 @@
 .btn--lg { padding: 16px 32px; font-size: 1.1rem; }
 .btn--block { width: 100%; justify-content: center; }
 
+/* Na pokładzie (poza logowaniem) przyciski główne są błękitne, nie pomarańczowe */
+body:not([data-route="welcome"]) .btn--primary {
+  background: linear-gradient(135deg, #4f86c6, #74aee4); color: #06223f;
+}
+
+/* Przycisk „Izabeli" — błękit jak jej golf, pogrubiony biały napis */
+.btn--iza {
+  background: linear-gradient(135deg, #4f86c6, #74aee4);
+  color: #fff; font-weight: 800; letter-spacing: .01em;
+  box-shadow: 0 10px 30px rgba(79, 134, 198, .5);
+  text-shadow: 0 1px 2px rgba(0, 40, 80, .4);
+}
+.btn--iza:hover { box-shadow: 0 14px 36px rgba(79, 134, 198, .6); }
+
 .card {
   background: var(--surface-glass);
   border: 1px solid var(--surface-border);
@@ -173,6 +187,11 @@ body.in-lesson { background: #0a0d15; }
   transition: transform .1s; display: grid; place-items: center;
 }
 .mic-btn:active { transform: scale(.94); }
+/* Mikrofon spójny z błękitem pokładu (golf Izabeli) */
+body:not([data-route="welcome"]) .mic-btn {
+  background: linear-gradient(135deg, #4f86c6, #82c4ff);
+  box-shadow: 0 0 26px rgba(91, 159, 224, .5);
+}
 .mic-btn.recording { background: linear-gradient(135deg, var(--error), var(--pink)); animation: rec 1s infinite; }
 @keyframes rec { 0%,100% { box-shadow: 0 0 0 0 rgba(255,107,129,.5); } 50% { box-shadow: 0 0 0 18px rgba(255,107,129,0); } }
 .spinner { width: 38px; height: 38px; border-radius: 50%; margin: 0 auto;
@@ -326,6 +345,21 @@ body.in-lesson { background: #0a0d15; }
 }
 .intro-video video { width: 100%; display: block; }
 .intro-skip { position: absolute; top: 16px; right: 16px; z-index: 5; }
+
+/* ---------- Intro: pełnoekranowy filmik powitalny ---------- */
+.intro-full { position: fixed; inset: 0; z-index: 60; background: #000; display: flex; align-items: center; justify-content: center; }
+.intro-full video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+.intro-full .intro-skip { position: fixed; top: max(16px, env(safe-area-inset-top)); right: 16px; }
+/* Przycisk „Zaczynajmy" pojawiający się po filmie */
+.intro-go { position: fixed; left: 0; right: 0; bottom: 9vh; z-index: 61; display: flex; justify-content: center;
+  opacity: 0; transform: translateY(14px); transition: opacity .4s ease, transform .4s ease; pointer-events: none; }
+.intro-go.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+/* ---------- Intro: karta powitalna / wyjaśnienie (na pokładzie) ---------- */
+.intro-hello { max-width: 560px; margin: 9vh auto 0; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.intro-hello .iza-shot { width: clamp(150px, 40vw, 230px); border-radius: 20px; overflow: hidden;
+  border: 2px solid rgba(120,160,220,.3); box-shadow: 0 16px 48px rgba(0,0,0,.55); }
+.intro-hello .iza-shot img { width: 100%; display: block; }
 
 /* ---------- Intro: powitanie Izabeli (kadr + dymek) ---------- */
 .greet-wrap { position: relative; max-width: 560px; margin: 4vh auto 0; display: flex; flex-direction: column; align-items: center; gap: 18px; }

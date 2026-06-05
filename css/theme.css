@@ -121,3 +121,28 @@ a { color: var(--accent-bright); text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
   .stars, .planet, .sky-rocket { animation: none; }
 }
+
+/* =============================================================
+   Motyw per-ekran — planety/pomarańcz TYLKO na logowaniu.
+   Po wejściu na pokład: tło statku + chłodny błękit (golf Izabeli).
+   ============================================================= */
+.cosmos { display: none; }                         /* domyślnie brak planet */
+body[data-route="welcome"] .cosmos { display: block; }
+
+/* Pokład statku — tło z grafiki Izabeli, przyciemnione dla czytelności */
+body:not([data-route="welcome"]) {
+  background:
+    linear-gradient(180deg, rgba(8,11,20,.86), rgba(7,10,18,.93)),
+    url('../assets/scenes/scene-02.jpg') center/cover fixed no-repeat;
+}
+
+/* Chłodna paleta (błękit) zamiast pomarańczu na całej apce poza logowaniem */
+body:not([data-route="welcome"]) {
+  --accent: #5b9fe0;
+  --accent-bright: #84c4ff;
+  --amber: #84c4ff;
+  --accent-soft: #1d3a5c;
+  --grad-brand: linear-gradient(90deg, #5b9fe0, #84c4ff);
+  --glow-accent: 0 0 24px rgba(91, 159, 224, 0.45);
+  --surface-border: rgba(120, 160, 220, 0.18);
+}

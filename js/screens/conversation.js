@@ -40,7 +40,7 @@ export function renderConversation(mount, lessonId) {
   ]);
   stage.onclick = () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); };
   const setMood = () => {};
-  const setAvSpeaking = (_n, on) => stage.classList.toggle('speaking', !!on);
+  const setAvSpeaking = (on) => stage.classList.toggle('speaking', !!on);
 
   const chatEl = el('div.chat');
   const stepArea = el('div', { id: 'step-area' });
@@ -49,6 +49,7 @@ export function renderConversation(mount, lessonId) {
   const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center', text: 'Naciśnij mikrofon i powtórz 🎙' });
   const suggestRow = el('div.suggest-row', { id: 'suggest-row' });
   const replayBtn = el('button.btn.btn--ghost', { onclick: () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); } }, ['🔊 Powtórz']);
+  const skipBtn = el('button.btn.btn--ghost', { onclick: skipTask }, ['Pomiń ⏭']);
 
   let sceneTick = 0;
   function nextScene() {
@@ -78,7 +79,7 @@ export function renderConversation(mount, lessonId) {
         suggestRow,
         el('div.composer', { style: 'flex-direction:column;align-items:center;gap:10px' }, [
           micBtn, micLabel,
-          el('div.row', { style: 'gap:10px' }, [replayBtn]),
+          el('div.row', { style: 'gap:10px' }, [replayBtn, skipBtn]),
         ]),
       ]),
     ])
@@ -117,9 +118,9 @@ export function renderConversation(mount, lessonId) {
     if (r.unsupported) { startStep(); return; }     // brak Gemini → kroki
     nextScene();           // zmiana scenerii co turę
     history.push({ role: 'model', text: r.say });
-    if (r.mistake) setMood(avatar, 'oops');
+    if (r.mistake) setMood('oops');
     addMessage('izabela', r.say);
-    speakLine(r.say, { lang: r.lang, onEnd: () => setMood(avatar, 'neutral') });
+    speakLine(r.say, { lang: r.lang, onEnd: () => setMood('neutral') });
     renderSuggestions(r.suggestions);
     if (r.done) {
       store.markLessonDone(lesson.id);
@@ -141,7 +142,7 @@ export function renderConversation(mount, lessonId) {
     chatEl.append(node);
     chatEl.scrollTop = chatEl.scrollHeight;
   }
-  function setSpeaking(on) { setAvSpeaking(avatar, on); }
+  function setSpeaking(on) { setAvSpeaking(on); }
   function setMicLabel(t) { micLabel.textContent = t; }
 
   // Mówi i zapamiętuje ostatnią kwestię. lang 'pl'|'en'; slow = wolniej.
@@ -153,9 +154,9 @@ export function renderConversation(mount, lessonId) {
       onEnd: () => { setSpeaking(false); onEnd?.(); } });
   }
   function izabelaSay(text, { lang = 'pl', slow = false, mood = 'neutral', onEnd } = {}) {
-    setMood(avatar, mood);
+    setMood(mood);
     addMessage('izabela', text);
-    speakLine(text, { lang, slow, onEnd: () => { setMood(avatar, 'neutral'); onEnd?.(); } });
+    speakLine(text, { lang, slow, onEnd: () => { setMood('neutral'); onEnd?.(); } });
   }
   function renderSuggestions(list) {
     suggestRow.replaceChildren();
@@ -196,6 +197,20 @@ export function renderConversation(mount, lessonId) {
     nextStep();
   }
   function nextStep() { stepIdx++; startStep(); }
+
+  // Pomiń bieżące zadanie (do szybkiego przeglądania) — działa w obu trybach.
+  function skipTask() {
+    if (busy) return;
+    speech.stopSpeaking();
+    if (listening) resetMic();
+    if (aiLed) {
+      addMessage('user', '⏭ pomijam');
+      history.push({ role: 'user', text: 'Pomińmy to ćwiczenie — przejdź od razu do następnej frazy lub tematu.' });
+      return aiTurn();
+    }
+    if (phase === 'chunks' && chunkDoneCb) return chunkDoneCb();
+    nextStep();
+  }
 
   function finishLesson() {
     store.markLessonDone(lesson.id);

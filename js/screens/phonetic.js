@@ -44,6 +44,7 @@ export function renderPhonetic(mount) {
         resultArea(),
         el('div.row', { style: 'justify-content:center;gap:10px;margin-top:6px' }, [
           el('button.btn.btn--ghost', { onclick: skip }, ['Pomiń słowo']),
+          el('button.btn.btn--ghost', { style: 'opacity:.7;font-size:.85rem', onclick: finish }, ['Pomiń cały test ⏭']),
         ]),
       ]),
       el('div.spacer'),
