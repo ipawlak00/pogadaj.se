@@ -10,6 +10,22 @@
 import { CONFIG } from '../config.js';
 import { IZABELA } from '../data/izabela.js';
 import { store } from '../state.js';
+import { toast } from '../ui.js';
+
+// Pokaż PRAWDZIWY błąd połączenia z Gemini (raz), żeby dało się go zdiagnozować.
+let aiErrorShown = false;
+function reportAiError(e) {
+  console.warn('[Gemini]', e);
+  if (aiErrorShown) return;
+  aiErrorShown = true;
+  const msg = String(e && (e.message || e));
+  let hint = '';
+  if (/\b403\b|PERMISSION|API_KEY|referer|referrer|blocked/i.test(msg)) hint = ' — klucz nieprawidłowy lub ma ograniczenia (HTTP referrer / API niewłączone).';
+  else if (/\b429\b|quota|RESOURCE_EXHAUSTED/i.test(msg)) hint = ' — przekroczony limit (quota). Odczekaj lub włącz rozliczenia.';
+  else if (/\b404\b|not found|NOT_FOUND/i.test(msg)) hint = ' — model niedostępny na tym kluczu.';
+  else if (/\b400\b/i.test(msg)) hint = ' — błędne zapytanie/klucz.';
+  toast('Gemini: ' + msg + hint, 'error');
+}
 
 // ---- Heurystyki stub: typowe błędy Polaków po angielsku ----
 const STUB_RULES = [
@@ -182,8 +198,8 @@ const geminiProvider = {
         suggestions: Array.isArray(r.suggestions) ? r.suggestions.slice(0, 4) : [],
       };
     } catch (e) {
-      console.warn('[Gemini chat]', e);
-      return { reply: 'Ups, chwilowo nie mogę połączyć się z moim mózgiem AI Sprawdź klucz API i spróbuj ponownie.', correction: null, mistake: null, lang: 'pl', suggestions: [] };
+      reportAiError(e);
+      return { reply: 'Ups, chwilowo nie mogę połączyć się z moim mózgiem AI. Sprawdź klucz API i spróbuj ponownie.', correction: null, mistake: null, lang: 'pl', suggestions: [] };
     }
   },
   async hint({ task, text }) {
@@ -216,7 +232,7 @@ Zwróć JSON:
         heard: r.heard || '', issue: r.issue || null, tip: r.tip || '', praise: r.praise || null,
         focus: target.focus,
       };
-    } catch (e) { console.warn('[Gemini pron]', e); return null; }
+    } catch (e) { reportAiError(e); return null; }
   },
 
   // Wielo-turowe wywołanie (lekcja prowadzona przez AI)
@@ -244,8 +260,8 @@ Zwróć JSON:
         correction: r.correction || null, mistake: r.mistake || null, done: !!r.done,
       };
     } catch (e) {
-      console.warn('[Gemini lesson]', e);
-      return { say: 'Ups, chwilowo nie mogę połączyć się z AI Sprawdź klucz i spróbuj jeszcze raz.', lang: 'pl', suggestions: [], done: false };
+      reportAiError(e);
+      return { say: 'Ups, chwilowo nie mogę połączyć się z AI. Sprawdź klucz i spróbuj jeszcze raz.', lang: 'pl', suggestions: [], done: false };
     }
   },
 };
