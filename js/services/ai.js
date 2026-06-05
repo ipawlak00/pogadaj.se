@@ -108,13 +108,30 @@ const stubProvider = {
   // Lekcja AI niedostępna bez Gemini — sygnał do fallbacku na proste kroki
   async lessonReply() { return { say: '', lang: 'pl', suggestions: [], done: true, unsupported: true }; },
 
+  // Analiza wymowy niedostępna bez Gemini → sygnał do fallbacku (Web Speech)
+  async analyzePronunciation() { return null; },
+
   // Budowa profilu fonetycznego z wyników słówek
   async buildProfile({ results }) {
-    const challenges = [...new Set(results.filter((r) => !r.ok).map((r) => r.focus))];
-    const strengths = [...new Set(results.filter((r) => r.ok).map((r) => r.focus))];
-    return { strengths, challenges, samples: results, createdAt: Date.now() };
+    return buildProfileFrom(results);
   },
 };
+
+// Wspólna agregacja profilu fonetycznego (uwzględnia wynik 0-100 jeśli jest)
+function buildProfileFrom(results) {
+  const byFocus = {};
+  for (const r of results) {
+    if (!r || !r.focus) continue;
+    (byFocus[r.focus] ||= []).push(typeof r.score === 'number' ? r.score : (r.ok ? 85 : 45));
+  }
+  const avg = (a) => Math.round(a.reduce((s, x) => s + x, 0) / a.length);
+  const focusScores = Object.fromEntries(Object.entries(byFocus).map(([k, v]) => [k, avg(v)]));
+  const challenges = Object.entries(focusScores).filter(([, s]) => s < 70).sort((a, b) => a[1] - b[1]).map(([k]) => k);
+  const strengths = Object.entries(focusScores).filter(([, s]) => s >= 85).map(([k]) => k);
+  const all = results.map((r) => (typeof r.score === 'number' ? r.score : (r.ok ? 85 : 45))).filter((x) => x != null);
+  const overall = all.length ? avg(all) : null;
+  return { strengths, challenges, focusScores, overall, samples: results, createdAt: Date.now() };
+}
 
 // ---- Klucz Gemini: localStorage (na urządzeniu) lub CONFIG ----
 const KEY_STORE = 'pogadajse.geminiKey';
@@ -174,8 +191,32 @@ const geminiProvider = {
       return { reply: r };
     } catch { return { reply: task?.hintSpoken || 'Spokojnie, pomyśl o czasie tej czynności 😊' }; }
   },
-  async analyzeWord(args) { return stubProvider.analyzeWord(args); },     // wymowa lokalnie (na razie)
-  async buildProfile(args) { return stubProvider.buildProfile(args); },
+  async analyzeWord(args) { return stubProvider.analyzeWord(args); },     // fallback tekstowy
+  async buildProfile({ results }) { return buildProfileFrom(results); },
+
+  // PRAWDZIWA analiza wymowy: Gemini SŁUCHA nagrania ucznia
+  async analyzePronunciation({ target, base64, mimeType }) {
+    try {
+      const sys = 'Jesteś Izabelą — ciepłą, konkretną nauczycielką wymowy angielskiego dla Polaków. Słuchasz nagrania i oceniasz wymowę POJEDYNCZEGO słowa. Odpowiadasz wyłącznie poprawnym JSON, bez markdown.';
+      const prompt = `Uczeń (Polak) miał wymówić angielskie słowo "${target.word}" (IPA: ${target.ipa}; kluczowy dźwięk: ${target.focus}). Posłuchaj nagrania i oceń wymowę uczciwie, ale życzliwie.
+Zwróć JSON:
+{
+ "heard": "co najprawdopodobniej słyszysz (krótko)",
+ "score": liczba 0-100 (jak blisko poprawnej wymowy),
+ "ok": true/false (true gdy score>=70),
+ "issue": "krótka etykieta głównego błędu lub null, np. 'TH wymówione jak F'",
+ "tip": "jedno-dwa zdania PO POLSKU: konkretnie jak poprawić ten dźwięk (ułożenie języka/ust)",
+ "praise": "krótka pochwała po polsku gdy dobrze, inaczej null"
+}`;
+      const contents = [{ role: 'user', parts: [{ text: prompt }, { inline_data: { mime_type: mimeType || 'audio/webm', data: base64 } }] }];
+      const r = await this._callContents(contents, sys);
+      return {
+        ok: !!r.ok, score: typeof r.score === 'number' ? Math.max(0, Math.min(100, r.score)) : null,
+        heard: r.heard || '', issue: r.issue || null, tip: r.tip || '', praise: r.praise || null,
+        focus: target.focus,
+      };
+    } catch (e) { console.warn('[Gemini pron]', e); return null; }
+  },
 
   // Wielo-turowe wywołanie (lekcja prowadzona przez AI)
   async _callContents(contents, systemText) {
@@ -217,6 +258,7 @@ export const ai = {
   chat: (...a) => provider.chat(...a),
   hint: (...a) => provider.hint(...a),
   analyzeWord: (...a) => provider.analyzeWord(...a),
+  analyzePronunciation: (...a) => provider.analyzePronunciation(...a),
   buildProfile: (...a) => provider.buildProfile(...a),
   lessonReply: (...a) => provider.lessonReply(...a),
 };

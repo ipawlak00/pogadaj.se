@@ -195,7 +195,39 @@ export const speech = {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   },
+
+  // --- Nagrywanie audio (do analizy wymowy przez Gemini) ---
+  canRecord() {
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && typeof MediaRecorder !== 'undefined');
+  },
+  async recordAudio() {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    let mime = '';
+    for (const m of ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/webm', 'audio/mp4']) {
+      if (MediaRecorder.isTypeSupported(m)) { mime = m; break; }
+    }
+    const mr = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    const chunks = [];
+    mr.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+    const done = new Promise((resolve) => {
+      mr.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunks, { type: mr.mimeType || mime || 'audio/webm' });
+        resolve({ base64: await blobToBase64(blob), mimeType: (mr.mimeType || mime || 'audio/webm').split(';')[0] });
+      };
+    });
+    mr.start();
+    return { stop: () => { try { mr.stop(); } catch (e) {} }, done };
+  },
 };
+
+function blobToBase64(blob) {
+  return new Promise((resolve) => {
+    const r = new FileReader();
+    r.onloadend = () => resolve(String(r.result).split(',')[1] || '');
+    r.readAsDataURL(blob);
+  });
+}
 
 // Usuwa emoji/piktogramy z tekstu PRZED czytaniem (tekst na ekranie zostaje bez zmian)
 function forSpeech(text) {
