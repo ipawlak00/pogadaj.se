@@ -513,95 +513,99 @@ body:not([data-route="welcome"]) .mic-btn {
 .hidden { display: none !important; }
 .spacer-sm { height: 8px; } .spacer { height: 20px; } .spacer-lg { height: 40px; }
 
+
 /* ============================================================
-   Ekran lekcji — Izabela w środku, 3 lekcje na orbicie
+   Ekran lekcji — PEŁNY EKRAN ze sceną jako tłem
    ============================================================ */
-.lessons-head { text-align: center; margin: 6px 0 10px; }
+body.on-lessons { overflow: hidden; }
+body.on-lessons .cosmos { display: none; }
+
+.lessons-fs {
+  position: fixed; inset: 0; z-index: 50;
+  background: url('../assets/scenes/scene-11.jpg') center center / cover no-repeat;
+  background-color: #0c1018;
+  font-family: var(--font-body);
+}
+/* delikatne przyciemnienie góry i dołu dla czytelności napisów */
+.lessons-fs::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(6,10,18,.62) 0%, rgba(6,10,18,0) 26%),
+    linear-gradient(0deg, rgba(6,10,18,.55) 0%, rgba(6,10,18,0) 24%);
+}
+
+.lessons-fs__top {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 3;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px clamp(14px, 3vw, 32px);
+}
+.lessons-fs__top .logo { font-size: 1.5rem; text-shadow: 0 2px 10px rgba(0,0,0,.5); }
+.lessons-fs__tools { display: flex; gap: 8px; flex-wrap: wrap; }
+.lessons-fs__tools .btn { font-size: .82rem; padding: 8px 14px; background: rgba(10,14,24,.6); backdrop-filter: blur(6px); }
+
+.lessons-fs__head {
+  position: absolute; top: 11%; left: 50%; transform: translateX(-50%); z-index: 3;
+  width: min(92%, 720px); text-align: center;
+}
 .lessons-title {
-  margin: 0; font-size: clamp(1.4rem, 3.4vw, 2.1rem); line-height: 1.15;
-  background: var(--grad-brand); -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent;
+  margin: 0; font-family: var(--font-display); font-weight: 700; color: #fff;
+  font-size: clamp(1.3rem, 3.2vw, 2.2rem); line-height: 1.15;
+  text-shadow: 0 2px 14px rgba(0,0,0,.7), 0 0 26px rgba(0,0,0,.5);
 }
-.lessons-sub { margin: 6px 0 0; color: var(--text-dim); font-size: 1.02rem; }
-
-.lessons-hero {
-  position: relative; width: 100%; max-width: 820px; margin: 14px auto 0;
-  aspect-ratio: 16 / 11; border-radius: 22px; overflow: hidden;
-  border: 1px solid var(--surface-border);
-  box-shadow: var(--shadow-card);
-  background: #0c1018;
-}
-.lessons-hero__iza {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; display: block;
-}
-.lessons-hero__iza-fallback {
-  position: absolute; inset: 0; display: grid; place-items: center;
-  font-family: var(--font-display); font-size: 2rem; color: var(--text-dim);
+.lessons-sub {
+  margin: 8px 0 0; color: #eaf1ff; font-size: clamp(.95rem, 1.6vw, 1.15rem);
+  text-shadow: 0 2px 10px rgba(0,0,0,.7);
 }
 
-/* mieniąca się orbita wokół Izabeli */
-.lessons-hero__ring {
-  position: absolute; left: 50%; top: 33%; width: 64%; aspect-ratio: 1.18 / 1;
-  transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none;
-  border: 2px dashed rgba(132,196,255,.45);
-  box-shadow: 0 0 50px rgba(132,196,255,.18) inset, 0 0 30px rgba(132,196,255,.12);
-  animation: orbitSpin 26s linear infinite;
-}
-.lessons-hero__ring::after {
-  content: ''; position: absolute; inset: 9%; border-radius: 50%;
-  border: 1px solid rgba(255,194,75,.30);
-  animation: orbitSpin 18s linear infinite reverse;
-}
-@keyframes orbitSpin { to { transform: translate(-50%, -50%) rotate(360deg); } }
-
-/* przyciski lekcji rozłożone na orbicie */
+/* przyciski lekcji na orbicie */
 .orbit-lesson {
-  position: absolute; transform: translate(-50%, -50%); z-index: 3;
+  position: absolute; transform: translate(-50%, -50%); z-index: 4;
   display: flex; flex-direction: column; align-items: center; gap: 4px;
-  width: clamp(82px, 12vw, 116px); padding: 12px 8px; cursor: pointer;
+  width: clamp(86px, 11vw, 124px); padding: 12px 8px; cursor: pointer;
   color: var(--text); text-align: center;
-  background: rgba(14,20,34,.82); backdrop-filter: blur(6px);
-  border: 1px solid rgba(132,196,255,.45); border-radius: 16px;
-  box-shadow: 0 8px 26px rgba(0,0,0,.5);
+  background: rgba(10,16,30,.82); backdrop-filter: blur(7px);
+  border: 1px solid rgba(132,196,255,.5); border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.55);
   transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 .orbit-lesson:hover, .orbit-lesson:focus-visible {
-  transform: translate(-50%, -50%) scale(1.09); outline: none;
-  border-color: var(--accent-bright);
-  box-shadow: 0 0 0 2px var(--accent), 0 12px 32px rgba(0,0,0,.55), var(--glow-accent);
+  transform: translate(-50%, -50%) scale(1.1); outline: none;
+  border-color: #84c4ff;
+  box-shadow: 0 0 0 2px #4fa8ff, 0 14px 36px rgba(0,0,0,.6), 0 0 26px rgba(79,168,255,.5);
 }
-.orbit-lesson__num {
-  font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; line-height: 1;
-  color: var(--accent-bright);
-}
-.orbit-lesson__name { font-size: .8rem; color: var(--text-dim); line-height: 1.1; }
-.orbit-lesson.is-done { border-color: rgba(70,224,216,.6); }
+.orbit-lesson__num { font-family: var(--font-display); font-weight: 700; font-size: 1.55rem; line-height: 1; color: #84c4ff; }
+.orbit-lesson__name { font-size: .82rem; color: #cdd9f5; line-height: 1.12; }
+.orbit-lesson.is-done { border-color: rgba(70,224,216,.65); }
 .orbit-lesson.is-done .orbit-lesson__num { color: var(--cyan); }
 
-/* trzy pozycje na łuku orbity nad Izabelą */
-.orbit-pos-1 { left: 19%; top: 41%; }
-.orbit-pos-2 { left: 50%; top: 13%; }
-.orbit-pos-3 { left: 81%; top: 35%; }
+/* trzy pozycje wzdłuż orbity wokół Izabeli (dopasowane do scene-11) */
+.orbit-pos-1 { left: 17%; top: 46%; }
+.orbit-pos-2 { left: 33%; top: 25%; }
+.orbit-pos-3 { left: 65%; top: 27%; }
 
-/* info pod biurkiem Izabeli (na dole sceny) */
-.lessons-hero__desk {
-  position: absolute; left: 50%; bottom: 5%; transform: translateX(-50%); z-index: 2;
-  width: min(72%, 560px); padding: 12px 16px; text-align: center;
-  background: rgba(8,12,22,.78); backdrop-filter: blur(8px);
-  border: 1px solid rgba(132,196,255,.28); border-radius: 14px;
-  box-shadow: 0 12px 34px rgba(0,0,0,.55);
-  opacity: .72; transition: opacity .2s ease, transform .2s ease, border-color .2s ease;
+/* info pod biurkiem Izabeli (dół sceny) */
+.lessons-fs__desk {
+  position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); z-index: 4;
+  width: min(64%, 540px); padding: 12px 18px; text-align: center; color: #fff;
+  background: rgba(6,10,20,.8); backdrop-filter: blur(8px);
+  border: 1px solid rgba(132,196,255,.3); border-radius: 14px;
+  box-shadow: 0 14px 38px rgba(0,0,0,.6);
+  opacity: .85; transition: opacity .2s ease, transform .2s ease, border-color .2s ease;
 }
-.lessons-hero__desk.show { opacity: 1; border-color: var(--accent-bright); transform: translateX(-50%) translateY(-2px); }
-.desk-hint { color: var(--text-faint); font-size: .9rem; }
-.desk-status { font-size: .72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--accent-bright); }
-.desk-cta { margin-top: 6px; font-size: .82rem; color: var(--cyan); }
+.lessons-fs__desk.show { opacity: 1; border-color: #84c4ff; transform: translateX(-50%) translateY(-3px); }
+.desk-hint { color: #c7d2ee; font-size: .92rem; }
+.desk-status { font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; color: #84c4ff; }
+.desk-cta { margin-top: 6px; font-size: .84rem; color: var(--cyan); }
 
-@media (max-width: 560px) {
-  .lessons-hero { aspect-ratio: 4 / 5; }
-  .orbit-lesson { width: clamp(70px, 22vw, 92px); padding: 9px 6px; }
-  .orbit-lesson__num { font-size: 1.25rem; }
-  .orbit-lesson__name { font-size: .72rem; }
-  .lessons-hero__desk { width: 84%; bottom: 4%; }
+/* telefon / wąskie ekrany — układ pionowy, ale nadal pełnoekranowy */
+@media (max-width: 620px) {
+  .lessons-fs { background-position: 60% center; }
+  .lessons-fs__head { top: 16%; }
+  .orbit-lesson { width: clamp(72px, 26vw, 100px); padding: 9px 6px; }
+  .orbit-lesson__num { font-size: 1.3rem; }
+  .orbit-lesson__name { font-size: .74rem; }
+  .orbit-pos-1 { left: 20%; top: 50%; }
+  .orbit-pos-2 { left: 50%; top: 30%; }
+  .orbit-pos-3 { left: 80%; top: 50%; }
+  .lessons-fs__desk { width: 88%; bottom: 5%; }
 }
