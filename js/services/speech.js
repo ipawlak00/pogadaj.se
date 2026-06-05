@@ -308,7 +308,7 @@ export const speech = {
   canRecord() {
     return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && typeof MediaRecorder !== 'undefined');
   },
-  async recordAudio() {
+  async recordAudio({ autoStop = false, onStop, maxMs = 20000, silenceMs = 1500 } = {}) {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     let mime = '';
     for (const m of ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/webm', 'audio/mp4']) {
@@ -317,15 +317,49 @@ export const speech = {
     const mr = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
     const chunks = [];
     mr.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+
+    // Auto-stop po ciszy — żeby uczeń klikał tylko START, a nagranie samo się kończy
+    let ac = null, raf = null, stopped = false;
+    const stopNow = () => { if (!stopped) { stopped = true; try { mr.stop(); } catch (e) {} } };
+    if (autoStop) {
+      try {
+        ac = new (window.AudioContext || window.webkitAudioContext)();
+        const src = ac.createMediaStreamSource(stream);
+        const an = ac.createAnalyser(); an.fftSize = 1024;
+        src.connect(an);
+        const buf = new Uint8Array(an.fftSize);
+        const t0 = performance.now();
+        let spokeAt = 0, lastLoud = 0;
+        const tick = () => {
+          if (stopped) return;
+          an.getByteTimeDomainData(buf);
+          let sum = 0;
+          for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; sum += v * v; }
+          const rms = Math.sqrt(sum / buf.length);
+          const now = performance.now();
+          if (rms > 0.045) { if (!spokeAt) spokeAt = now; lastLoud = now; }
+          if (spokeAt && now - lastLoud > silenceMs) return stopNow();   // cisza po wypowiedzi
+          if (!spokeAt && now - t0 > 6000) return stopNow();             // nic nie powiedziano
+          if (now - t0 > maxMs) return stopNow();                        // limit bezpieczeństwa
+          raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+      } catch (e) { /* brak AudioContext — zostaje ręczny Stop */ }
+    }
+
     const done = new Promise((resolve) => {
       mr.onstop = async () => {
+        stopped = true;
+        if (raf) cancelAnimationFrame(raf);
+        if (ac) { try { ac.close(); } catch (e) {} }
         stream.getTracks().forEach((t) => t.stop());
         const blob = new Blob(chunks, { type: mr.mimeType || mime || 'audio/webm' });
         resolve({ base64: await blobToBase64(blob), mimeType: (mr.mimeType || mime || 'audio/webm').split(';')[0] });
+        onStop?.();
       };
     });
     mr.start();
-    return { stop: () => { try { mr.stop(); } catch (e) {} }, done };
+    return { stop: stopNow, done };
   },
 };
 

@@ -52,7 +52,7 @@ export function renderConversation(mount, lessonId) {
   const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center', text: 'Naciśnij mikrofon i mów (po polsku lub angielsku — możesz mieszać)' });
   const suggestRow = el('div.suggest-row', { id: 'suggest-row' });
   const replayBtn = el('button.btn.btn--ghost', { onclick: () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); } }, ['Powtórz']);
-  const skipBtn = el('button.btn.btn--ghost', { onclick: skipTask }, ['Pomiń']);
+  const skipBtn = el('button.btn.btn--ghost.skip-corner', { onclick: skipTask, title: 'Pomiń to ćwiczenie' }, ['Pomiń ↦']);
   const stopBtn = el('button.btn.btn--ghost', { onclick: () => { speech.stopSpeaking(); setSpeaking(false); } }, ['Przerwij']);
 
   // Jedna, stała scena na całą lekcję (nie migocze co krok). Losowana raz.
@@ -73,6 +73,7 @@ export function renderConversation(mount, lessonId) {
     el('div.lesson-view.fade-in', {}, [
       stage,
       el('div.lesson-panel', {}, [
+        skipBtn,
         el('div.row', { style: 'justify-content:space-between;align-items:center' }, [
           el('h2.display', { style: 'margin:0;font-size:1.2rem', text: lesson.title }),
           progressEl,
@@ -82,7 +83,7 @@ export function renderConversation(mount, lessonId) {
         suggestRow,
         el('div.composer', { style: 'flex-direction:column;align-items:center;gap:10px' }, [
           micBtn, micLabel,
-          el('div.row', { style: 'gap:10px;flex-wrap:wrap;justify-content:center' }, [replayBtn, stopBtn, skipBtn]),
+          el('div.row', { style: 'gap:10px;flex-wrap:wrap;justify-content:center' }, [replayBtn, stopBtn]),
         ]),
       ]),
     ])
@@ -205,8 +206,8 @@ export function renderConversation(mount, lessonId) {
     speech.stopSpeaking();
     if (listening) resetMic();
     if (aiLed) {
-      addMessage('user', 'pomijam');
-      history.push({ role: 'user', text: 'Pomińmy to ćwiczenie — przejdź od razu do następnej frazy lub tematu.' });
+      // Cicha zmiana tematu — bez komentowania, że „pomijamy"
+      history.push({ role: 'user', text: 'Przejdź do zupełnie nowej, innej frazy lub tematu. NIE komentuj pomijania, nie mów że coś pomijamy — po prostu ucz dalej, naturalnie.' });
       return aiTurn();
     }
     if (phase === 'chunks' && chunkDoneCb) return chunkDoneCb();
@@ -321,38 +322,40 @@ export function renderConversation(mount, lessonId) {
   }
 
   // ---------- mikrofon (mówienie + pytania, można przerwać Izabelę) ----------
-  // Mów w dowolnym języku — możesz swobodnie mieszać polski i angielski w jednym
-  // zdaniu, Izabela wyłapie jedno i drugie.
+  // Klikasz tylko START — nagranie samo kończy się po chwili ciszy.
+  // Mów w dowolnym języku, możesz swobodnie mieszać polski i angielski.
+  let finalized = false;
   async function toggleListen() {
     if (busy || processing) return;
-    if (listening) return stopListening();
-    speech.stopSpeaking();              // naciśnięcie mikrofonu PRZERYWA Izabelę
+    if (listening) return stopListening();   // (opcjonalnie: drugie kliknięcie kończy wcześniej)
+    speech.stopSpeaking();                    // naciśnięcie mikrofonu PRZERYWA Izabelę
     setSpeaking(false);
     if (useGeminiStt) return startRecording();
     return startBrowserListen();
   }
 
   function stopListening() {
-    if (recHandle) return stopRecording();   // ścieżka Gemini (nagranie)
-    recorder?.stop();                         // ścieżka przeglądarki
+    if (recHandle) { recHandle.stop(); return; }   // ścieżka Gemini (auto-stop wywoła finalize)
+    recorder?.stop();                               // ścieżka przeglądarki
   }
 
-  // --- Ścieżka Gemini: nagranie audio → transkrypcja (łapie miks PL+EN) ---
+  // --- Ścieżka Gemini: nagranie audio (auto-stop po ciszy) → transkrypcja PL+EN ---
   async function startRecording() {
-    try { recHandle = await speech.recordAudio(); }
+    finalized = false;
+    try { recHandle = await speech.recordAudio({ autoStop: true, onStop: finalizeRecording }); }
     catch (e) { toast('Mikrofon: ' + (e.message || e), 'error'); resetMic(); return; }
     listening = true;
-    micBtn.classList.add('recording'); micBtn.textContent = 'Stop';
-    setMicLabel('Słucham… mów po polsku lub angielsku (dotknij, by zakończyć)');
+    micBtn.classList.add('recording'); micBtn.textContent = 'Słucham';
+    setMicLabel('Mów śmiało — sama skończę, gdy ucichniesz (możesz mieszać PL i EN)');
   }
 
-  async function stopRecording() {
+  async function finalizeRecording() {
+    if (finalized) return; finalized = true;       // nagranie skończone (auto lub ręcznie)
     const h = recHandle; recHandle = null;
     listening = false; processing = true;
     micBtn.classList.remove('recording'); micBtn.textContent = 'Mów';
     micBtn.disabled = true; micBtn.style.opacity = '0.5';
     setMicLabel('Rozpoznaję, co powiedziałeś…');
-    h.stop();
     let audio = null;
     try { audio = await h.done; } catch (e) { /* ignore */ }
     let text = null;
@@ -364,7 +367,7 @@ export function renderConversation(mount, lessonId) {
 
   // --- Ścieżka zapasowa (bez Gemini): rozpoznawanie przeglądarki, jeden język ---
   function startBrowserListen() {
-    listening = true; micBtn.classList.add('recording'); micBtn.textContent = 'Stop'; setMicLabel('Słucham… mów teraz');
+    listening = true; micBtn.classList.add('recording'); micBtn.textContent = 'Słucham'; setMicLabel('Słucham… mów teraz');
     let heard = '';
     recorder = speech.listen({
       lang: FALLBACK_REC_LANG,
