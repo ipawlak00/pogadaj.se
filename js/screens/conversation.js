@@ -35,7 +35,7 @@ export function renderConversation(mount, lessonId) {
   const stageCaption = el('div.stage-caption', { id: 'stage-caption' });
   const stage = el('div.lesson-stage', { title: 'Dotknij, aby powtórzyć' }, [
     sceneImg,
-    el('div.stage-name', { text: '👩‍🚀 Izabela' }),
+    el('div.stage-name', { text: 'Izabela' }),
     stageCaption,
   ]);
   stage.onclick = () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); };
@@ -45,11 +45,11 @@ export function renderConversation(mount, lessonId) {
   const chatEl = el('div.chat');
   const stepArea = el('div', { id: 'step-area' });
   const progressEl = el('div.faint', { id: 'step-progress', style: 'font-size:.8rem;margin:0 0 4px' });
-  const micBtn = el('button.mic-btn', { 'aria-label': 'Mów', onclick: toggleListen }, ['🎙']);
-  const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center', text: 'Naciśnij mikrofon i powtórz 🎙' });
+  const micBtn = el('button.mic-btn', { 'aria-label': 'Mów', onclick: toggleListen }, ['Mów']);
+  const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center', text: 'Naciśnij mikrofon i powtórz' });
   const suggestRow = el('div.suggest-row', { id: 'suggest-row' });
-  const replayBtn = el('button.btn.btn--ghost', { onclick: () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); } }, ['🔊 Powtórz']);
-  const skipBtn = el('button.btn.btn--ghost', { onclick: skipTask }, ['Pomiń ⏭']);
+  const replayBtn = el('button.btn.btn--ghost', { onclick: () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); } }, ['Powtórz']);
+  const skipBtn = el('button.btn.btn--ghost', { onclick: skipTask }, ['Pomiń']);
 
   let sceneTick = 0;
   function nextScene() {
@@ -71,7 +71,7 @@ export function renderConversation(mount, lessonId) {
       stage,
       el('div.lesson-panel', {}, [
         el('div.row', { style: 'justify-content:space-between;align-items:center' }, [
-          el('h2.display', { style: 'margin:0;font-size:1.2rem', text: `${lesson.emoji} ${lesson.title}` }),
+          el('h2.display', { style: 'margin:0;font-size:1.2rem', text: lesson.title }),
           progressEl,
         ]),
         chatEl,
@@ -87,7 +87,7 @@ export function renderConversation(mount, lessonId) {
 
   // Start: AI prowadzi lekcję, albo proste kroki (fallback bez Gemini)
   if (aiLed) {
-    progressEl.textContent = '🎙️ Lekcja na żywo z Izabelą';
+    progressEl.textContent = 'Lekcja na żywo z Izabelą';
     startAiLesson();
   } else if (lesson.intro) {
     addMessage('izabela', lesson.intro);
@@ -101,8 +101,8 @@ export function renderConversation(mount, lessonId) {
     busy = on;
     micBtn.disabled = on;
     micBtn.style.opacity = on ? '0.5' : '1';
-    if (on) setMicLabel('Izabela myśli… 🤔');
-    else setMicLabel('Naciśnij mikrofon i mów 🎙');
+    if (on) setMicLabel('Izabela myśli…');
+    else setMicLabel('Naciśnij mikrofon i mów');
   }
 
   async function startAiLesson() {
@@ -124,7 +124,7 @@ export function renderConversation(mount, lessonId) {
     renderSuggestions(r.suggestions);
     if (r.done) {
       store.markLessonDone(lesson.id);
-      toast('Lekcja ukończona! 🌟');
+      toast('Lekcja ukończona!');
     }
   }
 
@@ -161,7 +161,7 @@ export function renderConversation(mount, lessonId) {
   function renderSuggestions(list) {
     suggestRow.replaceChildren();
     if (!list || !list.length) return;
-    suggestRow.append(el('div.suggest-hint', { text: '💡 Dotknij, by usłyszeć po angielsku:' }));
+    suggestRow.append(el('div.suggest-hint', { text: 'Dotknij, by usłyszeć po angielsku:' }));
     suggestRow.append(el('div.suggest-chips', {}, list.slice(0, 4).map((s) =>
       el('button.suggest-chip', { onclick: () => speech.speak(s, { lang: 'en-US' }) }, [s]))));
   }
@@ -204,7 +204,7 @@ export function renderConversation(mount, lessonId) {
     speech.stopSpeaking();
     if (listening) resetMic();
     if (aiLed) {
-      addMessage('user', '⏭ pomijam');
+      addMessage('user', 'pomijam');
       history.push({ role: 'user', text: 'Pomińmy to ćwiczenie — przejdź od razu do następnej frazy lub tematu.' });
       return aiTurn();
     }
@@ -215,8 +215,8 @@ export function renderConversation(mount, lessonId) {
   function finishLesson() {
     store.markLessonDone(lesson.id);
     setProgress();
-    izabelaSay('To wszystko w tej lekcji — świetna robota! 🎉 Jesteś coraz lepszy. Do zobaczenia następnym razem!', {
-      lang: 'pl', mood: 'happy', onEnd: () => { toast('Lekcja ukończona! 🌟'); setTimeout(() => navigate('#/lessons'), 600); },
+    izabelaSay('To wszystko w tej lekcji — świetna robota! Jesteś coraz lepszy. Do zobaczenia następnym razem!', {
+      lang: 'pl', mood: 'happy', onEnd: () => { toast('Lekcja ukończona!'); setTimeout(() => navigate('#/lessons'), 600); },
     });
   }
 
@@ -226,7 +226,7 @@ export function renderConversation(mount, lessonId) {
     stepArea.replaceChildren(el('div.card.center.stack', { style: 'gap:8px' }, [
       el('div.task-en', { text: step.en }),
       el('div.task-pl', { text: step.pl }),
-      el('button.btn.btn--ghost', { style: 'margin:0 auto', onclick: () => speech.speak(step.en, { lang: 'en-US' }) }, ['🔊 Posłuchaj po angielsku']),
+      el('button.btn.btn--ghost', { style: 'margin:0 auto', onclick: () => speech.speak(step.en, { lang: 'en-US' }) }, ['Posłuchaj po angielsku']),
     ]));
     renderSuggestions([step.en]);
     izabelaSay(`Posłuchaj: „${step.en}". Po polsku to: ${step.pl}. Teraz powtórz za mną: „${step.en}".`, { lang: 'pl', slow: true });
@@ -241,7 +241,7 @@ export function renderConversation(mount, lessonId) {
       el('div.task-pl', {}, plSentence(step.sentencePL, step.answer)),
       el('div.task-opts', {}, step.options.map((o) =>
         el('button.suggest-chip', { onclick: () => speech.speak(`„${o.en}" — ${o.pl}`, { lang: 'pl-PL' }) }, [o.en]))),
-      el('button.btn.btn--ghost', { style: 'margin-top:12px', onclick: () => izabelaSay(step.hint, { lang: 'pl' }) }, ['💡 Podpowiedź']),
+      el('button.btn.btn--ghost', { style: 'margin-top:12px', onclick: () => izabelaSay(step.hint, { lang: 'pl' }) }, ['Podpowiedź']),
     ]));
     renderSuggestions([step.answer]);
     izabelaSay(`Posłuchaj zdania: „${step.fullSentence}". Po polsku znaczy to: ${plainPL(step.sentencePL)}. Brakuje jednego słowa — powiedz, które pasuje.`, { lang: 'pl', slow: true });
@@ -265,7 +265,7 @@ export function renderConversation(mount, lessonId) {
     if (overlapOf(text, chunks[chunkIdx]) >= 0.6) {
       chunkIdx++;
       if (chunkIdx >= chunks.length) {
-        izabelaSay('Super, wszystkie kawałki Ci wyszły! 🎉', { lang: 'pl', mood: 'happy', onEnd: () => chunkDoneCb && chunkDoneCb() });
+        izabelaSay('Super, wszystkie kawałki Ci wyszły!', { lang: 'pl', mood: 'happy', onEnd: () => chunkDoneCb && chunkDoneCb() });
       } else {
         izabelaSay(`Świetnie! Teraz: „${chunks[chunkIdx]}"`, { lang: 'pl', slow: true, mood: 'happy' });
         renderSuggestions([chunks[chunkIdx]]);
@@ -287,13 +287,13 @@ export function renderConversation(mount, lessonId) {
 
   function handleSay(step, text) {
     if (overlapOf(text, step.en) >= 0.6) {
-      izabelaSay(`Brawo! „${step.en}" — dokładnie tak! 🌟`, { lang: 'pl', mood: 'happy', onEnd: nextStep });
+      izabelaSay(`Brawo! „${step.en}" — dokładnie tak!`, { lang: 'pl', mood: 'happy', onEnd: nextStep });
     } else {
       attempts++;
       if (wordCount(step.en) > 2 && attempts >= 1) {
         startChunks(step.en, nextStep);
       } else {
-        izabelaSay(`Spokojnie 🙂 Posłuchaj wolniutko: „${step.en}". Spróbuj jeszcze raz za mną.`, { lang: 'pl', slow: true, mood: 'oops' });
+        izabelaSay(`Spokojnie Posłuchaj wolniutko: „${step.en}". Spróbuj jeszcze raz za mną.`, { lang: 'pl', slow: true, mood: 'oops' });
       }
     }
   }
@@ -302,17 +302,17 @@ export function renderConversation(mount, lessonId) {
     if (phase === 'word') {
       if (norm(text).split(' ').includes(norm(step.answer))) {
         phase = 'sentence';
-        izabelaSay(`Ekstra! 🎉 Dokładnie — „${step.answer}". A teraz całe zdanie za mną, wolniutko: „${step.fullSentence}"`, { lang: 'pl', slow: true, mood: 'happy' });
+        izabelaSay(`Ekstra! Dokładnie — „${step.answer}". A teraz całe zdanie za mną, wolniutko: „${step.fullSentence}"`, { lang: 'pl', slow: true, mood: 'happy' });
         renderSuggestions([step.fullSentence]);
       } else {
         attempts++;
         izabelaSay(attempts >= 2
           ? `Powolutku — posłuchaj: „${step.answer}". ${step.hint} Teraz Ty, samo to słowo.`
-          : `Jeszcze nie to 🙂 ${step.hint}`, { lang: 'pl', slow: attempts >= 2, mood: 'oops' });
+          : `Jeszcze nie to ${step.hint}`, { lang: 'pl', slow: attempts >= 2, mood: 'oops' });
       }
     } else if (phase === 'sentence') {
       if (overlapOf(text, step.fullSentence) >= 0.6) {
-        izabelaSay('Brawo! Całe zdanie, super Ci poszło! 🌟', { lang: 'pl', mood: 'happy', onEnd: nextStep });
+        izabelaSay('Brawo! Całe zdanie, super Ci poszło!', { lang: 'pl', mood: 'happy', onEnd: nextStep });
       } else {
         startChunks(step.fullSentence, nextStep);
       }
@@ -323,14 +323,14 @@ export function renderConversation(mount, lessonId) {
   function toggleListen() {
     if (busy) return;
     if (listening) { recorder?.stop(); return; }
-    listening = true; micBtn.classList.add('recording'); micBtn.textContent = '⏹'; setMicLabel('Słucham… mów teraz 🎤');
+    listening = true; micBtn.classList.add('recording'); micBtn.textContent = 'Stop'; setMicLabel('Słucham… mów teraz');
     let heard = '';
     recorder = speech.listen({
       lang: REC_LANG,
       onResult: (t) => { heard = t; setMicLabel(`„${t}"`); },
       onError: (e) => { toast('Mikrofon: ' + (e.message || e), 'error'); resetMic(); },
-      onEnd: () => { resetMic(); if (heard) handleAnswer(heard); else setMicLabel('Nie dosłyszałam — naciśnij i powiedz jeszcze raz 🎙'); },
+      onEnd: () => { resetMic(); if (heard) handleAnswer(heard); else setMicLabel('Nie dosłyszałam — naciśnij i powiedz jeszcze raz'); },
     });
   }
-  function resetMic() { listening = false; micBtn.classList.remove('recording'); micBtn.textContent = '🎙'; setMicLabel('Naciśnij mikrofon i powtórz 🎙'); }
+  function resetMic() { listening = false; micBtn.classList.remove('recording'); micBtn.textContent = 'Mów'; setMicLabel('Naciśnij mikrofon i powtórz'); }
 }

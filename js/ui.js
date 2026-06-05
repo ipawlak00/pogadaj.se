@@ -51,7 +51,7 @@ export function aiConnectButton() {
       const k = prompt('Wklej swój klucz Gemini API (z aistudio.google.com).\n\nKlucz zostaje TYLKO na tym urządzeniu — nie wysyłamy go nigdzie poza Google ani nie zapisujemy w kodzie.');
       if (k && k.trim()) { setGeminiKey(k); location.reload(); }
     },
-  }, [connected ? '🟢 Izabela AI: połączona (zmień klucz)' : '🔌 Połącz Izabelę z prawdziwym AI']);
+  }, [connected ? 'Izabela AI: połączona (zmień klucz)' : 'Połącz Izabelę z prawdziwym AI']);
 }
 
 // Przycisk podłączenia GŁOSU Izabeli (Google Cloud Text-to-Speech).
@@ -64,5 +64,5 @@ export function voiceConnectButton() {
       if (!key || !key.trim()) return;
       setGoogleTTSKey(key); location.reload();
     },
-  }, [connected ? '🟢 Głos Izabeli: Google (zmień klucz)' : '🎙 Ustaw głos Izabeli (Google TTS)']);
+  }, [connected ? 'Głos Izabeli: Google (zmień klucz)' : 'Ustaw głos Izabeli (Google TTS)']);
 }

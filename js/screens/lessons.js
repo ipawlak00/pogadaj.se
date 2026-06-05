@@ -8,7 +8,7 @@ export function renderLessons(mount) {
   const done = st.progress.lessonsDone;
 
   const userChip = el('div.row', {}, [
-    el('span.pill', { text: `👋 ${st.user?.name || 'Gość'}` }),
+    el('span.pill', { text: `${st.user?.name || 'Gość'}` }),
     el('button.btn.btn--ghost', { onclick: () => { auth.signOut(); location.hash = '#/'; location.reload(); } }, ['Wyloguj']),
   ]);
 
@@ -18,7 +18,7 @@ export function renderLessons(mount) {
       el('div.row', { style: 'gap:14px' }, [
         el('div.iza-portrait.iza-portrait--sm', {}, [
           el('img', { src: 'assets/izabela/izabela-lesson.png', alt: 'Izabela',
-            onerror: function () { this.replaceWith(el('span', { text: '👩‍🚀', style: 'font-size:2rem' })); } }),
+            onerror: function () { this.replaceWith(el('span', { text: '', style: 'font-size:2rem' })); } }),
         ]),
         el('div', {}, [
           el('h1.display', { style: 'margin:0', text: 'Twoje darmowe lekcje' }),
@@ -37,21 +37,20 @@ export function renderLessons(mount) {
     const prevDone = i === 0 || done.includes(LESSONS[i - 1].id);
     const locked = !prevDone;
     const badge = isDone
-      ? el('span.badge.badge--done', { text: '✓ ukończona' })
+      ? el('span.badge.badge--done', { text: 'ukończona' })
       : locked
-        ? el('span.badge.badge--locked', { text: '🔒 zablokowana' })
+        ? el('span.badge.badge--locked', { text: 'zablokowana' })
         : el('span.badge.badge--free', { text: 'darmowa' });
 
     return el(`div.card.lesson-card${locked ? '.locked' : ''}`, {
-      onclick: () => { if (locked) return toast('Najpierw ukończ poprzednią lekcję 😉'); navigate('#/lesson/' + l.id); },
+      onclick: () => { if (locked) return toast('Najpierw ukończ poprzednią lekcję'); navigate('#/lesson/' + l.id); },
       style: locked ? '' : 'cursor:pointer',
     }, [
       el('div.num', { text: l.num }),
-      el('div', { style: 'font-size:1.8rem', text: l.emoji }),
       el('h3.display', { style: 'margin:6px 0', text: l.title }),
       el('p.muted', { style: 'font-size:.9rem;min-height:40px', text: l.desc }),
       el('div.row', { style: 'justify-content:space-between;margin-top:8px' }, [badge,
-        el('span.faint', { text: locked ? '' : isDone ? 'Powtórz ↺' : 'Start →' }),
+        el('span.faint', { text: locked ? '' : isDone ? 'Powtórz' : 'Start →' }),
       ]),
     ]);
   }
@@ -59,7 +58,7 @@ export function renderLessons(mount) {
   function analystSummary(mistakes) {
     if (!mistakes.length) return el('span');
     return el('div.card', { style: 'margin-top:8px' }, [
-      el('h3.display', { style: 'margin:0 0 10px', text: '📋 Twój Analityk — zebrane błędy' }),
+      el('h3.display', { style: 'margin:0 0 10px', text: 'Twój Analityk — zebrane błędy' }),
       ...mistakes.slice(-6).reverse().map((m) => el('div.mistake', {}, [
         el('div', {}, [ el('span.bad', { text: m.bad }), ' → ', el('span.good', { text: m.good }) ]),
         el('div.note', { text: m.note }),

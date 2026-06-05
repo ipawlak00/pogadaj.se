@@ -67,8 +67,8 @@ const stubProvider = {
     if (mistake) {
       return {
         reply: beg
-          ? `${pick(['Ups, łap mnie!', 'Stop, stop 😄', 'O, mały haczyk!'])} Po angielsku mówimy „${mistake.good}". ${mistake.note} Spróbuj jeszcze raz, dasz radę!`
-          : `${pick(['Oops, caught me!', 'Hold on 😄'])} Say "${mistake.good}" instead. ${mistake.note} Okay — go on!`,
+          ? `${pick(['Ups, łap mnie!', 'Stop, stop', 'O, mały haczyk!'])} Po angielsku mówimy „${mistake.good}". ${mistake.note} Spróbuj jeszcze raz, dasz radę!`
+          : `${pick(['Oops, caught me!', 'Hold on'])} Say "${mistake.good}" instead. ${mistake.note} Okay — go on!`,
         correction: { spoken: `Po angielsku: „${mistake.good}". ${mistake.note}` },
         mistake,
         lang: beg ? 'pl' : 'en',
@@ -77,7 +77,7 @@ const stubProvider = {
     }
     return {
       reply: beg
-        ? `${pick(['Świetnie!', 'Brawo!', 'Idzie Ci super!'])} Powiedz mi coś więcej — spróbuj po angielsku, a jak zabraknie Ci słówka, spokojnie wtrąć po polsku, ja pomogę. 😊`
+        ? `${pick(['Świetnie!', 'Brawo!', 'Idzie Ci super!'])} Powiedz mi coś więcej — spróbuj po angielsku, a jak zabraknie Ci słówka, spokojnie wtrąć po polsku, ja pomogę.`
         : `${pick(IZABELA.encouragements)} And what happened next? Tell me more!`,
       correction: null, mistake: null,
       lang: beg ? 'pl' : 'en',
@@ -87,7 +87,7 @@ const stubProvider = {
 
   // Głosowe Koło Ratunkowe — podpowiedź do zadania
   async hint({ task }) {
-    return { reply: task?.hintSpoken || 'Spokojnie, pomyśl o czasie tej czynności i spróbuj jeszcze raz 😊' };
+    return { reply: task?.hintSpoken || 'Spokojnie, pomyśl o czasie tej czynności i spróbuj jeszcze raz' };
   },
 
   // Analiza nagrania słowa w Paszporcie Fonetycznym (stub: na bazie transkrypcji)
@@ -182,14 +182,14 @@ const geminiProvider = {
       };
     } catch (e) {
       console.warn('[Gemini chat]', e);
-      return { reply: 'Ups, chwilowo nie mogę połączyć się z moim mózgiem AI 😅 Sprawdź klucz API i spróbuj ponownie.', correction: null, mistake: null, lang: 'pl', suggestions: [] };
+      return { reply: 'Ups, chwilowo nie mogę połączyć się z moim mózgiem AI Sprawdź klucz API i spróbuj ponownie.', correction: null, mistake: null, lang: 'pl', suggestions: [] };
     }
   },
   async hint({ task, text }) {
     try {
       const r = await this._call(`Uczeń utknął w zadaniu: "${task?.prompt}". Mówi: "${text || 'podpowiedz'}". Naprowadź go PO POLSKU, nie podawaj gotowej odpowiedzi.`, { json: false });
       return { reply: r };
-    } catch { return { reply: task?.hintSpoken || 'Spokojnie, pomyśl o czasie tej czynności 😊' }; }
+    } catch { return { reply: task?.hintSpoken || 'Spokojnie, pomyśl o czasie tej czynności' }; }
   },
   async analyzeWord(args) { return stubProvider.analyzeWord(args); },     // fallback tekstowy
   async buildProfile({ results }) { return buildProfileFrom(results); },
@@ -244,7 +244,7 @@ Zwróć JSON:
       };
     } catch (e) {
       console.warn('[Gemini lesson]', e);
-      return { say: 'Ups, chwilowo nie mogę połączyć się z AI 😅 Sprawdź klucz i spróbuj jeszcze raz.', lang: 'pl', suggestions: [], done: false };
+      return { say: 'Ups, chwilowo nie mogę połączyć się z AI Sprawdź klucz i spróbuj jeszcze raz.', lang: 'pl', suggestions: [], done: false };
     }
   },
 };

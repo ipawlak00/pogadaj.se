@@ -31,27 +31,27 @@ export function renderPhonetic(mount) {
     const w = words[idx];
     screen.replaceChildren(
       el('div.center.stack', { style: 'gap:6px;margin-bottom:16px' }, [
-        el('div.pill', { style: 'margin:0 auto', text: `🎤 Paszport Fonetyczny · ${idx + 1}/${words.length}` }),
+        el('div.pill', { style: 'margin:0 auto', text: `Paszport Fonetyczny · ${idx + 1}/${words.length}` }),
         el('p.muted', { style: 'margin:6px 0 0', text: '1) Posłuchaj, jak Izabela czyta słowo.  2) Powtórz je do mikrofonu.' }),
       ]),
       el('div.card.center.stack', { style: 'max-width:580px;margin:0 auto;gap:14px' }, [
         el('div.phonetic-word', { text: w.word }),
         el('div.phonetic-ipa', { text: w.ipa }),
-        el('button.btn.btn--ghost', { style: 'margin:0 auto', onclick: () => speakWord() }, ['🔊 Posłuchaj jeszcze raz']),
+        el('button.btn.btn--ghost', { style: 'margin:0 auto', onclick: () => speakWord() }, ['Posłuchaj jeszcze raz']),
         el('div.phonetic-hint', { text: w.hint }),
         el('div.spacer-sm'),
         micArea(),
         resultArea(),
         el('div.row', { style: 'justify-content:center;gap:10px;margin-top:6px' }, [
           el('button.btn.btn--ghost', { onclick: skip }, ['Pomiń słowo']),
-          el('button.btn.btn--ghost', { style: 'opacity:.7;font-size:.85rem', onclick: finish }, ['Pomiń cały test ⏭']),
+          el('button.btn.btn--ghost', { style: 'opacity:.7;font-size:.85rem', onclick: finish }, ['Pomiń cały test']),
         ]),
       ]),
       el('div.spacer'),
       dots(),
     );
     if (!audioMode && !speech.isRecognitionSupported()) {
-      setStatus('⚠️ Ta przeglądarka nie wspiera mikrofonu — możesz pomijać słowa.');
+      setStatus('Ta przeglądarka nie wspiera mikrofonu — możesz pomijać słowa.');
     }
     if (phase === 'idle' && lastSpoken !== idx) { lastSpoken = idx; speakWord(); }
   }
@@ -60,12 +60,12 @@ export function renderPhonetic(mount) {
     if (phase === 'analyzing') {
       return el('div.center.stack', { style: 'gap:8px' }, [
         el('div.spinner'),
-        el('div.faint', { text: 'Izabela słucha Twojej wymowy… 👂' }),
+        el('div.faint', { text: 'Izabela słucha Twojej wymowy…' }),
       ]);
     }
     const recording = phase === 'recording';
     return el('div.center.stack', { style: 'gap:8px' }, [
-      el(`button.mic-btn${recording ? '.recording' : ''}`, { onclick: onMic, 'aria-label': 'Nagraj' }, [recording ? '⏹' : '🎙']),
+      el(`button.mic-btn${recording ? '.recording' : ''}`, { onclick: onMic, 'aria-label': 'Nagraj' }, [recording ? 'Stop' : 'Mów']),
       el('div.faint', { id: 'phon-status', text: recording ? 'Mów teraz… (dotknij, by zakończyć)' : 'Dotknij i powiedz słowo' }),
     ]);
   }
@@ -78,10 +78,10 @@ export function renderPhonetic(mount) {
     return el('div.pron-result.fade-in', { style: 'width:100%' }, [
       score != null ? scoreBar(score) : null,
       r.heard ? el('div.muted', { style: 'margin-top:8px', html: `Usłyszałam: „<b>${r.heard}</b>"` }) : null,
-      (!good && r.issue) ? el('div.pron-issue', { text: '⚠️ ' + r.issue }) : null,
-      r.tip ? el('div', { style: 'margin-top:8px', text: (good ? '✅ ' : '💡 ') + (good ? (r.praise || 'Brzmi świetnie!') : r.tip) }) : null,
+      (!good && r.issue) ? el('div.pron-issue', { text: '' + r.issue }) : null,
+      r.tip ? el('div', { style: 'margin-top:8px', text: (good ? '' : '') + (good ? (r.praise || 'Brzmi świetnie!') : r.tip) }) : null,
       el('div.row', { style: 'justify-content:center;gap:10px;margin-top:14px' }, [
-        el('button.btn.btn--ghost', { onclick: () => { phase = 'idle'; draw(); } }, ['↺ Jeszcze raz']),
+        el('button.btn.btn--ghost', { onclick: () => { phase = 'idle'; draw(); } }, ['Jeszcze raz']),
         el('button.btn.btn--primary', { onclick: next }, ['Dalej →']),
       ]),
     ]);
@@ -176,11 +176,11 @@ export function renderPhonetic(mount) {
     const overall = typeof profile.overall === 'number' ? profile.overall : null;
     setTimeout(() => {
       screen.replaceChildren(el('div.card.center.stack.fade-in', { style: 'max-width:520px;margin:6vh auto;gap:14px' }, [
-        el('div', { style: 'font-size:3rem', text: '🛰️' }),
+        el('div', { style: 'font-size:3rem', text: '' }),
         el('h2.display', { text: 'Paszport gotowy!' }),
         overall != null ? scoreBar(overall) : null,
         el('p.muted', { text: 'Izabela wie już, jak brzmisz. Od teraz będzie zwracać uwagę na Twoje słabsze dźwięki podczas rozmów.' }),
-        el('div.pill', { style: 'margin:0 auto', text: `🎯 Do podszlifowania: ${chal}` }),
+        el('div.pill', { style: 'margin:0 auto', text: `Do podszlifowania: ${chal}` }),
         el('div.spacer-sm'),
         el('button.btn.btn--primary.btn--lg', { onclick: () => navigate('#/lessons') }, ['Do lekcji →']),
       ]));

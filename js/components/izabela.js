@@ -30,7 +30,7 @@ export function izabela({ mood = 'neutral', size = 64, speaking = false } = {}) 
     'data-mood': mood,
   }, [
     el('img', { src, alt: 'Izabela', draggable: 'false',
-      onerror: function(){ this.replaceWith(el('span', { text: '👩‍🚀', style: 'font-size:' + (size * 0.5) + 'px' })); } }),
+      onerror: function(){ this.replaceWith(el('span', { text: '', style: 'font-size:' + (size * 0.5) + 'px' })); } }),
   ]);
   if (speaking) node.classList.add('speaking');
   return node;

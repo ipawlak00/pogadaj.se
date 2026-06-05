@@ -20,11 +20,11 @@ export function renderWelcome(mount) {
 
         el('div.auth-divider', { text: 'lub kontynuuj przez' }),
         el('div.auth-oauth', {}, [
-          el('button.btn.oauth-btn', { onclick: enterAsGuest }, ['🔵 Google']),
-          el('button.btn.oauth-btn', { onclick: enterAsGuest }, ['🍎 Apple']),
+          el('button.btn.oauth-btn', { onclick: enterAsGuest }, ['Google']),
+          el('button.btn.oauth-btn', { onclick: enterAsGuest }, ['Apple']),
         ]),
 
-        el('button.btn.auth-create', { onclick: enterAsGuest }, ['Stwórz darmowe konto  👤+']),
+        el('button.btn.auth-create', { onclick: enterAsGuest }, ['Stwórz darmowe konto']),
       ]),
 
       el('div.auth-footer', { html: 'POWERED BY <b>IZABELACODE</b>' }),
@@ -33,11 +33,11 @@ export function renderWelcome(mount) {
         voiceConnectButton(),
         el('button.btn.btn--ghost', { style: 'font-size:.75rem;padding:6px 14px;opacity:.7',
           onclick: () => { store.reset(); location.hash = '#/'; location.reload(); }
-        }, ['↺ Zacznij od nowa (reset)']),
+        }, ['Zacznij od nowa (reset)']),
       ]),
     ]),
     el('div.iza-badge', { title: 'Izabela' }, [
-      el('img', { src: 'assets/izabela/avatar.png', alt: 'Izabela', onerror: function(){ this.replaceWith(el('span',{text:'👩‍🚀',style:'font-size:1.5rem'})); } }),
+      el('img', { src: 'assets/izabela/avatar.png', alt: 'Izabela', onerror: function(){ this.replaceWith(el('span',{text:'',style:'font-size:1.5rem'})); } }),
       el('span.dot'),
     ])
   );
@@ -45,7 +45,7 @@ export function renderWelcome(mount) {
   async function enterAsGuest() {
     try {
       await auth.signInWithGoogle();   // tryb local → tworzy konto-gościa
-      toast('Wchodzisz w trybie podglądu — baw się dobrze! 🚀');
+      toast('Wchodzisz w trybie podglądu — baw się dobrze!');
       // Jeśli onboarding już był zrobiony, leć prosto do intro/lekcji; inaczej onboarding.
       navigate(store.get().onboarding.completed ? '#/intro' : '#/onboarding');
     } catch (e) {
