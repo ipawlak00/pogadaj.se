@@ -24,7 +24,7 @@ export function renderConversation(mount, lessonId) {
   const history = [];              // [{role:'user'|'model', text}] dla Gemini
   let busy = false;               // czeka na odpowiedź AI
 
-  const REC_LANG = 'en-US';        // uczeń powtarza po angielsku
+  let recLang = 'en-US';           // język, w którym mówi uczeń (przełączalny PL/EN)
 
   // W lekcji chowamy startowy motyw (pomarańcz + planety) — spójny widok stacji
   document.body.classList.add('in-lesson');
@@ -46,16 +46,26 @@ export function renderConversation(mount, lessonId) {
   const stepArea = el('div', { id: 'step-area' });
   const progressEl = el('div.faint', { id: 'step-progress', style: 'font-size:.8rem;margin:0 0 4px' });
   const micBtn = el('button.mic-btn', { 'aria-label': 'Mów', onclick: toggleListen }, ['Mów']);
-  const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center', text: 'Naciśnij mikrofon i powtórz' });
+  const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center', text: 'Naciśnij mikrofon i mów (możesz też zadać pytanie)' });
   const suggestRow = el('div.suggest-row', { id: 'suggest-row' });
   const replayBtn = el('button.btn.btn--ghost', { onclick: () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); } }, ['Powtórz']);
   const skipBtn = el('button.btn.btn--ghost', { onclick: skipTask }, ['Pomiń']);
+  const stopBtn = el('button.btn.btn--ghost', { onclick: () => { speech.stopSpeaking(); setSpeaking(false); } }, ['Przerwij']);
 
-  let sceneTick = 0;
+  // Przełącznik języka, w którym mówi uczeń (Izabela słucha PL i EN)
+  const plBtn = el('button.lang-opt', { onclick: () => setRecLang('pl-PL') }, ['polsku']);
+  const enBtn = el('button.lang-opt.active', { onclick: () => setRecLang('en-US') }, ['angielsku']);
+  function setRecLang(l) {
+    recLang = l;
+    plBtn.classList.toggle('active', l === 'pl-PL');
+    enBtn.classList.toggle('active', l === 'en-US');
+  }
+  const langToggle = el('div.lang-toggle', {}, [el('span.faint', { text: 'Mówię po:' }), enBtn, plBtn]);
+
+  // Jedna, stała scena na całą lekcję (nie migocze co krok). Losowana raz.
   function nextScene() {
     if (!SCENES.length) return;
-    const path = SCENES[sceneTick % SCENES.length];
-    sceneTick++;
+    const path = SCENES[Math.floor(Math.random() * SCENES.length)];
     sceneImg.onerror = () => { sceneImg.onerror = null; sceneImg.src = 'assets/izabela/izabela-lesson.png'; };
     sceneImg.src = path;
   }
@@ -78,8 +88,9 @@ export function renderConversation(mount, lessonId) {
         stepArea,
         suggestRow,
         el('div.composer', { style: 'flex-direction:column;align-items:center;gap:10px' }, [
+          langToggle,
           micBtn, micLabel,
-          el('div.row', { style: 'gap:10px' }, [replayBtn, skipBtn]),
+          el('div.row', { style: 'gap:10px;flex-wrap:wrap;justify-content:center' }, [replayBtn, stopBtn, skipBtn]),
         ]),
       ]),
     ])
@@ -116,7 +127,6 @@ export function renderConversation(mount, lessonId) {
     const r = await ai.lessonReply(history);
     setBusy(false);
     if (r.unsupported) { startStep(); return; }     // brak Gemini → kroki
-    nextScene();           // zmiana scenerii co turę
     history.push({ role: 'model', text: r.say });
     if (r.mistake) setMood('oops');
     addMessage('izabela', r.say);
@@ -190,7 +200,6 @@ export function renderConversation(mount, lessonId) {
     if (stepIdx >= steps.length) return finishLesson();
     attempts = 0; phase = ''; chunks = []; chunkIdx = 0; chunkDoneCb = null;
     setProgress();
-    nextScene();           // zmiana scenerii przy każdym kroku
     const step = steps[stepIdx];
     if (step.type === 'say') return startSay(step);
     if (step.type === 'fill') return startFill(step);
@@ -319,18 +328,20 @@ export function renderConversation(mount, lessonId) {
     }
   }
 
-  // ---------- mikrofon (tylko mówienie) ----------
+  // ---------- mikrofon (mówienie + pytania, można przerwać Izabelę) ----------
   function toggleListen() {
     if (busy) return;
     if (listening) { recorder?.stop(); return; }
+    speech.stopSpeaking();              // naciśnięcie mikrofonu PRZERYWA Izabelę
+    setSpeaking(false);
     listening = true; micBtn.classList.add('recording'); micBtn.textContent = 'Stop'; setMicLabel('Słucham… mów teraz');
     let heard = '';
     recorder = speech.listen({
-      lang: REC_LANG,
+      lang: recLang,
       onResult: (t) => { heard = t; setMicLabel(`„${t}"`); },
       onError: (e) => { toast('Mikrofon: ' + (e.message || e), 'error'); resetMic(); },
       onEnd: () => { resetMic(); if (heard) handleAnswer(heard); else setMicLabel('Nie dosłyszałam — naciśnij i powiedz jeszcze raz'); },
     });
   }
-  function resetMic() { listening = false; micBtn.classList.remove('recording'); micBtn.textContent = 'Mów'; setMicLabel('Naciśnij mikrofon i powtórz'); }
+  function resetMic() { listening = false; micBtn.classList.remove('recording'); micBtn.textContent = 'Mów'; setMicLabel('Naciśnij mikrofon i mów (możesz też zadać pytanie)'); }
 }
