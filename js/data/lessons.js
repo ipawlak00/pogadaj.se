@@ -109,14 +109,13 @@ export const LESSONS = [
   },
 ];
 
-// Sceny (tła) przeplatające się przy lekcjach/zadaniach.
-// Wgraj te pliki do assets/scenes/ — gdy ich brak, pokazuje się samo ciemne tło (bez błędu).
+// Sceny (tła) przeplatające się przy lekcjach/zadaniach — Twoje grafiki.
 export const SCENES = [
-  'assets/scenes/console.png',
-  'assets/scenes/whiteboard.png',
-  'assets/scenes/cockpit.png',
-  'assets/scenes/desk.png',
-  'assets/scenes/portrait.png',
+  'assets/scenes/scene-01.jpg', 'assets/scenes/scene-02.jpg', 'assets/scenes/scene-03.jpg',
+  'assets/scenes/scene-04.jpg', 'assets/scenes/scene-05.jpg', 'assets/scenes/scene-06.jpg',
+  'assets/scenes/scene-07.jpg', 'assets/scenes/scene-08.jpg', 'assets/scenes/scene-09.jpg',
+  'assets/scenes/scene-10.jpg', 'assets/scenes/scene-11.jpg', 'assets/scenes/scene-12.jpg',
+  'assets/scenes/scene-13.jpg', 'assets/scenes/scene-14.jpg',
 ];
 
 export const getLesson = (id) => LESSONS.find((l) => l.id === id);
