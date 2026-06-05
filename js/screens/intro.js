@@ -1,30 +1,28 @@
 import { el, navigate } from '../ui.js';
 import { speech } from '../services/speech.js';
 
-// Grafika „Izabela w drzwiach" — wgraj ją tutaj, a pojawi się automatycznie.
-// Zanim ją dodasz, używamy pozy stojącej jako podglądu.
-const DOOR_IMG = 'assets/izabela/izabela-door.png';
-const DOOR_FALLBACK = 'assets/scenes/scene-11.jpg';
+// Grafika Izabeli przy holograficznym stole (ręka + rysik na hologramie).
+const HERO_IMG = 'assets/izabela/izabela-door.png';
+const HERO_FALLBACK = 'assets/scenes/scene-04.jpg';
 
-// Wejście na pokład: pełnoekranowa Izabela.
+// Wejście na pokład — pełnoekranowa Izabela.
 //   1) „Leć ze mną" → film na cały ekran
-//   2) po filmie: Izabela w drzwiach, mówi „Dobra, to co — lecimy?" → test fonetyczny
+//   2) po filmie: Izabela mówi „Dobra, to co — lecimy?" + przycisk na hologramie → test
 export function renderIntro(mount) {
   launch();
 
-  function heroImg() {
-    return el('img.hero__img', { src: DOOR_IMG, alt: 'Izabela',
-      onerror: function () { this.onerror = null; this.src = DOOR_FALLBACK; } });
+  // Kadr 16:9 z Izabelą; dzieci pozycjonowane w % względem kadru (trzymają się dłoni).
+  function heroFrame(children) {
+    const img = el('img.hero__img', { src: HERO_IMG, alt: 'Izabela',
+      onerror: function () { this.onerror = null; this.src = HERO_FALLBACK; } });
+    return el('div.hero.fade-in', {}, [el('div.hero__frame', {}, [img, ...children])]);
   }
 
   // 1) Wejście — przycisk uruchamia film
   function launch() {
-    mount.replaceChildren(
-      el('div.hero.fade-in', {}, [
-        heroImg(),
-        el('button.btn.btn--iza.btn--lg.hero__cta', { onclick: playVideo }, ['Leć ze mną']),
-      ])
-    );
+    mount.replaceChildren(heroFrame([
+      el('button.btn.btn--iza.btn--lg.hero__cta', { onclick: playVideo }, ['Leć ze mną']),
+    ]));
   }
 
   // 2) Film na cały ekran
@@ -42,17 +40,14 @@ export function renderIntro(mount) {
     video.play().catch(doorway);   // gdy autoplay zablokowany → przejdź dalej
   }
 
-  // 3) Izabela w drzwiach — mówi i zaprasza do testu
+  // 3) Izabela zaprasza do testu — mówi i wskazuje przycisk na hologramie
   function doorway() {
     speech.stopSpeaking();
     const line = 'Dobra, to co — lecimy? Nie mamy przecież czasu do stracenia.';
-    mount.replaceChildren(
-      el('div.hero.fade-in', {}, [
-        heroImg(),
-        el('div.hero__bubble', { text: line }),
-        el('button.btn.btn--iza.btn--lg.hero__cta', { onclick: goTest }, ['Lecimy']),
-      ])
-    );
+    mount.replaceChildren(heroFrame([
+      el('div.hero__bubble', { text: line }),
+      el('button.btn.btn--iza.btn--lg.hero__cta', { onclick: goTest }, ['Lecimy']),
+    ]));
     speech.speak(line, { lang: 'pl-PL' });
   }
 
