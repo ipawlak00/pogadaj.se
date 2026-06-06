@@ -47,7 +47,15 @@ const GTTS_VOICES = {
 const chosenVoice = { pl: null, en: null };   // zapamiętany działający głos
 let ttsErrorShown = false;                      // pokaż błąd Google TTS tylko raz
 let engineAnnounced = false;                    // raz na sesję: który silnik głosu gra
+let lastTtsErrorAt = 0;                          // throttling powiadomień o błędach TTS
+export let lastTtsError = '';                    // ostatni powód awarii głosu (do diagnozy)
 function announceEngine(msg, kind) { if (engineAnnounced) return; engineAnnounced = true; toast(msg, kind); }
+// Powiadom o awarii naturalnego głosu — z throttlingiem (max raz na 8 s)
+function ttsNotify(msg) {
+  lastTtsError = msg;
+  const now = Date.now();
+  if (now - lastTtsErrorAt > 8000) { lastTtsErrorAt = now; toast(msg, 'error'); }
+}
 
 let currentAudio = null;
 const audioCache = new Map();   // cache audio po (voice|rate|text) — oszczędza koszt znaków
@@ -223,10 +231,7 @@ async function speakGemini(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
     await audio.play();
   } catch (e) {
     console.warn('[GeminiTTS] fallback:', e);
-    if (!ttsErrorShown) {
-      ttsErrorShown = true;
-      toast('Głos Gemini nie zadziałał (' + (e.message || e) + '). Używam zapasowego.', 'error');
-    }
+    ttsNotify('Głos Gemini nie zadziałał: ' + (e.message || e) + ' — używam zapasowego (robot).');
     if (hasGoogleTTS()) return speakGoogle(text, { lang, rate, onEnd });
     return speakWeb(text, { lang, onEnd });
   }
