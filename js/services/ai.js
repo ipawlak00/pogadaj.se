@@ -7,7 +7,7 @@
 //  Interfejs publiczny jest WSPÓLNY — ekrany nie wiedzą, co siedzi pod spodem.
 // =============================================================
 
-import { CONFIG } from '../config.js';
+import { CONFIG, genContentUrl, geminiConfigured } from '../config.js';
 import { IZABELA } from '../data/izabela.js';
 import { store } from '../state.js';
 import { toast } from '../ui.js';
@@ -173,15 +173,13 @@ function geminiKey() {
 export function setGeminiKey(key) {
   try { key ? localStorage.setItem(KEY_STORE, key.trim()) : localStorage.removeItem(KEY_STORE); } catch {}
 }
-export function hasGeminiKey() { return !!geminiKey(); }
+// Gemini jest dostępne gdy: jest proxy (dla wszystkich), klucz w CONFIG, albo klucz użytkownika
+export function hasGeminiKey() { return geminiConfigured() || !!geminiKey(); }
 
 // ---- Provider Gemini (aktywny gdy jest klucz) ----
 const geminiProvider = {
   async _call(userText, { json = true } = {}) {
-    const key = geminiKey();
-    const { model, proxyUrl } = CONFIG.GEMINI;
-    const url = proxyUrl
-      || `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    const url = CONFIG.GEMINI.proxyUrl || genContentUrl(CONFIG.GEMINI.model, geminiKey());
     const profile = store.get().phonetic.profile;
     const lvl = currentLevel();
     const beg = isBeginner();
@@ -249,9 +247,7 @@ Zwróć JSON:
 
   // Wielo-turowe wywołanie (lekcja prowadzona przez AI)
   async _callContents(contents, systemText) {
-    const key = geminiKey();
-    const { model, proxyUrl } = CONFIG.GEMINI;
-    const url = proxyUrl || `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    const url = CONFIG.GEMINI.proxyUrl || genContentUrl(CONFIG.GEMINI.model, geminiKey());
     const body = {
       system_instruction: { parts: [{ text: systemText }] },
       contents,

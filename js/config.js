@@ -17,11 +17,16 @@ export const CONFIG = {
   // 'gemini' -> realne Gemini API (wymaga klucza / proxy)
   AI_PROVIDER: 'stub',
   GEMINI: {
-    apiKey: '',                 // NIE commitujemy klucza do repo!
+    apiKey: '',                 // NIE commitujemy klucza do repo (zostanie unieważniony)!
     model: 'gemini-2.5-flash',
-    // Zalecane: trzymać klucz po stronie Firebase Functions (proxy),
-    // a tu zostawić proxyUrl zamiast apiKey.
-    proxyUrl: '',
+    ttsModel: 'gemini-2.5-flash-preview-tts',
+    // ZALECANE dla wszystkich użytkowników bez wklejania klucza:
+    // wdróż proxy (np. Cloudflare Worker z proxy/cloudflare-worker.js),
+    // które trzyma klucz po stronie serwera, i wpisz tu jego adres, np.
+    //   proxyBase: 'https://pogadajse-proxy.twoj-subdomena.workers.dev'
+    // Wtedy przeglądarka woła proxy BEZ klucza, a Gemini działa u każdego od startu.
+    proxyBase: '',
+    proxyUrl: '',               // (legacy) pełny URL tylko dla modelu czatu
   },
 
   // --- Uwierzytelnianie -----------------------------------------
@@ -54,6 +59,17 @@ export const CONFIG = {
   FREE_LESSONS: 3,              // 3 darmowe lekcje (haczyk)
   PHONETIC_WORDS_COUNT: 20,     // ile słówek w Paszporcie Fonetycznym (15–50)
 };
+
+// Czy Gemini jest dostępne (proxy dla wszystkich LUB klucz lokalny/użytkownika)
+export const geminiConfigured = () =>
+  !!(CONFIG.GEMINI.proxyBase || CONFIG.GEMINI.apiKey);
+
+// Buduje URL do generateContent: przez proxy (bez klucza) albo wprost (z kluczem)
+export function genContentUrl(model, key) {
+  const base = (CONFIG.GEMINI.proxyBase || '').replace(/\/$/, '');
+  if (base) return `${base}/v1beta/models/${model}:generateContent`;
+  return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key || ''}`;
+}
 
 // Mały helper do logów w trybie dev
 export const isDev = () =>

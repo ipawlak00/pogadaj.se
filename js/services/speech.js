@@ -6,7 +6,7 @@
 //       sklonowanym głosem (PL+EN). Inaczej → wbudowany głos przeglądarki.
 // =============================================================
 
-import { CONFIG } from '../config.js';
+import { CONFIG, genContentUrl, geminiConfigured } from '../config.js';
 import { toast } from '../ui.js';
 
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -175,11 +175,11 @@ async function speakEleven(text, { onEnd, rate } = {}) {
 }
 
 // ---- Gemini natywny TTS (naturalny głos na kluczu Gemini — bez Google Cloud TTS) ----
-const GEMINI_TTS_MODEL = 'gemini-2.5-flash-preview-tts';
 const GEMINI_VOICE = 'Leda';                 // ciepły, kobiecy głos
 const GEMINI_KEY_STORE = 'pogadajse.geminiKey';
 function genLangKey() { return (ls(GEMINI_KEY_STORE) || (CONFIG.GEMINI.apiKey || '')).trim(); }
-const hasGeminiTTS = () => !!genLangKey();
+// Głos Gemini dostępny gdy: proxy (dla wszystkich) lub klucz (CONFIG/użytkownika)
+const hasGeminiTTS = () => geminiConfigured() || !!genLangKey();
 
 // Surowe PCM (L16, mono) z Gemini → WAV data-blob do odtworzenia w przeglądarce
 function pcmToWavUrl(base64, sampleRate) {
@@ -199,7 +199,7 @@ async function geminiTtsUrl(text) {
   const cacheKey = 'gem|' + GEMINI_VOICE + '|' + text;
   const cached = audioCache.get(cacheKey);
   if (cached) return cached;
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_TTS_MODEL}:generateContent?key=${genLangKey()}`, {
+  const res = await fetch(genContentUrl(CONFIG.GEMINI.ttsModel, genLangKey()), {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ parts: [{ text }] }],
