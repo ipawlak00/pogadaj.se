@@ -1,0 +1,10 @@
+{
+  "name": "pogadajse-gemini-proxy",
+  "version": "1.0.0",
+  "description": "Proxy do Gemini (Google Cloud Function) — klucz po stronie serwera",
+  "main": "index.js",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.4.0"
+  }
+}

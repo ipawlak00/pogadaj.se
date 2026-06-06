@@ -1,6 +1,7 @@
 import { el, navigate, aiConnectButton, voiceConnectButton } from '../ui.js';
 import { store } from '../state.js';
 import { auth } from '../services/auth.js';
+import { speech } from '../services/speech.js';
 import { LESSONS } from '../data/lessons.js';
 
 export function renderLessons(mount) {
@@ -30,7 +31,7 @@ export function renderLessons(mount) {
   function orbitBtn(l, i) {
     const isDone = done.includes(l.id);
     return el(`button.orbit-lesson.orbit-pos-${i + 1}${isDone ? '.is-done' : ''}`, {
-      onclick: () => navigate('#/lesson/' + l.id),
+      onclick: () => { speech.unlockAudio(); navigate('#/lesson/' + l.id); },
       onmouseenter: () => showInfo(l, isDone),
       onmouseleave: () => showInfo(null),
       onfocus: () => showInfo(l, isDone),

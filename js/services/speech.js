@@ -60,6 +60,33 @@ function ttsNotify(msg) {
 let currentAudio = null;
 const audioCache = new Map();   // cache audio po (voice|rate|text) — oszczędza koszt znaków
 
+// --- Odblokowanie dźwięku na telefonie ---
+// Telefony blokują audio, dopóki użytkownik czegoś nie dotknie. Trzymamy JEDEN
+// element <audio> i „błogosławimy" go pierwszym gestem — potem gra automatycznie.
+let sharedAudio = null;
+let audioUnlocked = false;
+function getAudioEl() {
+  if (!sharedAudio) { sharedAudio = new Audio(); sharedAudio.preload = 'auto'; }
+  return sharedAudio;
+}
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  try {
+    const a = getAudioEl();
+    a.muted = true;
+    a.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=';
+    const p = a.play();
+    if (p && p.catch) p.catch(() => {});
+    setTimeout(() => { try { a.pause(); a.muted = false; } catch (e) {} }, 0);
+  } catch (e) { /* ignore */ }
+  try { window.speechSynthesis && window.speechSynthesis.resume(); } catch (e) {}
+}
+if (typeof window !== 'undefined') {
+  ['pointerdown', 'touchend', 'click', 'keydown'].forEach((ev) =>
+    window.addEventListener(ev, unlockAudio, { passive: true }));
+}
+
 // Dzieli tekst na fragmenty: to co w cudzysłowie (przykłady angielskie) → 'en',
 // reszta → język główny. Dzięki temu Izabela czyta angielski angielskim głosem.
 function splitByQuotes(text, primary) {
@@ -221,13 +248,15 @@ async function geminiTtsUrl(text) {
 
 async function speakGemini(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
   try {
-    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    if (currentAudio) { try { currentAudio.pause(); } catch (e) {} }
     const url = await geminiTtsUrl(text);
-    const audio = new Audio(url);
-    if (rate && rate < 1) audio.playbackRate = Math.max(0.85, rate);   // delikatne zwolnienie
-    currentAudio = audio;
+    const audio = getAudioEl();           // współdzielony, odblokowany element (mobile)
+    audio.muted = false;
+    audio.playbackRate = (rate && rate < 1) ? Math.max(0.85, rate) : 1;
     audio.onended = () => { if (currentAudio === audio) currentAudio = null; onEnd?.(); };
     audio.onerror = () => onEnd?.();
+    currentAudio = audio;
+    audio.src = url;
     await audio.play();
   } catch (e) {
     console.warn('[GeminiTTS] fallback:', e);
@@ -304,9 +333,12 @@ export const speech = {
     return speakWeb(clean, opts);
   },
 
+  // Odblokuj dźwięk na telefonie (wywołaj na geście wejścia w lekcję)
+  unlockAudio() { unlockAudio(); },
+
   stopSpeaking() {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    if (currentAudio) { try { currentAudio.pause(); } catch (e) {} currentAudio = null; }
   },
 
   // --- Nagrywanie audio (do analizy wymowy przez Gemini) ---

@@ -1,48 +1,66 @@
 # Proxy Gemini — głos i rozmowa dla WSZYSTKICH bez klucza
 
-Cel: każdy użytkownik pogadaj.se dostaje naturalny głos Gemini i rozmowę z Izabelą
-**od razu po wejściu**, bez wklejania własnego klucza API. Klucz trzymamy po stronie
-serwera (w proxy), a przeglądarka woła proxy bez klucza.
+## O co tu chodzi (po ludzku)
 
-Dlaczego nie wkleić klucza wprost do kodu? Bo repo jest publiczne — GitHub i Google
-wykryją klucz i **automatycznie go unieważnią**, a do tego ktoś mógłby wydrenować
-Twój budżet. Proxy to rozwiązuje.
+Naturalny głos Izabeli i rozmowy to **Gemini od Google**. Gemini kosztuje i wymaga
+**sekretnego klucza**. Tego klucza **nie wolno wkleić do kodu aplikacji**, bo kod jest
+publiczny — GitHub i Google by go wykryli i **automatycznie unieważnili**, a ktoś mógłby
+wydrenować budżet.
 
-## Wdrożenie na Cloudflare Workers (darmowe, ~5 minut)
+Rozwiązanie: mały program-pośrednik („proxy") stojący na serwerze. To on trzyma klucz.
+Przeglądarka użytkownika pyta proxy → proxy pyta Gemini (z kluczem) → odsyła głos.
+**Użytkownik nigdy nie widzi klucza, a głos działa od pierwszej sekundy.**
 
-1. Wejdź na https://dash.cloudflare.com → **Workers & Pages** → **Create** → **Create Worker**.
-2. Nadaj nazwę, np. `pogadajse-proxy`, kliknij **Deploy** (na razie z domyślnym kodem).
-3. Kliknij **Edit code**, usuń wszystko i wklej zawartość pliku
-   [`cloudflare-worker.js`](./cloudflare-worker.js). Kliknij **Deploy**.
-4. Wejdź w **Settings → Variables and Secrets → Add**:
-   - typ: **Secret**
-   - nazwa: `GEMINI_KEY`
-   - wartość: Twój klucz Gemini (ten z włączonym billingiem).
-   - **Deploy/Save**.
-5. Skopiuj adres Workera, np. `https://pogadajse-proxy.twoj-login.workers.dev`.
-6. W pliku `js/config.js` ustaw:
+> To dokładnie wzorzec „dashboardu": user widzi efekt, nie mając dostępu do danych bazowych.
 
+## Wersja docelowa: Google (wszystkie opłaty w jednym miejscu)
+
+Skoro aplikacja ma stać w środowisku Google, proxy też stawiamy w Google — wtedy
+hosting, funkcja-proxy i zużycie Gemini są w **jednym projekcie = jeden rachunek**.
+
+Pliki: [`google/index.js`](./google/index.js), [`google/package.json`](./google/package.json).
+
+Kroki:
+1. W [Google Cloud Console](https://console.cloud.google.com) wybierz/utwórz **projekt**
+   (najlepiej ten sam, w którym masz włączony billing Gemini).
+2. Włącz API: **Generative Language API**, **Cloud Functions API**, **Cloud Run API**,
+   **Secret Manager API**.
+3. **Secret Manager** → utwórz sekret `GEMINI_KEY` = Twój klucz Gemini.
+4. Wgraj funkcję (w katalogu `proxy/google`):
+   ```bash
+   gcloud functions deploy gemini-proxy \
+     --gen2 --runtime=nodejs20 --region=europe-central2 \
+     --source=. --entry-point=geminiProxy \
+     --trigger-http --allow-unauthenticated \
+     --set-secrets=GEMINI_KEY=GEMINI_KEY:latest
+   ```
+   (Można też przez konsolę: Cloud Functions → Create function → wklej `index.js`
+   i `package.json`, dodaj sekret `GEMINI_KEY`.)
+5. Skopiuj URL funkcji (np. `https://europe-central2-twoj-projekt.cloudfunctions.net/gemini-proxy`).
+6. W `js/config.js` ustaw:
    ```js
    GEMINI: {
      ...
-     proxyBase: 'https://pogadajse-proxy.twoj-login.workers.dev',
+     proxyBase: 'https://europe-central2-twoj-projekt.cloudfunctions.net/gemini-proxy',
    }
    ```
+   `apiKey` zostaw puste. Zacommituj i wypchnij.
+7. Gotowe — głos Gemini działa u każdego, klucz został w Google.
 
-   (Nie ustawiaj `apiKey` w configu — ma zostać puste.)
-7. Zacommituj zmianę w `config.js` i wypchnij. Gotowe — głos Gemini działa u każdego.
+Hosting strony też możesz przenieść do Google (**Firebase Hosting**), żeby wszystko
+było w jednym projekcie. Apka to statyczne pliki — `firebase init hosting` + `firebase deploy`.
 
-## Bezpieczeństwo
+## Alternatywa: Cloudflare Worker
 
-- W `cloudflare-worker.js` w `ALLOW_ORIGINS` trzymaj tylko swoje domeny
-  (`https://ipawlak00.github.io` itd.). To ogranicza, kto może wołać proxy.
-- W Google Cloud ustaw **budżet i alerty** na projekcie klucza (np. limit miesięczny),
-  żeby mieć pełną kontrolę kosztów.
-- Worker wpuszcza wyłącznie `…/v1beta/models/<model>:generateContent` — nic innego.
+Jeśli wolisz postawić proxy poza Google (równie dobre, darmowy plan), użyj
+[`cloudflare-worker.js`](./cloudflare-worker.js):
+1. dash.cloudflare.com → Workers & Pages → Create Worker → Deploy.
+2. Edit code → wklej `cloudflare-worker.js` → Deploy.
+3. Settings → Variables → **Secret** `GEMINI_KEY` = Twój klucz.
+4. Skopiuj URL Workera → wpisz w `js/config.js` → `proxyBase`.
 
-## Alternatywy
+## Bezpieczeństwo (oba warianty)
 
-Każda platforma z funkcjami serverless zadziała tak samo (klucz jako zmienna
-środowiskowa, ten sam reverse-proxy do `generativelanguage.googleapis.com`):
-Vercel, Netlify Functions, Firebase Functions, Deno Deploy. Logika jest identyczna
-jak w `cloudflare-worker.js`.
+- W `ALLOW_ORIGINS` trzymaj tylko swoje domeny (`https://ipawlak00.github.io`, itp.).
+- W Google ustaw **budżet i alerty** na projekcie (kontrola kosztów).
+- Proxy wpuszcza wyłącznie `…/v1beta/models/<model>:generateContent` — nic więcej.
