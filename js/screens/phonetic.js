@@ -196,7 +196,7 @@ export function renderPhonetic(mount) {
 
     // Izabela na zdjęciu + dymek od jej ust z tym, co właśnie mówi
     screen.replaceChildren(el('div.passport-scene.fade-in', {}, [
-      el('img.passport-iza', { src: 'assets/izabela/izabela-hero.png', alt: 'Izabela' }),
+      el('img.passport-iza', { src: 'assets/scenes/scene-09.jpg', alt: 'Izabela' }),
       el('div.passport-bubble', {}, [
         el('div.passport-bubble__title', { text: hello }),
         overall != null ? scoreBar(overall) : null,

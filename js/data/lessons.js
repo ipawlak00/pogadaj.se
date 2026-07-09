@@ -109,6 +109,102 @@ export const LESSONS = [
   },
 ];
 
+// ---- Zestaw B1/B2 — rozmowa już się klei, szlifujemy swobodę ----
+export const LESSONS_MID = [
+  {
+    id: 'small-talk',
+    num: 1,
+    title: 'Small talk bez spiny',
+    badge: 'free',
+    desc: 'Zagadać do kogoś naturalnie — pogoda, weekend, praca. I jak nie brzmieć jak robot.',
+    type: 'lesson',
+    aiTopic: 'Small talk na poziomie B1/B2: naturalne rozpoczynanie rozmowy, pytania podtrzymujące (How come? What was that like?), reagowanie na odpowiedzi, unikanie kalki z polskiego. Rozmowa głównie po angielsku, korekty po polsku.',
+    intro: 'Dziś uczymy się gadać o niczym — czyli o wszystkim. Small talk otwiera każde drzwi!',
+    steps: [
+      { type: 'say', en: 'How was your weekend?', pl: 'Jak minął weekend?' },
+      { type: 'say', en: 'I have been super busy lately', pl: 'Ostatnio jestem strasznie zajęty' },
+      { type: 'say', en: 'What do you do for a living?', pl: 'Czym się zajmujesz zawodowo?' },
+      { type: 'say', en: 'That sounds interesting, tell me more', pl: 'Brzmi ciekawie, opowiedz mi więcej' },
+    ],
+  },
+  {
+    id: 'daily-story',
+    num: 2,
+    title: 'Opowiedz swój dzień',
+    badge: 'free',
+    desc: 'Płynne opowiadanie o tym, co się wydarzyło — czasy przeszłe w praktyce, bez tabelek.',
+    type: 'lesson',
+    aiTopic: 'Opowiadanie o swoim dniu i wydarzeniach (B1/B2): Past Simple vs Present Perfect w praktyce, łączniki (so, then, actually, it turned out), naturalny storytelling. Uczeń opowiada, Izabela dopytuje i koryguje.',
+    intro: 'Dziś Ty gadasz, ja słucham. Opowiesz mi swój dzień po angielsku — a ja podkręcę Twoją opowieść.',
+    steps: [
+      { type: 'say', en: 'This morning I woke up late', pl: 'Dziś rano zaspałem' },
+      { type: 'say', en: 'It turned out to be a great day', pl: 'Okazało się, że to świetny dzień' },
+      { type: 'say', en: 'I have never done that before', pl: 'Nigdy wcześniej tego nie robiłem' },
+    ],
+  },
+  {
+    id: 'real-situations',
+    num: 3,
+    title: 'Sytuacje z życia',
+    badge: 'free',
+    desc: 'Reklamacja, rezerwacja, nieporozumienie — angielski, kiedy coś idzie nie tak.',
+    type: 'lesson',
+    aiTopic: 'Radzenie sobie w realnych sytuacjach (B1/B2): reklamacja w sklepie, zmiana rezerwacji, prośba o wyjaśnienie (Could you clarify...?), uprzejma asertywność. Odgrywanie scenek, Izabela gra drugą stronę.',
+    intro: 'Dziś scenki z życia — coś poszło nie tak i trzeba to ogarnąć po angielsku. Ja gram obsługę, Ty klienta!',
+    steps: [
+      { type: 'say', en: 'Excuse me, there is a problem with my order', pl: 'Przepraszam, jest problem z moim zamówieniem' },
+      { type: 'say', en: 'Could you clarify what you mean?', pl: 'Czy możesz wyjaśnić, co masz na myśli?' },
+      { type: 'say', en: 'I would like to change my reservation', pl: 'Chciałbym zmienić rezerwację' },
+    ],
+  },
+];
+
+// ---- Zestaw C1 — płynność jest, polerujemy detale i styl ----
+export const LESSONS_HIGH = [
+  {
+    id: 'strong-opinions',
+    num: 1,
+    title: 'Opinia z pazurem',
+    badge: 'free',
+    desc: 'Przekonująco bronić zdania, niuansować, grzecznie się nie zgadzać.',
+    type: 'lesson',
+    aiTopic: 'Dyskusja na poziomie C1: wyrażanie i obrona opinii, hedging (arguably, to some extent), grzeczne kontrargumenty (I see your point, but...), unikanie zbyt bezpośrednich kalk z polskiego. Izabela podrzuca kontrowersyjne (lekkie) tematy i gra adwokata diabła.',
+    intro: 'Dziś się pospieramy — kulturalnie! Ja podrzucam temat i gram adwokata diabła, Ty bronisz swojego zdania.',
+    steps: [
+      { type: 'say', en: 'I see your point, but I strongly disagree', pl: 'Rozumiem Twój punkt widzenia, ale zdecydowanie się nie zgadzam' },
+      { type: 'say', en: 'That is arguably the biggest challenge we face', pl: 'To prawdopodobnie największe wyzwanie, przed jakim stoimy' },
+    ],
+  },
+  {
+    id: 'work-english',
+    num: 2,
+    title: 'Angielski w robocie',
+    badge: 'free',
+    desc: 'Spotkania, prezentacje, feedback — brzmieć profesjonalnie, nie sztywno.',
+    type: 'lesson',
+    aiTopic: 'Profesjonalny angielski (C1): prowadzenie spotkania, dyplomatyczny feedback (I was wondering if we could...), podsumowywanie, różnica między formalnym a naturalnym tonem. Scenki biurowe, Izabela gra współpracownika.',
+    intro: 'Wchodzimy w tryb biurowy — ale bez korpomowy. Nauczysz się brzmieć profesjonalnie i po ludzku naraz.',
+    steps: [
+      { type: 'say', en: 'Let me summarize what we have agreed on', pl: 'Podsumuję, co ustaliliśmy' },
+      { type: 'say', en: 'I was wondering if we could revisit this decision', pl: 'Zastanawiam się, czy moglibyśmy wrócić do tej decyzji' },
+    ],
+  },
+  {
+    id: 'idioms-nuance',
+    num: 3,
+    title: 'Idiomy i niuanse',
+    badge: 'free',
+    desc: 'Brzmieć jak native: idiomy, phrasale i słowa, których podręczniki nie uczą.',
+    type: 'lesson',
+    aiTopic: 'Idiomy, phrasal verbs i niuanse znaczeniowe (C1): naturalne kolokwializmy, różnice rejestru, fałszywi przyjaciele, humor językowy. Izabela wplata idiomy w rozmowę i prosi ucznia o użycie ich we własnych zdaniach.',
+    intro: 'Dziś smaczki — idiomy i zwroty, po których brzmi się jak swój. Będzie się działo!',
+    steps: [
+      { type: 'say', en: 'It is not my cup of tea, to be honest', pl: 'Szczerze mówiąc, to nie moja bajka' },
+      { type: 'say', en: 'We will figure it out as we go', pl: 'Rozgryziemy to po drodze' },
+    ],
+  },
+];
+
 // Sceny (tła) przeplatające się przy lekcjach/zadaniach — Twoje grafiki.
 export const SCENES = [
   'assets/scenes/scene-01.jpg', 'assets/scenes/scene-02.jpg', 'assets/scenes/scene-03.jpg',
@@ -118,4 +214,11 @@ export const SCENES = [
   'assets/scenes/scene-13.jpg', 'assets/scenes/scene-14.jpg',
 ];
 
-export const getLesson = (id) => LESSONS.find((l) => l.id === id);
+// ---- Dobór zestawu lekcji do poziomu ucznia ----
+export const LESSON_SETS = { basic: LESSONS, mid: LESSONS_MID, high: LESSONS_HIGH };
+export const setForLevel = (lvl) =>
+  ['A1', 'A2'].includes(lvl) ? 'basic' : ['B1', 'B2'].includes(lvl) ? 'mid' : lvl ? 'high' : 'basic';
+export const getLessonsForLevel = (lvl) => LESSON_SETS[setForLevel(lvl)];
+
+export const getLesson = (id) =>
+  [...LESSONS, ...LESSONS_MID, ...LESSONS_HIGH].find((l) => l.id === id);

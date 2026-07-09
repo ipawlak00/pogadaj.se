@@ -28,7 +28,7 @@
 .btn:hover { transform: translateY(-1px); }
 .btn:active { transform: translateY(0); }
 .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-.btn--primary { background: linear-gradient(135deg, #ff6a00, #ff9a2e); box-shadow: var(--glow-accent); color: #1a0d00; }
+.btn--primary { background: linear-gradient(135deg, #4f86c6, #74aee4); box-shadow: var(--glow-accent); color: #06223f; }
 .btn--ghost { background: transparent; border-color: var(--surface-border); }
 .btn--pink { background: linear-gradient(135deg, var(--pink), var(--violet)); box-shadow: var(--glow-pink); }
 .btn--lg { padding: 16px 32px; font-size: 1.1rem; }
@@ -254,7 +254,9 @@ body:not([data-route="welcome"]) .mic-btn {
   max-width: 920px; margin: 4vh auto 0; flex-wrap: wrap;
 }
 .passport-iza {
-  width: clamp(220px, 32vw, 340px); border-radius: 24px;
+  width: clamp(240px, 34vw, 360px); aspect-ratio: 3 / 4;
+  object-fit: cover; object-position: 40% 18%;   /* kadr na Izabelę ze statku */
+  border-radius: 18px; border: 2px solid #16305a;
   box-shadow: var(--shadow-card); display: block;
 }
 .passport-bubble {
@@ -390,8 +392,8 @@ body:not([data-route="welcome"]) .mic-btn {
 }
 .auth-title .planet-dot {
   width: .32em; height: .32em; border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #ffd27a, #c25a12);
-  box-shadow: 0 0 16px rgba(255,138,30,.7); display: inline-block;
+  background: radial-gradient(circle at 35% 30%, #d8efff, #4f86c6 60%, #23405f);
+  box-shadow: 0 0 16px rgba(130,196,255,.75); display: inline-block;
 }
 .auth-sub {
   font-family: var(--font-display); font-weight: 700; text-transform: uppercase;
@@ -636,34 +638,48 @@ body.on-lessons .cosmos { display: none; }
 }
 
 /* Kafelki lekcji — jedna pod drugą, po LEWEJ od Izabeli.
-   Kolorystyka jak robot ze sceny: biel + błękit, z opalową obwódką. */
+   Jasny środek, ciemniej przy krawędziach, granatowa ramka. */
 .orbit-lesson {
   position: absolute; left: 3.5%; transform: translateY(-50%); z-index: 4;
-  display: flex; flex-direction: row; align-items: center; gap: 14px;
-  width: clamp(190px, 23vw, 280px); padding: 13px 18px; cursor: pointer;
-  color: #14314f; text-align: left;
-  background: rgba(255,255,255,.94); backdrop-filter: blur(7px);
-  border: none; border-radius: 16px;
-  box-shadow: 0 12px 30px rgba(10,40,80,.45);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  width: clamp(140px, 15vw, 190px); padding: 20px 14px; cursor: pointer;
+  color: #14314f; text-align: center;
+  background: radial-gradient(ellipse at center, #ffffff 25%, #e3eef9 62%, #b9d2e8 100%);
+  border: 2px solid #16305a; border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(6,25,55,.5);
   transition: transform .18s ease, box-shadow .18s ease;
 }
-/* opalowa, mieniąca się obwódka */
-.orbit-lesson::after {
-  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 2px;
-  background: linear-gradient(120deg, #9fe3ff, #ffd3f0, #b5ffe6, #cfd8ff, #9fe3ff);
-  background-size: 300% 300%;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: opalHue 6s linear infinite; pointer-events: none;
-}
-@keyframes opalHue { to { background-position: 300% 50%; } }
 .orbit-lesson:hover, .orbit-lesson:focus-visible {
   transform: translateY(-50%) scale(1.06); outline: none;
-  box-shadow: 0 0 26px rgba(120,220,255,.55), 0 16px 38px rgba(10,40,80,.5);
+  box-shadow: 0 0 24px rgba(120,190,255,.5), 0 16px 38px rgba(6,25,55,.55);
 }
-.orbit-lesson__num { font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; line-height: 1; color: #1d9fd8; }
-.orbit-lesson__name { font-size: .95rem; color: #2c4a68; line-height: 1.15; font-weight: 600; }
+.orbit-lesson__num { font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; line-height: 1; color: #16305a; }
+.orbit-lesson__name { font-size: .95rem; color: #24486e; line-height: 1.15; font-weight: 600; }
 .orbit-lesson.is-done .orbit-lesson__num { color: #17b8ae; }
+
+/* Wybór poziomu przed lekcjami próbnymi */
+.level-overlay {
+  position: absolute; inset: 0; z-index: 8;
+  display: grid; place-items: center;
+  background: rgba(6, 14, 28, .6); backdrop-filter: blur(4px);
+}
+.level-box {
+  width: min(92%, 560px); padding: 26px 28px; text-align: center;
+  background: radial-gradient(ellipse at center, #ffffff 30%, #eaf3fb 70%, #cfe0ef 100%);
+  border: 2px solid #16305a; border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(4,18,40,.6);
+}
+.level-options { display: flex; flex-direction: column; gap: 12px; }
+.level-opt {
+  display: flex; flex-direction: column; gap: 4px; text-align: left;
+  padding: 14px 18px; cursor: pointer;
+  background: radial-gradient(ellipse at center, #ffffff 30%, #e3eef9 70%, #c4d8ea 100%);
+  border: 2px solid #16305a; border-radius: 10px;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.level-opt:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(6,25,55,.35), 0 0 18px rgba(120,190,255,.4); }
+.level-opt__title { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; color: #16305a; }
+.level-opt__desc { font-size: .88rem; color: #46688c; }
 
 /* trzy pozycje: pionowa lista przy lewej krawędzi */
 .orbit-pos-1 { top: 33%; }
