@@ -26,7 +26,7 @@ export const CONFIG = {
     // które trzyma klucz po stronie serwera, i wpisz tu jego adres, np.
     //   proxyBase: 'https://pogadajse-proxy.twoj-subdomena.workers.dev'
     // Wtedy przeglądarka woła proxy BEZ klucza, a Gemini działa u każdego od startu.
-    proxyBase: '',
+    proxyBase: 'https://pogadaj-proxy-1008153683515.europe-central2.run.app',
     proxyUrl: '',               // (legacy) pełny URL tylko dla modelu czatu
   },
 
