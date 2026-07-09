@@ -23,6 +23,7 @@ export function renderConversation(mount, lessonId) {
   const aiLed = ai.provider === 'gemini';
   const history = [];              // [{role:'user'|'model', text}] dla Gemini
   let busy = false;               // czeka na odpowiedź AI
+  let introGate = Promise.resolve();   // powitanie ma się wybrzmieć przed 1. odpowiedzią AI
 
   // Mowa ucznia: gdy jest Gemini, nagrywamy audio i transkrybujemy (łapie MIKS PL+EN).
   // Bez Gemini — zapasowo rozpoznawanie przeglądarki (jeden język).
@@ -111,18 +112,26 @@ export function renderConversation(mount, lessonId) {
 
   async function startAiLesson() {
     const topic = lesson.aiTopic || lesson.title;
-    history.push({ role: 'user', text: `Rozpocznij lekcję mówienia na temat: "${topic}". Przywitaj się bardzo krótko i od razu naucz pierwszej, prostej frazy (po angielsku w cudzysłowie + znaczenie po polsku + poproś o powtórzenie).` });
+    // Izabela odzywa się OD RAZU (lokalny tekst), a w tle leci zapytanie do AI —
+    // zero głuchej ciszy po wejściu w lekcję.
+    const hello = [
+      'No hej! Rozgrzewam silniki... dobra, działa. Zaczynamy!',
+      'O, jesteś! Czekałam. Siadaj, gadamy.',
+      'Hej hej! Kawa jest, mikrofon jest — no to lecimy.',
+    ][Math.floor(Math.random() * 3)];
+    introGate = new Promise((res) => { speakLine(hello, { lang: 'pl', onEnd: res }); setTimeout(res, 7000); });
+    history.push({ role: 'user', text: `Rozpocznij lekcję mówienia na temat: "${topic}". WAŻNE: już się przywitałaś słowami "${hello}" — NIE witaj się ponownie. Od razu, bez wstępów, naucz pierwszej prostej frazy (po angielsku w cudzysłowie + znaczenie po polsku + poproś o powtórzenie).` });
     await aiTurn();
   }
 
   async function aiTurn() {
     setBusy(true);
     const r = await ai.lessonReply(history);
+    await introGate;                                 // nie przerywaj powitania w pół słowa
     setBusy(false);
     if (r.unsupported) { startStep(); return; }     // brak Gemini → kroki
     history.push({ role: 'model', text: r.say });
     if (r.mistake) setMood('oops');
-    addMessage('izabela', r.say);
     speakLine(r.say, { lang: r.lang, onEnd: () => setMood('neutral') });
     renderSuggestions(r.suggestions);
     if (r.done) {
@@ -137,9 +146,11 @@ export function renderConversation(mount, lessonId) {
   }
 
   // ---------- pomocnicze ----------
+  // Prawy panel jest TYLKO dla ucznia — wypowiedzi Izabeli lecą do dymka na scenie.
   function addMessage(who, text) {
-    const node = el(`div.msg.msg--${who}`, {}, [
-      el('div.who', { text: who === 'izabela' ? 'Izabela' : 'Ty' }),
+    if (who !== 'user') return;
+    const node = el('div.msg.msg--user', {}, [
+      el('div.who', { text: 'Ty' }),
       el('div', { text }),
     ]);
     chatEl.append(node);
@@ -158,7 +169,6 @@ export function renderConversation(mount, lessonId) {
   }
   function izabelaSay(text, { lang = 'pl', slow = false, mood = 'neutral', onEnd } = {}) {
     setMood(mood);
-    addMessage('izabela', text);
     speakLine(text, { lang, slow, onEnd: () => { setMood('neutral'); onEnd?.(); } });
   }
   function renderSuggestions(list) {

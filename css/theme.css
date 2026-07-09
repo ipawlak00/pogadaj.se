@@ -94,20 +94,60 @@ a { color: var(--accent-bright); text-decoration: none; }
   opacity: 0.7;
   animation: drift 120s linear infinite;
 }
-/* Planeta typu Jowisz — pasy bursztynowe (jak w projekcie logowania) */
+/* Planety-opale — błękit mieniący się jak opal (iryzujące przebłyski) */
 .planet {
   position: absolute;
   border-radius: 50%;
   background:
-    repeating-linear-gradient(92deg,
-      rgba(120,70,30,.55) 0 6px, rgba(255,180,90,.0) 6px 9px,
-      rgba(90,50,20,.5) 9px 15px, rgba(255,200,120,.0) 15px 18px),
-    radial-gradient(circle at 34% 28%, #f3bd72, #c87a30 55%, #7a431a);
-  box-shadow: inset -16px -10px 34px rgba(0,0,0,0.6), 0 0 46px rgba(255,138,30,0.22);
+    radial-gradient(circle at 30% 26%, rgba(255,255,255,.85), rgba(255,255,255,0) 30%),
+    conic-gradient(from 210deg,
+      rgba(168,255,236,.34), rgba(186,214,255,.14), rgba(255,188,236,.28),
+      rgba(160,236,255,.34), rgba(186,214,255,.14), rgba(168,255,236,.34)),
+    radial-gradient(circle at 34% 28%, #e2f2ff, #8ec3f2 48%, #3f6fa8 78%, #22405f);
+  box-shadow: inset -16px -12px 34px rgba(8,28,58,.55), 0 0 44px rgba(130,196,255,.35);
+  overflow: hidden;
+}
+/* przebłysk opalu przelatujący po tarczy co kilka sekund */
+.planet::after {
+  content: '';
+  position: absolute; inset: -30%;
+  background: linear-gradient(115deg,
+    transparent 40%, rgba(255,255,255,.75) 49%, rgba(178,240,255,.55) 53%,
+    rgba(255,210,244,.35) 57%, transparent 66%);
+  transform: translateX(-130%) rotate(8deg);
+  animation: opalShine 8s ease-in-out infinite;
+}
+.planet--b::after { animation-delay: 2.7s; }
+.planet--c::after { animation-delay: 5.2s; }
+@keyframes opalShine {
+  0%, 10%  { transform: translateX(-130%) rotate(8deg); opacity: 0; }
+  16%      { opacity: 1; }
+  32%, 100%{ transform: translateX(130%) rotate(8deg); opacity: 0; }
 }
 .planet--a { width: 120px; height: 120px; left: 11%; top: 28%; animation: floatY 13s ease-in-out infinite; }
-.planet--b { width: 64px; height: 64px; right: 12%; top: 22%; opacity: .85; animation: floatY 17s ease-in-out infinite reverse; }
-.planet--c { width: 44px; height: 44px; left: 30%; bottom: 12%; opacity: .8; animation: floatY 21s ease-in-out infinite; }
+.planet--b { width: 64px; height: 64px; right: 12%; top: 22%; opacity: .9; animation: floatY 17s ease-in-out infinite reverse; }
+.planet--c { width: 44px; height: 44px; left: 30%; bottom: 12%; opacity: .85; animation: floatY 21s ease-in-out infinite; }
+
+/* Rakieta Izabeli — przelatuje przez ekran, ciągnąc napis IzabelaCode */
+.iza-rocket {
+  position: absolute; left: 0; top: 0; z-index: 1;
+  display: flex; align-items: center; gap: 6px;
+  pointer-events: none; will-change: transform;
+  animation: rocketFly 22s linear infinite;
+}
+.iza-rocket__trail {
+  order: 0;
+  font-family: var(--font-display); font-weight: 700; font-size: 1rem;
+  letter-spacing: .22em; white-space: nowrap;
+  background: linear-gradient(90deg, rgba(190,224,255,0), rgba(190,224,255,.9));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: 0 0 18px rgba(130,196,255,.25);
+}
+.iza-rocket svg { order: 1; filter: drop-shadow(0 0 10px rgba(140,190,240,.45)); }
+@keyframes rocketFly {
+  0%   { transform: translate(-30vw, 72vh) rotate(-7deg); }
+  100% { transform: translate(115vw, 14vh) rotate(-7deg); }
+}
 
 /* Małe rakietki/spodki dryfujące w tle */
 .sky-rocket { position: absolute; opacity: .5; }
@@ -119,7 +159,8 @@ a { color: var(--accent-bright); text-decoration: none; }
 @keyframes drift { from { background-position: 0 0; } to { background-position: 600px 600px; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .stars, .planet, .sky-rocket { animation: none; }
+  .stars, .planet, .planet::after, .sky-rocket, .iza-rocket { animation: none; }
+  .iza-rocket { display: none; }
 }
 
 /* =============================================================

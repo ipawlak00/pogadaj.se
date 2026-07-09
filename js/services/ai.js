@@ -236,7 +236,7 @@ Zwróć JSON:
  "praise": "krótka pochwała po polsku gdy dobrze, inaczej null"
 }`;
       const contents = [{ role: 'user', parts: [{ text: prompt }, { inline_data: { mime_type: mimeType || 'audio/webm', data: base64 } }] }];
-      const r = await this._callContents(contents, sys);
+      const r = await this._callContents(contents, sys, CONFIG.GEMINI.fastModel);   // szybki model — mniejsze opóźnienie
       return {
         ok: !!r.ok, score: typeof r.score === 'number' ? Math.max(0, Math.min(100, r.score)) : null,
         heard: r.heard || '', issue: r.issue || null, tip: r.tip || '', praise: r.praise || null,
@@ -246,8 +246,8 @@ Zwróć JSON:
   },
 
   // Wielo-turowe wywołanie (lekcja prowadzona przez AI)
-  async _callContents(contents, systemText) {
-    const url = CONFIG.GEMINI.proxyUrl || genContentUrl(CONFIG.GEMINI.model, geminiKey());
+  async _callContents(contents, systemText, model) {
+    const url = CONFIG.GEMINI.proxyUrl || genContentUrl(model || CONFIG.GEMINI.model, geminiKey());
     const body = {
       system_instruction: { parts: [{ text: systemText }] },
       contents,
@@ -278,7 +278,7 @@ Zwróć JSON:
       const prompt = `Przepisz DOKŁADNIE, co osoba powiedziała na nagraniu. Osoba uczy się angielskiego i MOŻE MIESZAĆ polski z angielskim w jednym zdaniu — zapisz każde słowo w języku, w jakim je wypowiedziano (angielskie słowa po angielsku, polskie po polsku). Nie tłumacz, nie poprawiaj gramatyki, nie dodawaj nic od siebie. Jeśli nic nie słychać, zwróć pusty tekst.
 Zwróć JSON: {"text": "dokładna transkrypcja"}`;
       const contents = [{ role: 'user', parts: [{ text: prompt }, { inline_data: { mime_type: mimeType || 'audio/webm', data: base64 } }] }];
-      const r = await this._callContents(contents, sys);
+      const r = await this._callContents(contents, sys, CONFIG.GEMINI.fastModel);   // szybki model — mniejsze opóźnienie
       return (r.text || '').trim();
     } catch (e) { reportAiError(e); return null; }
   },

@@ -106,12 +106,16 @@ export function renderPhonetic(mount) {
     if (phase === 'idle') return startRecording();
   }
 
+  // Krótkie zajawki mówione od razu po nagraniu — uczeń wie, że coś się dzieje.
+  // (Cache'ują się po pierwszym użyciu, więc grają natychmiast.)
+  const FILLERS = ['Mhm, sekundka...', 'Okej, przesłuchuję...', 'Już słucham, momencik...', 'Dobra, lecę z odsłuchem...'];
+
   async function startRecording() {
     if (audioMode) {
-      try { rec = await speech.recordAudio(); }
+      // Auto-stop po ciszy — wystarczy powiedzieć słowo, nagranie samo się kończy
+      try { rec = await speech.recordAudio({ autoStop: true, silenceMs: 1000, maxMs: 6000, onStop: () => { if (phase === 'recording') stopRecording(); } }); }
       catch (e) { toast('Mikrofon: ' + (e.message || e), 'error'); return; }
       phase = 'recording'; draw();
-      recTimer = setTimeout(stopRecording, 4000);   // bezpiecznik
     } else {
       legacyListen();
     }
@@ -121,6 +125,7 @@ export function renderPhonetic(mount) {
     if (phase !== 'recording' || !rec) return;
     clearTimeout(recTimer);
     phase = 'analyzing'; draw();
+    speech.speak(pick(FILLERS), { lang: 'pl-PL' });   // natychmiastowa reakcja głosem
     rec.stop();
     const audio = await rec.done; rec = null;
     const w = words[idx];
@@ -166,24 +171,46 @@ export function renderPhonetic(mount) {
   async function finish() {
     screen.replaceChildren(el('div.card.center.stack', { style: 'max-width:520px;margin:8vh auto' }, [
       el('div.spinner'),
-      el('h2.display', { text: 'Tworzę Twój profil fonetyczny…' }),
-      el('p.muted', { text: 'Zbieram Twoje mocne strony i dźwięki do podszlifowania.' }),
+      el('h2.display', { text: 'Chwila, składam Twój paszport…' }),
+      el('p.muted', { text: 'Przesłuchuję wszystko jeszcze raz i notuję.' }),
     ]));
     const profile = await ai.buildProfile({ results });
     store.setPhoneticProfile(profile);
 
-    const chal = profile.challenges?.length ? profile.challenges.slice(0, 4).join(', ') : 'brak — super wymowa!';
+    // Przykładowe słowo dla każdego dźwięku (do "popracujemy nad...")
+    const example = {};
+    words.forEach((w) => { if (!example[w.focus]) example[w.focus] = w.word; });
+    const chalList = (profile.challenges || []).slice(0, 4);
+    const chalSpoken = chalList.map((c) => example[c] ? `${c} — jak w „${example[c]}"` : c);
+
     const overall = typeof profile.overall === 'number' ? profile.overall : null;
-    setTimeout(() => {
-      screen.replaceChildren(el('div.card.center.stack.fade-in', { style: 'max-width:520px;margin:6vh auto;gap:14px' }, [
-        el('div', { style: 'font-size:3rem', text: '' }),
-        el('h2.display', { text: 'Paszport gotowy!' }),
+    const hello = pick([
+      'No i cyk, mam Cię rozgryzioną!',
+      'Misja zakończona — paszport wbity!',
+      'Uff, przesłuchane. Wiesz, że masz całkiem niezły radiowy głos?',
+    ]);
+    const challengeLine = chalList.length
+      ? `Na celowniku mamy: ${chalSpoken.join(', ')}. Będę Cię na tym łapać podczas gadania — z miłością, rzecz jasna.`
+      : 'I szczerze? Nie mam się do czego przyczepić. Aż podejrzane...';
+    const spokenAll = `${hello} Znam już Twoją wymowę${overall != null ? ` — brzmisz na jakieś ${overall} procent` : ''}. ${challengeLine} No to co, lecimy pogadać?`;
+
+    // Izabela na zdjęciu + dymek od jej ust z tym, co właśnie mówi
+    screen.replaceChildren(el('div.passport-scene.fade-in', {}, [
+      el('img.passport-iza', { src: 'assets/izabela/izabela-hero.png', alt: 'Izabela' }),
+      el('div.passport-bubble', {}, [
+        el('div.passport-bubble__title', { text: hello }),
         overall != null ? scoreBar(overall) : null,
-        el('p.muted', { text: 'Izabela wie już, jak brzmisz. Od teraz będzie zwracać uwagę na Twoje słabsze dźwięki podczas rozmów.' }),
-        el('div.pill', { style: 'margin:0 auto', text: `Do podszlifowania: ${chal}` }),
+        el('p', { style: 'margin:10px 0 0', text: `Znam już Twoją wymowę${overall != null ? '' : ' od podszewki'}.` }),
+        chalList.length
+          ? el('div', { style: 'margin-top:8px' }, [
+              el('div.passport-bubble__label', { text: 'Popracujemy nad:' }),
+              el('div.passport-chips', {}, chalSpoken.map((c) => el('span.passport-chip', { text: c }))),
+            ])
+          : el('p', { style: 'margin-top:8px', text: 'Nie mam się do czego przyczepić. Aż podejrzane...' }),
         el('div.spacer-sm'),
-        el('button.btn.btn--primary.btn--lg', { onclick: () => navigate('#/lessons') }, ['Do lekcji →']),
-      ]));
-    }, 1200);
+        el('button.btn.btn--primary.btn--lg', { onclick: () => navigate('#/lessons') }, ['No to lecimy →']),
+      ]),
+    ]));
+    speech.speak(spokenAll, { lang: 'pl-PL' });
   }
 }

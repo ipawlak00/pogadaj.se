@@ -35,10 +35,6 @@ export function renderWelcome(mount) {
           onclick: () => { store.reset(); location.hash = '#/'; location.reload(); }
         }, ['Zacznij od nowa (reset)']),
       ]),
-    ]),
-    el('div.iza-badge', { title: 'Izabela' }, [
-      el('img', { src: 'assets/izabela/avatar.png', alt: 'Izabela', onerror: function(){ this.replaceWith(el('span',{text:'',style:'font-size:1.5rem'})); } }),
-      el('span.dot'),
     ])
   );
 

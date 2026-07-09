@@ -19,6 +19,7 @@ export const CONFIG = {
   GEMINI: {
     apiKey: '',                 // NIE commitujemy klucza do repo (zostanie unieważniony)!
     model: 'gemini-2.5-flash',
+    fastModel: 'gemini-2.5-flash-lite',   // szybkie zadania: analiza wymowy, transkrypcja
     ttsModel: 'gemini-2.5-flash-preview-tts',
     // ZALECANE dla wszystkich użytkowników bez wklejania klucza:
     // wdróż proxy (np. Cloudflare Worker z proxy/cloudflare-worker.js),
