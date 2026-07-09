@@ -34,14 +34,11 @@ export function renderConversation(mount, lessonId) {
   document.body.classList.add('in-lesson');
   window.addEventListener('hashchange', () => document.body.classList.remove('in-lesson'), { once: true });
 
-  // ---------- UI: duża scena (lewo) + dialog (prawo) ----------
+  // ---------- UI: jedna karta czatu — Izabela (lewo) + rozmowa (prawo) ----------
+  // Dymki Izabeli "wychodzą" od niej w prawo, pod spodem odpowiedzi ucznia.
+  // Całość przewijalna — można wrócić do wcześniejszych wiadomości.
   const sceneImg = el('img', { id: 'scene-img', alt: 'Izabela', src: 'assets/izabela/izabela-lesson.png' });
-  const stageCaption = el('div.stage-caption', { id: 'stage-caption' });
-  const stage = el('div.lesson-stage', { title: 'Dotknij, aby powtórzyć' }, [
-    sceneImg,
-    el('div.stage-name', { text: 'Izabela' }),
-    stageCaption,
-  ]);
+  const stage = el('div.lc-stage', { title: 'Dotknij, aby powtórzyć' }, [sceneImg]);
   stage.onclick = () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); };
   const setMood = () => {};
   const setAvSpeaking = (on) => stage.classList.toggle('speaking', !!on);
@@ -63,19 +60,15 @@ export function renderConversation(mount, lessonId) {
     sceneImg.onerror = () => { sceneImg.onerror = null; sceneImg.src = 'assets/izabela/izabela-lesson.png'; };
     sceneImg.src = path;
   }
-  function showCaption(text) {
-    stageCaption.textContent = text;
-    stageCaption.classList.remove('show'); void stageCaption.offsetWidth; stageCaption.classList.add('show');
-  }
   nextScene();
 
   mount.append(
     topbar(el('button.btn.btn--ghost', { onclick: () => navigate('#/lessons') }, ['← Lekcje'])),
-    el('div.lesson-view.fade-in', {}, [
+    el('div.lesson-chat-card.fade-in', {}, [
       stage,
-      el('div.lesson-panel', {}, [
+      el('div.lc-main', {}, [
         skipBtn,
-        el('div.row', { style: 'justify-content:space-between;align-items:center' }, [
+        el('div.row', { style: 'justify-content:space-between;align-items:center;padding-right:78px' }, [
           el('h2.display', { style: 'margin:0;font-size:1.2rem', text: lesson.title }),
           progressEl,
         ]),
@@ -92,10 +85,8 @@ export function renderConversation(mount, lessonId) {
 
   // Start: AI prowadzi lekcję, albo proste kroki (fallback bez Gemini)
   if (aiLed) {
-    progressEl.textContent = 'Lekcja na żywo z Izabelą';
     startAiLesson();
   } else if (lesson.intro) {
-    addMessage('izabela', lesson.intro);
     speakLine(lesson.intro, { lang: 'pl', onEnd: startStep });
   } else {
     startStep();
@@ -146,11 +137,10 @@ export function renderConversation(mount, lessonId) {
   }
 
   // ---------- pomocnicze ----------
-  // Prawy panel jest TYLKO dla ucznia — wypowiedzi Izabeli lecą do dymka na scenie.
+  // Wspólny czat: dymki Izabeli (od jej strony) + odpowiedzi ucznia, przewijalne.
   function addMessage(who, text) {
-    if (who !== 'user') return;
-    const node = el('div.msg.msg--user', {}, [
-      el('div.who', { text: 'Ty' }),
+    const node = el(`div.msg.msg--${who === 'izabela' ? 'izabela' : 'user'}`, {}, [
+      el('div.who', { text: who === 'izabela' ? 'Izabela' : 'Ty' }),
       el('div', { text }),
     ]);
     chatEl.append(node);
@@ -160,9 +150,10 @@ export function renderConversation(mount, lessonId) {
   function setMicLabel(t) { micLabel.textContent = t; }
 
   // Mówi i zapamiętuje ostatnią kwestię. lang 'pl'|'en'; slow = wolniej.
+  // Powtórka tej samej kwestii (Powtórz / klik w Izabelę) nie dubluje dymka.
   function speakLine(text, { lang = 'pl', slow = false, onEnd } = {}) {
+    if (!lastLine || lastLine.text !== text) addMessage('izabela', text);
     lastLine = { text, lang, slow };
-    showCaption(text);
     setSpeaking(true);
     speech.speak(text, { lang: lang === 'en' ? 'en-US' : 'pl-PL', rate: slow ? 0.7 : 1,
       onEnd: () => { setSpeaking(false); onEnd?.(); } });
