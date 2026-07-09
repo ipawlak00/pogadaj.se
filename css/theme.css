@@ -177,6 +177,13 @@ body:not([data-route="welcome"]) {
     url('../assets/scenes/scene-02.jpg') center/cover fixed no-repeat;
 }
 
+/* Paszport fonetyczny: Izabela jest na pierwszym planie — w tle bez drugiej Izabeli */
+body[data-route="phonetic"] {
+  background:
+    radial-gradient(900px 600px at 80% -10%, rgba(91,159,224,.16) 0%, transparent 60%),
+    linear-gradient(180deg, #070b14 0%, #0d1524 60%, #0a1220 100%);
+}
+
 /* Chłodna paleta (błękit) zamiast pomarańczu na całej apce poza logowaniem */
 body:not([data-route="welcome"]) {
   --accent: #5b9fe0;

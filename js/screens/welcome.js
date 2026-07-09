@@ -17,14 +17,7 @@ export function renderWelcome(mount) {
         el('div.field', {}, [ el('label', { text: 'Email' }), email ]),
         el('div.field', {}, [ el('label', { text: 'Hasło' }), pass ]),
         el('button.btn.btn--primary.auth-submit', { onclick: enterAsGuest }, ['Zaloguj się', el('span.arrow', { text: '→' })]),
-
-        el('div.auth-divider', { text: 'lub kontynuuj przez' }),
-        el('div.auth-oauth', {}, [
-          el('button.btn.oauth-btn', { onclick: enterAsGuest }, ['Google']),
-          el('button.btn.oauth-btn', { onclick: enterAsGuest }, ['Apple']),
-        ]),
-
-        el('button.btn.auth-create', { onclick: enterAsGuest }, ['Stwórz darmowe konto']),
+        el('button.btn.auth-create', { style: 'margin-top:14px', onclick: enterAsGuest }, ['Stwórz darmowe konto']),
       ]),
 
       el('div.auth-footer', { html: 'POWERED BY <b>IZABELACODE</b>' }),

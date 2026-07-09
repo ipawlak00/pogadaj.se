@@ -16,6 +16,12 @@ export function renderPhonetic(mount) {
   let rec = null, recTimer = null, lastSpoken = -1;
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
+  // Izabela najpierw tłumaczy, PO CO ten cały paszport — bez tego to tylko test
+  let introSpoken = false;
+  const INTRO = 'Zanim zaczniemy, wyjaśnię o co mi chodzi. Chcę usłyszeć, jaki masz akcent, ' +
+    'żeby lepiej rozumieć Twoje wypowiedzi. Każdy z nas mówi trochę inaczej i nie ma się czego wstydzić! ' +
+    'Powtórz za mną kilka słów i tyle, żadnych ocen z czerwonym długopisem.';
+
   const screen = el('div.fade-in');
   mount.append(topbar(), screen);
   draw();
@@ -32,6 +38,7 @@ export function renderPhonetic(mount) {
     screen.replaceChildren(
       el('div.center.stack', { style: 'gap:6px;margin-bottom:16px' }, [
         el('div.pill', { style: 'margin:0 auto', text: `Paszport Fonetyczny · ${idx + 1}/${words.length}` }),
+        idx === 0 ? el('p.muted', { style: 'margin:6px auto 0;max-width:560px', text: 'Chcę usłyszeć, jaki masz akcent, żeby lepiej rozumieć Twoje wypowiedzi. Każdy mówi trochę inaczej — i nie ma się czego wstydzić!' }) : null,
         el('p.muted', { style: 'margin:6px 0 0', text: '1) Posłuchaj, jak Izabela czyta słowo.  2) Powtórz je do mikrofonu.' }),
       ]),
       el('div.card.center.stack', { style: 'max-width:580px;margin:0 auto;gap:14px' }, [
@@ -53,7 +60,11 @@ export function renderPhonetic(mount) {
     if (!audioMode && !speech.isRecognitionSupported()) {
       setStatus('Ta przeglądarka nie wspiera mikrofonu — możesz pomijać słowa.');
     }
-    if (phase === 'idle' && lastSpoken !== idx) { lastSpoken = idx; speakWord(); }
+    if (phase === 'idle' && lastSpoken !== idx) {
+      lastSpoken = idx;
+      if (!introSpoken) { introSpoken = true; speech.speak(INTRO, { lang: 'pl-PL', onEnd: () => speakWord() }); }
+      else speakWord();
+    }
   }
 
   function micArea() {
