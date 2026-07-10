@@ -27,6 +27,18 @@ function reportAiError(e) {
   toast('Gemini: ' + msg + hint, 'error');
 }
 
+// Kim jest uczeń — imię i (heurystycznie z imienia) płeć.
+// Dzięki temu Izabela mówi po imieniu i NIE pisze form „zrobiłeś/aś".
+function userLine() {
+  const name = (store.get().user?.name || '').trim();
+  if (!name || /^gość$/i.test(name)) {
+    return 'Imienia ucznia jeszcze nie znasz — pisz neutralnie i NIGDY nie używaj form z ukośnikiem typu „zrobiłeś/aś".';
+  }
+  const maleException = /^(kuba|barnaba|kosma|bonawentura|dyzma|saba)$/i.test(name);
+  const female = !maleException && /a$/i.test(name);
+  return `Uczeń ma na imię ${name} (najpewniej ${female ? 'kobieta' : 'mężczyzna'}). Zwracaj się do ucznia po imieniu, buduj relację i używaj końcówek rodzaju ${female ? 'żeńskiego' : 'męskiego'} — NIGDY form z ukośnikiem („zrobiłeś/aś", „gotowy/a").`;
+}
+
 // Wywołanie Gemini z ponawianiem przy przejściowych błędach (429/503 — limit na minutę).
 async function geminiFetch(url, body) {
   let lastErr;
@@ -74,6 +86,7 @@ function lessonSystem() {
   return `${IZABELA.systemPrompt}
 
 TRYB LEKCJI — prowadzisz interaktywną, DŁUGĄ lekcję mówienia (cel ~45 minut):
+- ${userLine()}
 - Poziom ucznia: ${lvl}. ${beg ? 'POCZĄTKUJĄCY — prowadź po polsku, ucz bardzo prostych, krótkich angielskich fraz.' : 'Prowadź po angielsku, dobieraj trudność do ucznia.'}
 - Ucz krok po kroku: NAJPIERW powiedz frazę po angielsku (w cudzysłowie „..."), POTEM jej znaczenie po polsku, POTEM poproś, żeby uczeń ją POWTÓRZYŁ na głos.
 - Wypowiedź ucznia pochodzi z rozpoznawania mowy i bywa niedokładna — bądź wyrozumiała, nie czepiaj się drobiazgów.
@@ -186,7 +199,7 @@ const geminiProvider = {
     const langRule = beg
       ? 'Uczeń jest POCZĄTKUJĄCY — prowadź rozmowę GŁÓWNIE PO POLSKU, łagodnie zachęcając do prostych angielskich słów/zdań. Tłumacz wszystko po polsku.'
       : 'Prowadź rozmowę po angielsku na poziomie ucznia; korekty i wyjaśnienia po polsku.';
-    const sys = `${IZABELA.systemPrompt}\n\nKONTEKST: Poziom CEFR: ${lvl}. ${langRule} Profil fonetyczny ucznia: ${JSON.stringify(profile)}.`;
+    const sys = `${IZABELA.systemPrompt}\n\nKONTEKST: Poziom CEFR: ${lvl}. ${langRule} ${userLine()} Profil fonetyczny ucznia: ${JSON.stringify(profile)}.`;
     const body = {
       system_instruction: { parts: [{ text: sys }] },
       contents: [{ role: 'user', parts: [{ text: userText }] }],

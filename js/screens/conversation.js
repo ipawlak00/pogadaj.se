@@ -32,7 +32,12 @@ export function renderConversation(mount, lessonId) {
 
   // W lekcji chowamy startowy motyw (pomarańcz + planety) — spójny widok stacji
   document.body.classList.add('in-lesson');
-  window.addEventListener('hashchange', () => document.body.classList.remove('in-lesson'), { once: true });
+  // Wyjście z lekcji = natychmiastowa cisza (Izabela nie gada w tle)
+  window.addEventListener('hashchange', () => {
+    document.body.classList.remove('in-lesson');
+    speech.stopSpeaking();
+    try { recHandle?.stop(); recorder?.stop(); } catch (e) { /* ignore */ }
+  }, { once: true });
 
   // ---------- UI: jedna karta czatu — Izabela (lewo) + rozmowa (prawo) ----------
   // Dymki Izabeli "wychodzą" od niej w prawo, pod spodem odpowiedzi ucznia.
@@ -65,10 +70,24 @@ export function renderConversation(mount, lessonId) {
       }, [phrase]),
     );
   }
-  // Wyciąga z wypowiedzi Izabeli frazę w cudzysłowie („..." / "...")
+  // Czy fraza wygląda na angielską (a nie polski cytat)?
+  const isEnglishPhrase = (s) => {
+    if (/[ąćęłńóśźż]/i.test(s)) return false;
+    const words = s.toLowerCase().match(/[a-z']+/g) || [];
+    if (!words.length) return false;
+    const PL = new Set(['to', 'nie', 'tak', 'jest', 'czy', 'sie', 'na', 'co', 'po', 'ja', 'ty',
+      'dobrze', 'czesc', 'prosze', 'dziekuje', 'i', 'z', 'w', 'o', 'ale', 'juz', 'moze']);
+    return words.filter((w) => PL.has(w)).length / words.length < 0.5;
+  };
+  // Wyciąga z wypowiedzi Izabeli AKTUALNĄ frazę do powtórzenia:
+  // ostatni angielski cytat (pierwszy bywa nawiązaniem do poprzedniej frazy).
   const quotedPhrase = (s) => {
-    const m = String(s || '').match(/[„"]([^”“"]+)[”“"]/);
-    return m ? m[1].trim() : null;
+    const rx = /[„"]([^”“"„]{2,60})[”“"]/g;
+    const found = [];
+    let m;
+    while ((m = rx.exec(String(s || '')))) found.push(m[1].trim());
+    const eng = found.filter(isEnglishPhrase);
+    return eng.length ? eng[eng.length - 1] : null;
   };
 
   // Każda lekcja ma SWOJE zdjęcie (lesson.scene); losujemy tylko gdy go brak.
