@@ -11,7 +11,7 @@ export function renderWelcome(mount) {
   mount.append(
     el('div.auth-wrap.fade-in', {}, [
       el('h1.auth-title', {}, ['POGADAJ', el('span.planet-dot'), 'SE']),
-      el('div.auth-sub', { text: 'GADAJ I UCZ SIĘ Z NAMI!' }),
+      el('div.auth-sub', { text: 'GADAJ I UCZ SIĘ ANGIELSKIEGO Z IZABELĄ!' }),
 
       el('div.auth-card', {}, [
         el('div.field', {}, [ el('label', { text: 'Email' }), email ]),

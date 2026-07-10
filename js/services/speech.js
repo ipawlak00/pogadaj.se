@@ -226,15 +226,24 @@ async function geminiTtsUrl(text) {
   const cacheKey = 'gem|' + GEMINI_VOICE + '|' + text;
   const cached = audioCache.get(cacheKey);
   if (cached) return cached;
-  const res = await fetch(genContentUrl(CONFIG.GEMINI.ttsModel, genLangKey()), {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text }] }],
-      generationConfig: { responseModalities: ['AUDIO'],
-        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_VOICE } } } },
-    }),
-  });
-  if (!res.ok) throw new Error('Gemini TTS ' + res.status + ': ' + (await res.text()).slice(0, 200));
+  // Limity "na minutę" zdarzają się przy żywszym klikaniu — ponawiamy 2 razy,
+  // zanim zejdziemy na głos zapasowy.
+  let res = null, lastErr = '';
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt) await new Promise((r) => setTimeout(r, attempt * 2000));
+    res = await fetch(genContentUrl(CONFIG.GEMINI.ttsModel, genLangKey()), {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text }] }],
+        generationConfig: { responseModalities: ['AUDIO'],
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_VOICE } } } },
+      }),
+    });
+    if (res.ok) break;
+    lastErr = 'Gemini TTS ' + res.status + ': ' + (await res.text()).slice(0, 200);
+    if (res.status !== 429 && res.status !== 503) throw new Error(lastErr);
+  }
+  if (!res || !res.ok) throw new Error(lastErr || 'Gemini TTS: brak odpowiedzi');
   const data = await res.json();
   const parts = data.candidates?.[0]?.content?.parts || [];
   const inline = parts.map((p) => p.inlineData || p.inline_data).find((d) => d && d.data);
