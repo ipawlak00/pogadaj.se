@@ -867,11 +867,19 @@ body.on-lessons .cosmos { display: none; }
   background: rgba(6, 14, 28, .6); backdrop-filter: blur(4px);
 }
 .level-box {
+  position: relative;
   width: min(92%, 560px); padding: 26px 28px; text-align: center;
   background: radial-gradient(ellipse at center, #ffffff 30%, #eaf3fb 70%, #cfe0ef 100%);
   border: 2px solid #16305a; border-radius: 12px;
   box-shadow: 0 24px 60px rgba(4,18,40,.6);
 }
+.level-close {
+  position: absolute; top: 10px; right: 12px;
+  width: 34px; height: 34px; border-radius: 8px; cursor: pointer;
+  background: #eaf3fb; color: #16305a; border: 2px solid #16305a;
+  font-family: var(--font-display); font-weight: 700; font-size: 1rem;
+}
+.level-close:hover { background: #d9ecfa; }
 .level-options { display: flex; flex-direction: column; gap: 12px; }
 .level-opt {
   display: flex; flex-direction: column; gap: 4px; text-align: left;
@@ -891,9 +899,20 @@ body.on-lessons .cosmos { display: none; }
 
 /* Lekcja próbna: DUŻY kafelek + zegarek z pozostałym czasem pod spodem */
 .trial-wrap {
-  position: absolute; left: 3.5%; top: 50%; transform: translateY(-50%); z-index: 4;
+  position: absolute; left: 7%; top: 52%; transform: translateY(-50%); z-index: 4;
   display: flex; flex-direction: column; align-items: center; gap: 14px;
 }
+/* telefon: kafelek na środku, pod dymkiem — nie przyklejony do lewej */
+@media (max-width: 620px) {
+  .trial-wrap { left: 50%; top: 60%; transform: translate(-50%, -50%); }
+}
+.trial-reset {
+  margin-top: 2px; background: none; border: none; cursor: pointer;
+  color: #dce9f5; font-size: .72rem; opacity: .55;
+  text-decoration: underline; text-underline-offset: 3px;
+  text-shadow: 0 1px 4px rgba(0,0,0,.6);
+}
+.trial-reset:hover { opacity: 1; }
 .trial-tile {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
   width: clamp(190px, 20vw, 260px); padding: 30px 20px; cursor: pointer;

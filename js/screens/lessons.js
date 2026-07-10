@@ -92,6 +92,13 @@ export function renderLessons(mount) {
         el('i.trial-clock__dot'),
       ]),
       el('div.trial-clock__label', { text: left > 0 ? `zostało ok. ${left} min` : 'pełne lekcje już wkrótce' }),
+      // Testowy reset licznika (do usunięcia przed startem produkcyjnym)
+      el('button.trial-reset', {
+        onclick: () => {
+          store.patchKey('progress', { trialSecondsUsed: 0, trialHistory: [], trialChat: [] });
+          draw();
+        },
+      }, ['wyzeruj czas (testy)']),
     ]);
 
     screen.replaceChildren(
@@ -111,13 +118,19 @@ export function renderLessons(mount) {
   }
 
   function drawPicker() {
-    const overlay = el('div.level-overlay', {}, [
+    const close = () => { overlay.remove(); document.removeEventListener('keydown', onEsc); };
+    const onEsc = (e) => { if (e.key === 'Escape') close(); };
+    const overlay = el('div.level-overlay', {
+      // klik w tło (poza okienkiem) zamyka
+      onclick: (e) => { if (e.target === overlay) close(); },
+    }, [
       el('div.level-box', {}, [
+        el('button.level-close', { onclick: close, 'aria-label': 'Zamknij', title: 'Zamknij' }, ['X']),
         el('h2.display', { style: 'margin:0 0 4px;color:#14314f', text: 'Na jakim poziomie jest Twój angielski?' }),
         el('p', { style: 'margin:0 0 16px;color:#46688c', text: 'Dopasuję do niego naszą rozmowę. Zawsze możesz to zmienić.' }),
         el('div.level-options', {}, LEVEL_BANDS.map((b) =>
           el('button.level-opt', {
-            onclick: () => { store.patchKey('onboarding', { level: b.level }); overlay.remove(); draw(); },
+            onclick: () => { store.patchKey('onboarding', { level: b.level }); close(); draw(); },
           }, [
             el('span.level-opt__title', { text: b.title }),
             el('span.level-opt__desc', { text: b.desc }),
@@ -125,6 +138,7 @@ export function renderLessons(mount) {
         )),
       ]),
     ]);
+    document.addEventListener('keydown', onEsc);
     screen.append(overlay);
   }
 }
