@@ -96,17 +96,30 @@ if (typeof window !== 'undefined') {
 // Dzieli tekst na fragmenty: to co w cudzysłowie (przykłady angielskie) → 'en',
 // reszta → język główny. Dzięki temu Izabela czyta angielski angielskim głosem.
 // Czy fragment w cudzysłowie faktycznie wygląda na angielski?
-// Izabela cytuje też POLSKIE słowa — te muszą zostać przy polskim głosie,
-// inaczej angielski lektor czyta polski tekst „bez polskich znaków".
-function looksEnglish(s) {
+// Izabela cytuje też POLSKIE słowa („witaj", „twoja mama") — te muszą zostać
+// przy polskim głosie. Liczymy trafienia w OBU językach i wygrywa większość.
+const EN_WORDS = new Set(['hello', 'hi', 'hey', 'good', 'morning', 'evening', 'night', 'afternoon',
+  'thank', 'thanks', 'you', 'please', 'name', 'my', 'is', 'are', 'am', 'i', 'yes', 'no', 'not',
+  'what', 'how', 'where', 'when', 'why', 'who', 'nice', 'meet', 'the', 'a', 'an', 'it', 'me',
+  'like', 'want', 'need', 'have', 'has', 'do', 'does', 'did', 'can', 'could', 'would', 'will',
+  'help', 'sorry', 'bye', 'goodbye', 'see', 'later', 'day', 'coffee', 'tea', 'water', 'from',
+  'been', 'was', 'were', 'this', 'that', 'your', 'his', 'her', 'we', 'they', 'he', 'she',
+  'up', 'to', 'go', 'went', 'come', 'and', 'or', 'but', 'very', 'much', 'so', 'too', 'for']);
+const PL_WORDS = new Set(['witaj', 'witajcie', 'czesc', 'siema', 'dzien', 'dobry', 'dobra', 'dziekuje',
+  'prosze', 'przepraszam', 'tak', 'nie', 'jest', 'czy', 'sie', 'na', 'po', 'ja', 'ty', 'my', 'wy',
+  'dobrze', 'ale', 'juz', 'moze', 'mama', 'tata', 'twoja', 'twoj', 'moja', 'moj', 'jak', 'masz',
+  'mam', 'imie', 'nazywam', 'znaczy', 'mowie', 'lubie', 'chce', 'jestem', 'jutro', 'dzis', 'wczoraj']);
+export function isEnglishText(s) {
   if (/[ąćęłńóśźż]/i.test(s)) return false;               // polskie znaki → polski
-  const words = (s.toLowerCase().match(/[a-z']+/g) || []);
+  const words = (String(s).toLowerCase().match(/[a-z']+/g) || []);
   if (!words.length) return false;
-  const PL = new Set(['to', 'nie', 'tak', 'jest', 'czy', 'sie', 'na', 'co', 'po', 'ja', 'ty',
-    'dobrze', 'czesc', 'prosze', 'dziekuje', 'i', 'z', 'w', 'o', 'ale', 'juz', 'moze']);
-  const plHits = words.filter((w) => PL.has(w)).length;
-  return plHits / words.length < 0.5;                      // większość polska → polski
+  let en = 0, pl = 0;
+  for (const w of words) { if (PL_WORDS.has(w)) pl++; else if (EN_WORDS.has(w)) en++; }
+  if (pl > en) return false;                               // przewaga polskiego → polski
+  if (en > 0) return true;                                 // przewaga/obecność angielskiego → angielski
+  return pl === 0;                                         // nic nie rozpoznane → raczej angielski cytat
 }
+const looksEnglish = isEnglishText;
 
 function splitByQuotes(text, primary) {
   const QUOTE = /["„“”»«]/;
@@ -126,9 +139,11 @@ function splitByQuotes(text, primary) {
 }
 
 async function gttsOnce(text, v, rate) {
-  // Głosy Chirp3-HD nie wspierają speakingRate — pomijamy je dla nich.
+  // Chirp3-HD potrafi przeciągać słowa — delikatnie przyspieszamy (1.07x),
+  // tempo zawsze w bezpiecznych widełkach.
   const isChirp = /chirp/i.test(v.name);
-  const audioConfig = isChirp ? { audioEncoding: 'MP3' } : { audioEncoding: 'MP3', speakingRate: rate || 1 };
+  const eff = Math.min(1.25, Math.max(0.85, (rate || 1) * (isChirp ? 1.07 : 1)));
+  const audioConfig = { audioEncoding: 'MP3', speakingRate: eff };
   const res = await fetch(gttsSynthUrl(), {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ input: { text }, voice: v, audioConfig }),
@@ -453,6 +468,7 @@ function forSpeech(text) {
     .replace(/[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}‍️⃣]/gu, '')
     .replace(/\/(aś|eś|am|em|ą|a)(?![a-ząćęłńóśźż])/gi, '')   // resztki form „zrobiłeś/aś" — nie czytamy ukośnika
     .replace(/[—–]/g, ',')                     // myślnik = pauza, nie „minus"
+    .replace(/…|\.{3,}/g, ',')                  // wielokropek = pauza, nie „yyy"
     .replace(/\s-\s/g, ', ')
     .replace(/\s{2,}/g, ' ')
     .trim();

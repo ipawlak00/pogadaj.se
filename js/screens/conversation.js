@@ -1,6 +1,6 @@
 import { el, topbar, toast, navigate } from '../ui.js';
 import { store } from '../state.js';
-import { speech } from '../services/speech.js';
+import { speech, isEnglishText } from '../services/speech.js';
 import { ai } from '../services/ai.js';
 import { getLesson, getTrialLesson, SCENES, TRIAL_MINUTES } from '../data/lessons.js';
 import { lessonHello } from '../data/phrases.js';
@@ -100,23 +100,14 @@ export function renderConversation(mount, lessonId) {
       }, [phrase]),
     );
   }
-  // Czy fraza wygląda na angielską (a nie polski cytat)?
-  const isEnglishPhrase = (s) => {
-    if (/[ąćęłńóśźż]/i.test(s)) return false;
-    const words = s.toLowerCase().match(/[a-z']+/g) || [];
-    if (!words.length) return false;
-    const PL = new Set(['to', 'nie', 'tak', 'jest', 'czy', 'sie', 'na', 'co', 'po', 'ja', 'ty',
-      'dobrze', 'czesc', 'prosze', 'dziekuje', 'i', 'z', 'w', 'o', 'ale', 'juz', 'moze']);
-    return words.filter((w) => PL.has(w)).length / words.length < 0.5;
-  };
   // Wyciąga z wypowiedzi Izabeli AKTUALNĄ frazę do powtórzenia:
-  // ostatni angielski cytat (pierwszy bywa nawiązaniem do poprzedniej frazy).
+  // ostatni ANGIELSKI cytat (wspólna detekcja języka z silnikiem mowy).
   const quotedPhrase = (s) => {
     const rx = /[„"]([^”“"„]{2,60})[”“"]/g;
     const found = [];
     let m;
     while ((m = rx.exec(String(s || '')))) found.push(m[1].trim());
-    const eng = found.filter(isEnglishPhrase);
+    const eng = found.filter(isEnglishText);
     return eng.length ? eng[eng.length - 1] : null;
   };
 

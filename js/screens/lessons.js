@@ -31,10 +31,16 @@ export function renderLessons(mount) {
 
   function bubbleText(left) {
     const name = (store.get().user?.name || '').trim();
+    const used = store.get().progress.trialSecondsUsed || 0;
     if (left <= 0) {
       return { hi: 'No i wyskoczył nam czas próbny!', body: `Ale nie znikaj${name ? ', ' + name : ''} — niedługo ruszamy z pełnymi lekcjami. Trzymaj wymowę w formie!` };
     }
-    // Powitanie składane z klocków — za każdym wejściem inne
+    if (used > 0) {
+      // Powrót z lekcji — Izabela już się witała, teraz podtrzymuje relację
+      const hi = [`I jak wrażenia${name ? ', ' + name : ''}?`, 'No i jak było?', `O, wracasz${name ? ', ' + name : ''}!`][Math.floor(Math.random() * 3)];
+      return { hi, body: `Podobała Ci się nasza rozmowa? Pamiętaj — mamy jeszcze ok. ${left} minut razem do przegadania. Czekam!` };
+    }
+    // Pierwsze wejście — powitanie składane z klocków, za każdym razem inne
     return {
       hi: greetingHi(name),
       body: `Żebyśmy mogli się poznać i pogadać na luzie, masz u mnie ${TRIAL_MINUTES} minut lekcji próbnej. Wpadaj kiedy chcesz — możesz zużywać ten czas po kawałku. ${pushLine()}`,
@@ -62,21 +68,28 @@ export function renderLessons(mount) {
       el('p', { style: 'margin:6px 0 0', text: bt.body }),
     ]);
 
-    // JEDEN kafelek lekcji próbnej z licznikiem czasu
+    // JEDEN duży kafelek lekcji próbnej + zegarek z pozostałym czasem pod spodem
+    const used = store.get().progress.trialSecondsUsed || 0;
+    const frac = Math.min(1, used / (TRIAL_MINUTES * 60));
     const tile = left > 0
-      ? el('button.orbit-lesson.orbit-pos-2', {
+      ? el('button.trial-tile', {
           onclick: () => { speech.unlockAudio(); navigate('#/lesson/trial'); },
           'aria-label': 'Lekcja próbna',
         }, [
-          el('span.orbit-lesson__num', { text: `${left}′` }),
-          el('span.orbit-lesson__name', { text: 'Lekcja próbna' }),
-          el('span.orbit-lesson__sub', { text: `zostało ok. ${left} min` }),
+          el('span.trial-tile__num', { text: `${left}′` }),
+          el('span.trial-tile__name', { text: 'Lekcja próbna' }),
         ])
-      : el('div.orbit-lesson.orbit-pos-2.is-locked', {}, [
-          el('span.orbit-lesson__num', { text: '0′' }),
-          el('span.orbit-lesson__name', { text: 'Czas próbny wykorzystany' }),
-          el('span.orbit-lesson__sub', { text: 'pełne lekcje już wkrótce' }),
+      : el('div.trial-tile.is-locked', {}, [
+          el('span.trial-tile__num', { text: '0′' }),
+          el('span.trial-tile__name', { text: 'Czas próbny wykorzystany' }),
         ]);
+    const clock = el('div.trial-clock', {}, [
+      el('div.trial-clock__face', {}, [
+        el('i.trial-clock__hand', { style: `transform: rotate(${Math.round(frac * 360)}deg)` }),
+        el('i.trial-clock__dot'),
+      ]),
+      el('div.trial-clock__label', { text: left > 0 ? `zostało ok. ${left} min` : 'pełne lekcje już wkrótce' }),
+    ]);
 
     screen.replaceChildren(
       el('header.lessons-fs__top', {}, [
@@ -84,7 +97,7 @@ export function renderLessons(mount) {
         topRight,
       ]),
       bubble,
-      tile,
+      el('div.trial-wrap', {}, [tile, clock]),
     );
 
     // Izabela mówi to, co w dymku (raz na wejście)

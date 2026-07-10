@@ -884,6 +884,48 @@ body.on-lessons .cosmos { display: none; }
 .orbit-pos-2 { top: 51%; }
 .orbit-pos-3 { top: 69%; }
 
+/* Lekcja próbna: DUŻY kafelek + zegarek z pozostałym czasem pod spodem */
+.trial-wrap {
+  position: absolute; left: 3.5%; top: 50%; transform: translateY(-50%); z-index: 4;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.trial-tile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  width: clamp(190px, 20vw, 260px); padding: 30px 20px; cursor: pointer;
+  color: #14314f; text-align: center;
+  background: radial-gradient(ellipse at center, #ffffff 25%, #e3eef9 62%, #b9d2e8 100%);
+  border: 3px solid #16305a; border-radius: 12px;
+  box-shadow: 0 14px 34px rgba(6,25,55,.5);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.trial-tile:hover { transform: scale(1.05); box-shadow: 0 0 26px rgba(120,190,255,.5), 0 18px 40px rgba(6,25,55,.55); }
+.trial-tile__num { font-family: var(--font-display); font-weight: 700; font-size: 2.6rem; line-height: 1; color: #16305a; }
+.trial-tile__name { font-family: var(--font-display); font-size: 1.05rem; color: #24486e; font-weight: 600; }
+.trial-tile.is-locked { cursor: default; opacity: .85; filter: saturate(.6); }
+.trial-tile.is-locked:hover { transform: none; }
+
+.trial-clock { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.trial-clock__face {
+  position: relative; width: 56px; height: 56px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffffff, #e3eef9 70%, #cfe0ef 100%);
+  border: 3px solid #16305a; box-shadow: 0 8px 20px rgba(6,25,55,.45);
+}
+.trial-clock__hand {
+  position: absolute; left: 50%; bottom: 50%; width: 3px; height: 20px;
+  background: #1d9fd8; border-radius: 2px; transform-origin: 50% 100%;
+  margin-left: -1.5px;
+}
+.trial-clock__dot {
+  position: absolute; left: 50%; top: 50%; width: 8px; height: 8px;
+  transform: translate(-50%, -50%); border-radius: 50%; background: #16305a;
+}
+.trial-clock__label {
+  background: rgba(255,255,255,.92); color: #24486e;
+  border: 2px solid #aee0f5; border-radius: 999px;
+  padding: 4px 14px; font-size: .85rem; font-weight: 600;
+  box-shadow: 0 6px 16px rgba(6,25,55,.35);
+}
+
 /* info pod biurkiem Izabeli (dół sceny) — biel + błękit jak robot */
 .lessons-fs__desk {
   position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); z-index: 4;
