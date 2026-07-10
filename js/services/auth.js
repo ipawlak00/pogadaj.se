@@ -30,17 +30,30 @@ async function call(path, payload) {
   return data;
 }
 
+// Ostatnio używane konto na tym urządzeniu (przeżywa wylogowanie) —
+// żeby przełączenie kont nie dziedziczyło cudzych postępów.
+const LAST_KEY = 'pogadajse.lastAccount';
+const lastAccount = () => { try { return localStorage.getItem(LAST_KEY) || ''; } catch { return ''; } };
+const rememberAccount = (email) => { try { localStorage.setItem(LAST_KEY, email); } catch {} };
+
 export const auth = {
-  // Nowe konto: imię + email + hasło
+  // Nowe konto: imię + email + hasło. Świeże konto = CZYSTY start
+  // (zero odziedziczonych postępów, historii lekcji i paszportu z tego urządzenia).
   async register({ name, email, password }) {
     const d = await call('/auth/register', { name, email, password });
+    store.reset();
+    rememberAccount(d.email);
     store.setUser({ name: d.name, email: d.email, token: d.token, provider: 'pogadaj' });
     return d;
   },
 
-  // Logowanie na istniejące konto
+  // Logowanie na istniejące konto. Przełączenie na INNE konto niż ostatnio
+  // używane na tym urządzeniu czyści lokalne postępy poprzedniego.
   async login({ email, password }) {
     const d = await call('/auth/login', { email, password });
+    const prev = store.get().user?.email || lastAccount();
+    if (prev && prev !== d.email) store.reset();
+    rememberAccount(d.email);
     store.setUser({ name: d.name, email: d.email, token: d.token, provider: 'pogadaj' });
     return d;
   },

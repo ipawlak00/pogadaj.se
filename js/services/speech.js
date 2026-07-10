@@ -135,7 +135,22 @@ function splitByQuotes(text, primary) {
     buf += ch;
   }
   push();
-  return out.length ? out : [{ text, lang: primary }];
+
+  // Fragmenty z samą interpunkcją („?", „,") doklejamy do sąsiada —
+  // inaczej lektor czyta „znak zapytania". Potem sklejamy sąsiadów
+  // w tym samym języku (mniej zapytań, płynniejsza mowa).
+  const merged = [];
+  for (const seg of out) {
+    const hasWord = /[a-z0-9ąćęłńóśźż]/i.test(seg.text);
+    const last = merged[merged.length - 1];
+    if (!hasWord) {
+      if (last) last.text += seg.text;
+      continue;                        // sama interpunkcja bez poprzednika → pomijamy
+    }
+    if (last && last.lang === seg.lang) last.text += ' ' + seg.text;
+    else merged.push({ ...seg });
+  }
+  return merged.length ? merged : [{ text, lang: primary }];
 }
 
 async function gttsOnce(text, v, rate) {
