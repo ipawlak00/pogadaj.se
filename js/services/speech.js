@@ -451,7 +451,7 @@ function forSpeech(text) {
   if (!text) return '';
   return String(text)
     .replace(/[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}‍️⃣]/gu, '')
-    .replace(/\/(aś|am|eś|em|a|ą)\b/gi, '')   // resztki form „zrobiłeś/aś" — nie czytamy ukośnika
+    .replace(/\/(aś|eś|am|em|ą|a)(?![a-ząćęłńóśźż])/gi, '')   // resztki form „zrobiłeś/aś" — nie czytamy ukośnika
     .replace(/[—–]/g, ',')                     // myślnik = pauza, nie „minus"
     .replace(/\s-\s/g, ', ')
     .replace(/\s{2,}/g, ' ')
