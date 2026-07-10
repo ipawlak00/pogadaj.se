@@ -1,4 +1,4 @@
-import { el, toast, navigate, aiConnectButton, voiceConnectButton } from '../ui.js';
+import { el, toast, navigate } from '../ui.js';
 import { auth } from '../services/auth.js';
 import { store } from '../state.js';
 
@@ -16,18 +16,11 @@ export function renderWelcome(mount) {
       el('div.auth-card', {}, [
         el('div.field', {}, [ el('label', { text: 'Email' }), email ]),
         el('div.field', {}, [ el('label', { text: 'Hasło' }), pass ]),
-        el('button.btn.btn--primary.auth-submit', { onclick: enterAsGuest }, ['Zaloguj się', el('span.arrow', { text: '→' })]),
+        el('button.btn.btn--primary.auth-submit', { onclick: enterAsGuest }, ['Zaloguj się']),
         el('button.btn.auth-create', { style: 'margin-top:14px', onclick: enterAsGuest }, ['Stwórz darmowe konto']),
       ]),
 
       el('div.auth-footer', { html: 'POWERED BY <b>IZABELACODE</b>' }),
-      el('div.row', { style: 'gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px' }, [
-        aiConnectButton(),
-        voiceConnectButton(),
-        el('button.btn.btn--ghost', { style: 'font-size:.75rem;padding:6px 14px;opacity:.7',
-          onclick: () => { store.reset(); location.hash = '#/'; location.reload(); }
-        }, ['Zacznij od nowa (reset)']),
-      ]),
     ])
   );
 

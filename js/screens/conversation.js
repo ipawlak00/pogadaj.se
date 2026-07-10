@@ -47,23 +47,42 @@ export function renderConversation(mount, lessonId) {
   const stepArea = el('div', { id: 'step-area' });
   const progressEl = el('div.faint', { id: 'step-progress', style: 'font-size:.8rem;margin:0 0 4px' });
   const micBtn = el('button.mic-btn', { 'aria-label': 'Mów', onclick: toggleListen }, ['Mów']);
-  const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center', text: 'Naciśnij mikrofon i mów (po polsku lub angielsku — możesz mieszać)' });
-  const suggestRow = el('div.suggest-row', { id: 'suggest-row' });
+  const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center;min-height:1.2em', text: '' });
+  // Co uczeń ma teraz powiedzieć — klik odtwarza wzór jeszcze raz
+  const targetEl = el('div.say-target', { id: 'say-target' });
   const replayBtn = el('button.btn.btn--ghost', { onclick: () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); } }, ['Powtórz']);
-  const skipBtn = el('button.btn.btn--ghost.skip-corner', { onclick: skipTask, title: 'Pomiń to ćwiczenie' }, ['Pomiń ↦']);
+  const skipBtn = el('button.btn.btn--ghost.skip-corner', { onclick: skipTask, title: 'Pomiń to ćwiczenie' }, ['Pomiń']);
   const stopBtn = el('button.btn.btn--ghost', { onclick: () => { speech.stopSpeaking(); setSpeaking(false); } }, ['Przerwij']);
 
-  // Jedna, stała scena na całą lekcję (nie migocze co krok). Losowana raz.
+  function setTarget(phrase) {
+    targetEl.replaceChildren();
+    if (!phrase) return;
+    targetEl.append(
+      el('span.say-target__label', { text: 'Powtórz:' }),
+      el('button.say-target__phrase', {
+        title: 'Kliknij, a przeczytam jeszcze raz',
+        onclick: () => speech.speak(phrase, { lang: 'en-US', rate: 0.85 }),
+      }, [phrase]),
+    );
+  }
+  // Wyciąga z wypowiedzi Izabeli frazę w cudzysłowie („..." / "...")
+  const quotedPhrase = (s) => {
+    const m = String(s || '').match(/[„"]([^”“"]+)[”“"]/);
+    return m ? m[1].trim() : null;
+  };
+
+  // Każda lekcja ma SWOJE zdjęcie (lesson.scene); losujemy tylko gdy go brak.
   function nextScene() {
-    if (!SCENES.length) return;
-    const path = SCENES[Math.floor(Math.random() * SCENES.length)];
+    const path = lesson.scene
+      || (SCENES.length ? SCENES[Math.floor(Math.random() * SCENES.length)] : null);
+    if (!path) return;
     sceneImg.onerror = () => { sceneImg.onerror = null; sceneImg.src = 'assets/izabela/izabela-lesson.png'; };
     sceneImg.src = path;
   }
   nextScene();
 
   mount.append(
-    topbar(el('button.btn.btn--ghost', { onclick: () => navigate('#/lessons') }, ['← Lekcje'])),
+    topbar(el('button.btn.btn--ghost', { onclick: () => navigate('#/lessons') }, ['Wróć do lekcji'])),
     el('div.lesson-chat-card.fade-in', {}, [
       stage,
       el('div.lc-main', {}, [
@@ -74,9 +93,10 @@ export function renderConversation(mount, lessonId) {
         ]),
         chatEl,
         stepArea,
-        suggestRow,
         el('div.composer', { style: 'flex-direction:column;align-items:center;gap:10px' }, [
-          micBtn, micLabel,
+          micBtn,
+          targetEl,
+          micLabel,
           el('div.row', { style: 'gap:10px;flex-wrap:wrap;justify-content:center' }, [replayBtn, stopBtn]),
         ]),
       ]),
@@ -98,7 +118,7 @@ export function renderConversation(mount, lessonId) {
     micBtn.disabled = on;
     micBtn.style.opacity = on ? '0.5' : '1';
     if (on) setMicLabel('Izabela myśli…');
-    else setMicLabel('Naciśnij mikrofon i mów');
+    else setMicLabel('');
   }
 
   async function startAiLesson() {
@@ -124,7 +144,7 @@ export function renderConversation(mount, lessonId) {
     history.push({ role: 'model', text: r.say });
     if (r.mistake) setMood('oops');
     speakLine(r.say, { lang: r.lang, onEnd: () => setMood('neutral') });
-    renderSuggestions(r.suggestions);
+    setTarget(quotedPhrase(r.say) || (r.suggestions || [])[0] || null);
     if (r.done) {
       store.markLessonDone(lesson.id);
       toast('Lekcja ukończona!');
@@ -162,13 +182,8 @@ export function renderConversation(mount, lessonId) {
     setMood(mood);
     speakLine(text, { lang, slow, onEnd: () => { setMood('neutral'); onEnd?.(); } });
   }
-  function renderSuggestions(list) {
-    suggestRow.replaceChildren();
-    if (!list || !list.length) return;
-    suggestRow.append(el('div.suggest-hint', { text: 'Dotknij, by usłyszeć po angielsku:' }));
-    suggestRow.append(el('div.suggest-chips', {}, list.slice(0, 4).map((s) =>
-      el('button.suggest-chip', { onclick: () => speech.speak(s, { lang: 'en-US' }) }, [s]))));
-  }
+  // (chipsy z podpowiedziami zastąpione jednym „Powtórz: ..." przy mikrofonie)
+  function renderSuggestions(list) { setTarget((list || [])[0] || null); }
 
   const norm = (s) => (s || '').toLowerCase().replace(/[^a-ząćęłńóśźż ]/gi, ' ').replace(/\s+/g, ' ').trim();
   const overlapOf = (heardStr, targetStr) => {
@@ -382,6 +397,6 @@ export function renderConversation(mount, lessonId) {
     listening = false; recorder = null; recHandle = null;
     micBtn.disabled = false; micBtn.style.opacity = '1';
     micBtn.classList.remove('recording'); micBtn.textContent = 'Mów';
-    setMicLabel('Naciśnij mikrofon i mów (po polsku lub angielsku — możesz mieszać)');
+    setMicLabel('');
   }
 }

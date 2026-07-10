@@ -101,12 +101,12 @@ body.in-lesson .pill { background: #eaf5ff; border-color: #bfe0f7; color: #46688
 body.in-lesson .suggest-chip { background: #eaf6ff; border-color: #a8d8f2; color: #14526f; }
 body.in-lesson .suggest-chip:hover { border-color: #1d9fd8; }
 body.in-lesson .mic-btn {
-  background: linear-gradient(135deg, #ffffff, #d8efff);
-  color: #1d6fa8; border: 2px solid #9fd8f0;
-  box-shadow: 0 0 26px rgba(80,190,240,.5);
+  background: linear-gradient(135deg, #4f86c6, #74aee4);
+  color: #fff; border: none;
+  box-shadow: 0 0 26px rgba(80,160,230,.5);
 }
 body.in-lesson .mic-btn.recording {
-  background: linear-gradient(135deg, #ff8fa5, #ffc2cf); color: #7a1330; border-color: #ff9fb2;
+  background: linear-gradient(135deg, #e66a84, #ff9fb2); color: #fff;
 }
 body.in-lesson .btn--ghost { border-color: #b5d9f0; color: #2c5a80; background: rgba(255,255,255,.6); }
 
@@ -210,6 +210,18 @@ body.in-lesson .msg--user {
   color: #123a5e; border: 1px solid #a8d4f5;
 }
 
+/* „Powtórz: ..." — aktualna fraza do powiedzenia; klik = Izabela czyta ją znowu */
+.say-target { display: flex; align-items: center; gap: 10px; min-height: 34px; flex-wrap: wrap; justify-content: center; }
+.say-target__label { color: var(--text-dim); font-size: .92rem; }
+.say-target__phrase {
+  font-family: var(--font-display); font-weight: 700; font-size: 1.05rem;
+  color: #16305a; cursor: pointer;
+  background: radial-gradient(ellipse at center, #ffffff 20%, #e3eef9 62%, #bcd4e8 100%);
+  border: 2px solid #16305a; border-radius: 10px; padding: 8px 16px;
+  transition: transform .12s ease, box-shadow .15s ease;
+}
+.say-target__phrase:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(6,25,55,.35); }
+
 @media (max-width: 860px) {
   .lesson-chat-card { grid-template-columns: 1fr; }
   .lc-stage { min-height: 220px; }
@@ -269,15 +281,28 @@ body.in-lesson .msg--user {
 /* ---------- Paszport Fonetyczny ---------- */
 .phonetic-word { font-family: var(--font-display); font-size: clamp(2.5rem, 8vw, 4.5rem); font-weight: 700; }
 .phonetic-ipa { color: var(--accent-bright); font-size: 1.4rem; letter-spacing: .05em; }
+.phonetic-pl { color: var(--text-dim); font-size: 1.15rem; margin-top: -6px; }
 .phonetic-hint { color: var(--text-dim); font-size: .95rem; }
+
+/* Przyciski "kwadratowe": jaśniejszy środek, ciemniejsza (granatowa) ramka */
+.btn--sq {
+  border-radius: 10px;
+  background: radial-gradient(ellipse at center, #ffffff 20%, #e3eef9 62%, #bcd4e8 100%);
+  color: #16305a; border: 2px solid #16305a;
+  font-weight: 600; justify-content: center;
+}
+.btn--sq:hover { box-shadow: 0 8px 20px rgba(6,25,55,.4), 0 0 14px rgba(120,190,255,.35); }
+
+/* Mikrofon — rozciągnięty przycisk (nie kółko), biały napis */
 .mic-btn {
-  width: 96px; height: 96px; border-radius: 50%;
+  width: min(340px, 90%); height: 60px; border-radius: 14px;
   border: none; cursor: pointer;
-  font-family: var(--font-display); font-size: 1.1rem; font-weight: 700;
+  font-family: var(--font-display); font-size: 1.15rem; font-weight: 700;
   background: linear-gradient(135deg, var(--accent), var(--violet));
   color: #fff; box-shadow: var(--glow-accent);
   transition: transform .1s; display: grid; place-items: center;
-  text-align: center; line-height: 1.1; padding: 4px;
+  text-align: center; line-height: 1.1; padding: 4px 18px;
+  margin: 0 auto;
 }
 .mic-btn:active { transform: scale(.94); }
 /* Mikrofon spójny z błękitem pokładu (golf Izabeli) */
@@ -505,7 +530,24 @@ body:not([data-route="welcome"]) .mic-btn {
 .hero__frame { position: relative; width: min(100vw, 177.78vh); height: min(100vh, 56.25vw); }
 .hero__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 /* Przycisk na hologramie — tam, gdzie spoczywa dłoń i rysik Izabeli */
-.hero__cta { position: absolute; left: 77%; top: 85%; transform: translate(-50%, -50%); z-index: 3; }
+.hero__cta {
+  position: absolute; left: 77%; top: 85%; transform: translate(-50%, -50%); z-index: 3;
+  font-size: 1.35rem; padding: 18px 42px;
+  transition: transform .9s ease, box-shadow .3s ease;
+}
+/* strzałka rysowana w CSS — pojawia się z prawej i cały przycisk powoli odjeżdża */
+.hero__cta::after {
+  content: ''; display: inline-block; width: 0; height: 0;
+  border-top: 8px solid transparent; border-bottom: 8px solid transparent;
+  border-left: 12px solid currentColor;
+  margin-left: 0; opacity: 0; transition: opacity .4s ease, margin-left .6s ease;
+}
+.hero__cta:hover {
+  transform: translate(calc(-50% + 26px), -50%);
+  box-shadow: 0 16px 40px rgba(79, 134, 198, .65);
+}
+.hero__cta:hover::after { opacity: 1; margin-left: 14px; }
+.hero__cta:active { transform: translate(calc(-50% + 30px), -50%); }
 /* Dymek w dolnym-lewym rogu kadru (pusta konsola) — pełny błękit, bez przezroczystości */
 .hero__bubble { position: absolute; left: 3%; bottom: 6%; z-index: 3;
   max-width: min(420px, 42%); background: linear-gradient(135deg, #4f86c6, #74aee4);
@@ -741,7 +783,8 @@ body.on-lessons .cosmos { display: none; }
   background: rgba(255,255,255,.93); backdrop-filter: blur(8px);
   border: 2px solid #aee0f5; border-radius: 16px;
   box-shadow: 0 14px 38px rgba(10,40,80,.45);
-  opacity: .9; transition: opacity .2s ease, transform .2s ease, border-color .2s ease;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease, border-color .2s ease;
 }
 .lessons-fs__desk.show { opacity: 1; border-color: #5fc6ee; transform: translateX(-50%) translateY(-3px); }
 .lessons-fs__desk .muted { color: #46688c; }

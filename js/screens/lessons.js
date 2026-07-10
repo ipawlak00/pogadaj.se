@@ -1,4 +1,4 @@
-import { el, navigate, aiConnectButton, voiceConnectButton } from '../ui.js';
+import { el, navigate } from '../ui.js';
 import { store } from '../state.js';
 import { auth } from '../services/auth.js';
 import { speech } from '../services/speech.js';
@@ -19,17 +19,16 @@ export function renderLessons(mount) {
   document.body.classList.add('on-lessons');
   window.addEventListener('hashchange', () => document.body.classList.remove('on-lessons'), { once: true });
 
-  // Info pod biurkiem Izabeli (pojawia się po najechaniu na lekcję)
-  const deskHint = () => [el('div.desk-hint', { text: 'Najedź na lekcję, aby zobaczyć szczegóły' })];
-  const deskBox = el('div.lessons-fs__desk', { id: 'lesson-info' }, deskHint());
+  // Info pod biurkiem Izabeli — ukryte; pojawia się DOPIERO po najechaniu na lekcję
+  const deskBox = el('div.lessons-fs__desk', { id: 'lesson-info' });
 
   function showInfo(l, isDone) {
-    if (!l) { deskBox.replaceChildren(...deskHint()); deskBox.classList.remove('show'); return; }
+    if (!l) { deskBox.replaceChildren(); deskBox.classList.remove('show'); return; }
     deskBox.replaceChildren(
       el('div.desk-status', { text: isDone ? 'Ukończona — możesz powtórzyć' : 'Darmowa lekcja' }),
       el('h3.display', { style: 'margin:2px 0;color:#14314f', text: `${l.num}. ${l.title}` }),
       el('p', { style: 'margin:0;font-size:.92rem;color:#46688c', text: l.desc }),
-      el('div.desk-cta', { text: 'Kliknij, aby wejść →' }),
+      el('div.desk-cta', { text: 'Kliknij, aby wejść' }),
     );
     deskBox.classList.add('show');
   }
@@ -60,8 +59,6 @@ export function renderLessons(mount) {
 
     const topRight = el('div.lessons-fs__tools', {}, [
       level ? el('button.btn.btn--ghost', { onclick: () => drawPicker(), title: 'Zmień poziom' }, [`Poziom: ${level} · zmień`]) : null,
-      aiConnectButton(),
-      voiceConnectButton(),
       el('button.btn.btn--ghost', { onclick: () => { auth.signOut(); location.hash = '#/'; location.reload(); } }, ['Wyloguj']),
     ]);
 

@@ -11,6 +11,7 @@
 export const LESSONS = [
   {
     id: 'first-steps',
+    scene: 'assets/izabela/izabela-door.png',
     num: 1,
     title: 'Pierwsze kroki',
     emoji: '',
@@ -44,6 +45,7 @@ export const LESSONS = [
 
   {
     id: 'daily-phrases',
+    scene: 'assets/scenes/scene-01.jpg',
     num: 2,
     title: 'Codzienne zwroty',
     emoji: '',
@@ -77,6 +79,7 @@ export const LESSONS = [
 
   {
     id: 'simple-sentences',
+    scene: 'assets/scenes/scene-12.jpg',
     num: 3,
     title: 'Proste zdania',
     emoji: '',
@@ -113,6 +116,7 @@ export const LESSONS = [
 export const LESSONS_MID = [
   {
     id: 'small-talk',
+    scene: 'assets/scenes/scene-09.jpg',
     num: 1,
     title: 'Small talk bez spiny',
     badge: 'free',
@@ -129,6 +133,7 @@ export const LESSONS_MID = [
   },
   {
     id: 'daily-story',
+    scene: 'assets/scenes/scene-14.jpg',
     num: 2,
     title: 'Opowiedz swój dzień',
     badge: 'free',
@@ -144,6 +149,7 @@ export const LESSONS_MID = [
   },
   {
     id: 'real-situations',
+    scene: 'assets/scenes/scene-08.jpg',
     num: 3,
     title: 'Sytuacje z życia',
     badge: 'free',
@@ -163,6 +169,7 @@ export const LESSONS_MID = [
 export const LESSONS_HIGH = [
   {
     id: 'strong-opinions',
+    scene: 'assets/scenes/scene-10.jpg',
     num: 1,
     title: 'Opinia z pazurem',
     badge: 'free',
@@ -177,6 +184,7 @@ export const LESSONS_HIGH = [
   },
   {
     id: 'work-english',
+    scene: 'assets/scenes/scene-13.jpg',
     num: 2,
     title: 'Angielski w robocie',
     badge: 'free',
@@ -191,6 +199,7 @@ export const LESSONS_HIGH = [
   },
   {
     id: 'idioms-nuance',
+    scene: 'assets/scenes/scene-02.jpg',
     num: 3,
     title: 'Idiomy i niuanse',
     badge: 'free',

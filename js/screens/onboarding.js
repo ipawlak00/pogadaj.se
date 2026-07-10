@@ -49,7 +49,7 @@ export function renderOnboarding(mount) {
         el('p.muted', { text: 'Dzięki temu Izabela dobierze tematy rozmów.' }),
         choiceGrid(GOALS, data.goal, (id) => { data.goal = id; draw(); }),
         el('div.row', { style: 'justify-content:flex-end;margin-top:24px' }, [
-          el('button.btn.btn--primary', { disabled: !data.goal, onclick: () => { step = 1; draw(); } }, ['Dalej →']),
+          el('button.btn.btn--primary', { disabled: !data.goal, onclick: () => { step = 1; draw(); } }, ['Dalej']),
         ]),
       ]));
     }
@@ -60,8 +60,8 @@ export function renderOnboarding(mount) {
         el('p.muted', { text: 'Bez stresu — Izabela i tak sprawdzi to w praktyce.' }),
         choiceGrid(LEVELS, data.level, (id) => { data.level = id; draw(); }),
         el('div.row', { style: 'justify-content:space-between;margin-top:24px' }, [
-          el('button.btn.btn--ghost', { onclick: () => { step = 0; draw(); } }, ['← Wstecz']),
-          el('button.btn.btn--primary', { disabled: !data.level, onclick: () => { step = 2; draw(); } }, ['Dalej →']),
+          el('button.btn.btn--ghost', { onclick: () => { step = 0; draw(); } }, ['Wstecz']),
+          el('button.btn.btn--primary', { disabled: !data.level, onclick: () => { step = 2; draw(); } }, ['Dalej']),
         ]),
       ]));
     }
@@ -76,7 +76,7 @@ export function renderOnboarding(mount) {
         }, ['Zaloguj się przez Google']),
         el('button.btn.btn--ghost.btn--block', { onclick: handleLogin }, ['Wejdź jako gość (na próbę)']),
         el('div.row', { style: 'justify-content:center;margin-top:8px' }, [
-          el('button.btn.btn--ghost', { onclick: () => { step = 1; draw(); } }, ['← Wstecz']),
+          el('button.btn.btn--ghost', { onclick: () => { step = 1; draw(); } }, ['Wstecz']),
         ]),
       ]));
     }

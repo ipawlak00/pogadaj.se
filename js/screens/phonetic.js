@@ -37,21 +37,22 @@ export function renderPhonetic(mount) {
     const w = words[idx];
     screen.replaceChildren(
       el('div.center.stack', { style: 'gap:6px;margin-bottom:16px' }, [
-        el('div.pill', { style: 'margin:0 auto', text: `Paszport Fonetyczny · ${idx + 1}/${words.length}` }),
         idx === 0 ? el('p.muted', { style: 'margin:6px auto 0;max-width:560px', text: 'Chcę usłyszeć, jaki masz akcent, żeby lepiej rozumieć Twoje wypowiedzi. Każdy mówi trochę inaczej — i nie ma się czego wstydzić!' }) : null,
-        el('p.muted', { style: 'margin:6px 0 0', text: '1) Posłuchaj, jak Izabela czyta słowo.  2) Powtórz je do mikrofonu.' }),
+        el('p.muted', { style: 'margin:6px 0 0', text: '1) Posłuchaj, jak czytam słowo.  2) Powtórz je do mikrofonu.' }),
       ]),
       el('div.card.center.stack', { style: 'max-width:580px;margin:0 auto;gap:14px' }, [
         el('div.phonetic-word', { text: w.word }),
         el('div.phonetic-ipa', { text: w.ipa }),
-        el('button.btn.btn--ghost', { style: 'margin:0 auto', onclick: () => speakWord() }, ['Posłuchaj jeszcze raz']),
+        el('div.phonetic-pl', { text: w.pl }),
+        el('button.btn.btn--sq', { style: 'margin:0 auto', onclick: () => speakWord() }, ['Posłuchaj jeszcze raz']),
         el('div.phonetic-hint', { text: w.hint }),
         el('div.spacer-sm'),
         micArea(),
+        el('div.faint', { style: 'font-size:.85rem', text: `${idx + 1}/${words.length} słówek` }),
         resultArea(),
         el('div.row', { style: 'justify-content:center;gap:10px;margin-top:6px' }, [
-          el('button.btn.btn--ghost', { onclick: skip }, ['Pomiń słowo']),
-          el('button.btn.btn--ghost', { style: 'opacity:.7;font-size:.85rem', onclick: finish }, ['Pomiń cały test']),
+          el('button.btn.btn--sq', { onclick: skip }, ['Pomiń słowo']),
+          el('button.btn.btn--sq', { onclick: finish }, ['Pomiń cały test']),
         ]),
       ]),
       el('div.spacer'),
@@ -93,7 +94,7 @@ export function renderPhonetic(mount) {
       r.tip ? el('div', { style: 'margin-top:8px', text: (good ? '' : '') + (good ? (r.praise || 'Brzmi świetnie!') : r.tip) }) : null,
       el('div.row', { style: 'justify-content:center;gap:10px;margin-top:14px' }, [
         el('button.btn.btn--ghost', { onclick: () => { phase = 'idle'; draw(); } }, ['Jeszcze raz']),
-        el('button.btn.btn--primary', { onclick: next }, ['Dalej →']),
+        el('button.btn.btn--primary', { onclick: next }, ['Dalej']),
       ]),
     ]);
   }
@@ -203,7 +204,7 @@ export function renderPhonetic(mount) {
     const challengeLine = chalList.length
       ? `Na celowniku mamy: ${chalSpoken.join(', ')}. Będę Cię na tym łapać podczas gadania — z miłością, rzecz jasna.`
       : 'I szczerze? Nie mam się do czego przyczepić. Aż podejrzane...';
-    const spokenAll = `${hello} Znam już Twoją wymowę${overall != null ? ` — brzmisz na jakieś ${overall} procent` : ''}. ${challengeLine} No to co, lecimy pogadać?`;
+    const spokenAll = `${hello} Znam już Twoją wymowę${overall != null ? ` — brzmisz na jakieś ${overall} procent` : ''}. ${challengeLine} Dobra, dawaj — pogadamy w końcu!`;
 
     // Izabela na zdjęciu + dymek od jej ust z tym, co właśnie mówi
     screen.replaceChildren(el('div.passport-scene.fade-in', {}, [
@@ -219,7 +220,7 @@ export function renderPhonetic(mount) {
             ])
           : el('p', { style: 'margin-top:8px', text: 'Nie mam się do czego przyczepić. Aż podejrzane...' }),
         el('div.spacer-sm'),
-        el('button.btn.btn--primary.btn--lg', { onclick: () => navigate('#/lessons') }, ['No to lecimy →']),
+        el('button.btn.btn--primary.btn--lg', { onclick: () => navigate('#/lessons') }, ['Dobra, dawaj!']),
       ]),
     ]));
     speech.speak(spokenAll, { lang: 'pl-PL' });

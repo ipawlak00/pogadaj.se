@@ -137,11 +137,11 @@ a { color: var(--accent-bright); text-decoration: none; }
 }
 .iza-rocket__trail {
   order: 0;
-  font-family: var(--font-display); font-weight: 700; font-size: 1rem;
+  font-family: var(--font-display); font-weight: 700; font-size: 1.05rem;
   letter-spacing: .22em; white-space: nowrap;
-  background: linear-gradient(90deg, rgba(190,224,255,0), rgba(190,224,255,.9));
+  background: linear-gradient(90deg, rgba(200,228,255,.55), #dceeff);
   -webkit-background-clip: text; background-clip: text; color: transparent;
-  text-shadow: 0 0 18px rgba(130,196,255,.25);
+  filter: drop-shadow(0 0 10px rgba(130,196,255,.5));
 }
 .iza-rocket svg { order: 1; filter: drop-shadow(0 0 10px rgba(140,190,240,.45)); }
 @keyframes rocketFly {
