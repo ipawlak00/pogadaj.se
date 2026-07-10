@@ -94,10 +94,9 @@ export function renderPhonetic(mount) {
   function resultArea() {
     if (phase !== 'result' || !best) return el('span');
     const r = best;
-    const score = typeof r.score === 'number' ? r.score : null;
     const good = r.ok;
+    // Bez procentów — ocena liczbowa tylko stresuje. Liczy się wskazówka.
     return el('div.pron-result.fade-in', { style: 'width:100%' }, [
-      score != null ? scoreBar(score) : null,
       r.heard ? el('div.muted', { style: 'margin-top:8px', html: `Usłyszałam: „<b>${r.heard}</b>"` }) : null,
       (!good && r.issue) ? el('div.pron-issue', { text: '' + r.issue }) : null,
       r.tip ? el('div', { style: 'margin-top:8px', text: (good ? '' : '') + (good ? (r.praise || 'Brzmi świetnie!') : r.tip) }) : null,
@@ -204,7 +203,6 @@ export function renderPhonetic(mount) {
     const chalList = (profile.challenges || []).slice(0, 4);
     const chalSpoken = chalList.map((c) => example[c] ? `${c} — jak w „${example[c]}"` : c);
 
-    const overall = typeof profile.overall === 'number' ? profile.overall : null;
     const hello = pick([
       'No i cyk, mam Cię rozgryzioną!',
       'Misja zakończona — paszport wbity!',
@@ -213,15 +211,15 @@ export function renderPhonetic(mount) {
     const challengeLine = chalList.length
       ? `Na celowniku mamy: ${chalSpoken.join(', ')}. Będę Cię na tym łapać podczas gadania — z miłością, rzecz jasna.`
       : 'I szczerze? Nie mam się do czego przyczepić. Aż podejrzane...';
-    const spokenAll = `${hello} Znam już Twoją wymowę${overall != null ? ` — brzmisz na jakieś ${overall} procent` : ''}. ${challengeLine} Dobra, dawaj — pogadamy w końcu!`;
+    // Bez procentów — zero stresu, tylko konkret nad czym popracujemy
+    const spokenAll = `${hello} Znam już Twoją wymowę od podszewki. ${challengeLine} Dobra, dawaj — pogadamy w końcu!`;
 
     // Izabela na zdjęciu + dymek od jej ust z tym, co właśnie mówi
     screen.replaceChildren(el('div.passport-scene.fade-in', {}, [
       el('img.passport-iza', { src: 'assets/scenes/scene-09.jpg', alt: 'Izabela' }),
       el('div.passport-bubble', {}, [
         el('div.passport-bubble__title', { text: hello }),
-        overall != null ? scoreBar(overall) : null,
-        el('p', { style: 'margin:10px 0 0', text: `Znam już Twoją wymowę${overall != null ? '' : ' od podszewki'}.` }),
+        el('p', { style: 'margin:10px 0 0', text: 'Znam już Twoją wymowę od podszewki.' }),
         chalList.length
           ? el('div', { style: 'margin-top:8px' }, [
               el('div.passport-bubble__label', { text: 'Popracujemy nad:' }),

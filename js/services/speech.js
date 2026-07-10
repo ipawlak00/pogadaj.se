@@ -166,8 +166,11 @@ async function gttsUrl(text, langKey, rate) {
 async function speakGoogle(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
   try {
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-    const primary = lang.slice(0, 2).toLowerCase();
-    // Mieszany PL+EN tylko gdy główny język to polski (przykłady w cudzysłowie)
+    // O języku decyduje TREŚĆ, nie etykietka: jeśli w tekście są polskie znaki,
+    // to zdanie jest polskie (z angielskimi cytatami), nawet gdy AI oznaczyło 'en'.
+    // Inaczej angielski lektor czytał polski tekst „bez ogonków".
+    const hasPolish = /[ąćęłńóśźż]/i.test(text);
+    const primary = hasPolish ? 'pl' : lang.slice(0, 2).toLowerCase();
     const segments = primary === 'pl' ? splitByQuotes(text, 'pl') : [{ text, lang: primary }];
     // Zsyntetyzuj wszystkie fragmenty z góry — jeśli KTÓRYKOLWIEK padnie, lecimy
     // na zapasowy głos (żeby uczeń zawsze coś usłyszał), a błąd pokazujemy raz.
