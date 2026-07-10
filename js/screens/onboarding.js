@@ -32,11 +32,19 @@ export function renderOnboarding(mount) {
 
   const screen = el('div.fade-in');
   mount.append(topbar(), screen);
-  draw();
 
-  // Izabela przedstawia się głosem (raz, na wejściu); wyjście z ekranu = cisza
-  speech.speak('Cześć! Jestem Izabela, Twoja kosmiczna nauczycielka angielskiego. A Ty? Jak masz na imię?', { lang: 'pl-PL' });
+  // Wyjście z ekranu = cisza
   window.addEventListener('hashchange', () => speech.stopSpeaking(), { once: true });
+
+  // Izabela MÓWI swoją kwestię przy każdym kroku (raz na krok)
+  let spokenStep = -1;
+  function speakStep() {
+    if (spokenStep === step) return;
+    spokenStep = step;
+    speech.speak(BUBBLES[step], { lang: 'pl-PL' });
+  }
+
+  draw();
 
   function progressBar() {
     return el('div.progress', { style: 'margin:4px 0 20px' }, [ el('i', { style: `width:${(step / 4) * 100 + 10}%` }) ]);
@@ -52,14 +60,14 @@ export function renderOnboarding(mount) {
   }
 
   function draw() {
-    // Lewa strona: Izabela (patrzy na ucznia) + dymek z jej kwestią do tego kroku
-    const izaSide = el('div.phonetic-iza', {}, [
+    // Lewa strona karty: Izabela (patrzy na ucznia) + dymek z jej kwestią
+    const izaSide = el('div.iza-card__stage', {}, [
       el('img', { src: 'assets/scenes/scene-05.jpg', alt: 'Izabela',
         onerror: function () { this.onerror = null; this.src = 'assets/izabela/izabela-lesson.png'; } }),
-      el('div.phonetic-iza__bubble', { text: BUBBLES[step] }),
+      el('div.iza-card__bubble', { text: BUBBLES[step] }),
     ]);
 
-    const card = el('div.onboard-card.stack', { style: 'gap:6px' });
+    const card = el('div.iza-card__main', {});
     card.append(progressBar());
 
     if (step === 0) {
@@ -114,7 +122,8 @@ export function renderOnboarding(mount) {
       );
     }
 
-    screen.replaceChildren(el('div.onboard-layout', {}, [izaSide, card]));
+    screen.replaceChildren(el('div.iza-card.fade-in', {}, [izaSide, card]));
+    speakStep();
   }
 
   async function handleLogin() {

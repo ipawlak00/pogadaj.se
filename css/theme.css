@@ -177,12 +177,15 @@ body:not([data-route="welcome"]) {
     url('../assets/scenes/scene-02.jpg') center/cover fixed no-repeat;
 }
 
-/* Paszport fonetyczny: Izabela jest na pierwszym planie — w tle bez drugiej Izabeli */
+/* Onboarding i paszport: JASNY motyw jak w lekcjach (jedna spójna estetyka) */
+body[data-route="onboarding"],
 body[data-route="phonetic"] {
-  background:
-    radial-gradient(900px 600px at 80% -10%, rgba(91,159,224,.16) 0%, transparent 60%),
-    linear-gradient(180deg, #070b14 0%, #0d1524 60%, #0a1220 100%);
+  --text: #14314f; --text-dim: #46688c; --text-faint: #7b96b3;
+  --surface-border: rgba(100, 170, 225, .35);
+  background: linear-gradient(180deg, #e6f2fd 0%, #f7fbff 55%, #e9f5fe 100%);
 }
+body[data-route="onboarding"] .logo,
+body[data-route="phonetic"] .logo { text-shadow: none; }
 
 /* Chłodna paleta (błękit) zamiast pomarańczu na całej apce poza logowaniem */
 body:not([data-route="welcome"]) {

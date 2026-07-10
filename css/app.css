@@ -262,35 +262,66 @@ body.in-lesson .msg--user {
 }
 @keyframes pulse { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(1.25); opacity: 0; } }
 
-/* ---------- Onboarding — jasny motyw jak w lekcjach, z Izabelą obok ---------- */
-.onboard-layout {
-  display: grid; grid-template-columns: minmax(230px, .75fr) 1.25fr;
-  gap: 22px; align-items: start; max-width: 1050px; margin: 0 auto;
+/* ---------- Wspólna karta „Izabela + treść" (onboarding, test fonetyczny) ----------
+   JEDEN sklejony element: zdjęcie Izabeli z dymkiem po lewej, treść po prawej —
+   dokładnie jak karta czatu w lekcji. Jasny motyw. */
+.iza-card {
+  display: grid; grid-template-columns: minmax(240px, .8fr) 1.2fr;
+  max-width: 1080px; margin: 0 auto;
+  background: #fff; border: 1px solid #cfe6f8; border-radius: 20px; overflow: hidden;
+  box-shadow: 0 16px 44px rgba(70, 130, 190, .2);
+  color: #14314f;
 }
-@media (max-width: 760px) { .onboard-layout { grid-template-columns: 1fr; } }
-.onboard-card {
-  background: rgba(255,255,255,.95); border: 2px solid #cfe6f8; border-radius: 18px;
-  padding: 22px 24px; color: #14314f;
-  box-shadow: 0 16px 44px rgba(10,40,80,.35);
+.iza-card__stage { position: relative; min-height: 460px; }
+.iza-card__stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; display: block; }
+.iza-card__bubble {
+  position: absolute; left: 6%; right: 6%; bottom: 5%;
+  background: rgba(255,255,255,.96); color: #14314f;
+  border: 2px solid #a5ddf3; border-radius: 14px;
+  padding: 10px 14px; font-size: .92rem; line-height: 1.4; text-align: center;
+  box-shadow: 0 10px 28px rgba(20,70,120,.3);
 }
-.onboard-card h2 { color: #14314f; }
-.onboard-card .progress { background: #e3eef9; }
-.onboard-card .progress > i { background: linear-gradient(90deg, #4f86c6, #84c4ff); }
-.onboard-card .choice {
+.iza-card__bubble::before {
+  content: ''; position: absolute; top: -11px; left: 50%;
+  width: 18px; height: 18px; transform: translateX(-50%) rotate(45deg);
+  background: rgba(255,255,255,.96);
+  border-left: 2px solid #a5ddf3; border-top: 2px solid #a5ddf3;
+}
+.iza-card__main { padding: 22px 24px; display: flex; flex-direction: column; gap: 6px; }
+@media (max-width: 760px) {
+  .iza-card { grid-template-columns: 1fr; }
+  .iza-card__stage { min-height: 230px; }
+}
+
+/* jasna treść wewnątrz karty (wybory, pasek, pola, wyniki testu) */
+.iza-card h2 { color: #14314f; }
+.iza-card .muted { color: #46688c; }
+.iza-card .faint { color: #7b96b3; }
+.iza-card .progress { background: #e3eef9; }
+.iza-card .progress > i { background: linear-gradient(90deg, #4f86c6, #84c4ff); }
+.iza-card .choice {
   background: radial-gradient(ellipse at center, #ffffff 25%, #e3eef9 65%, #c4d8ea 100%);
   border: 2px solid #16305a; border-radius: 10px; color: #14314f;
 }
-.onboard-card .choice:hover { border-color: #1d9fd8; }
-.onboard-card .choice.selected {
+.iza-card .choice:hover { border-color: #1d9fd8; }
+.iza-card .choice.selected {
   border-color: #1d9fd8; background: radial-gradient(ellipse at center, #ffffff 30%, #d9edfb 70%, #b9dcf2 100%);
   box-shadow: 0 0 0 2px #1d9fd8, 0 10px 26px rgba(6,25,55,.3);
 }
-.onboard-card .choice .title { color: #16305a; }
-.onboard-card .choice .desc { color: #46688c; }
-.onboard-card .btn--ghost { border-color: #b5d9f0; color: #2c5a80; background: rgba(255,255,255,.7); }
-.onboard-card .field input { background: #f2f8fd; color: #14314f; border: 1px solid #cfe6f8; }
-.onboard-card .field input:focus { border-color: #1d9fd8; }
-.onboard-card .field input::placeholder { color: #8aa5bf; }
+.iza-card .choice .title { color: #16305a; }
+.iza-card .choice .desc { color: #46688c; }
+.iza-card .btn--ghost { border-color: #b5d9f0; color: #2c5a80; background: rgba(255,255,255,.7); }
+.iza-card .field input { background: #f2f8fd; color: #14314f; border: 1px solid #cfe6f8; }
+.iza-card .field input:focus { border-color: #1d9fd8; }
+.iza-card .field input::placeholder { color: #8aa5bf; }
+.iza-card .phonetic-word { color: #16305a; }
+.iza-card .phonetic-ipa { color: #1d9fd8; }
+.iza-card .phonetic-pl, .iza-card .phonetic-hint { color: #46688c; }
+.iza-card .word-dots i { background: #d7e6f2; }
+.iza-card .word-dots i.done { background: #17b8ae; }
+.iza-card .word-dots i.active { background: #1d9fd8; box-shadow: 0 0 10px rgba(29,159,216,.6); }
+.iza-card .spinner { border-color: #e3eef9; border-top-color: #1d9fd8; }
+.iza-card .pron-result { border-top: 1px solid #cfe6f8; }
 
 .choice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
 .choice {
