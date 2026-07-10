@@ -56,7 +56,10 @@ export function renderLessons(mount) {
     const bt = bubbleText(left);
     const spoken = `${bt.hi} ${bt.body}`;
 
+    const u = store.get().user;
     const topRight = el('div.lessons-fs__tools', {}, [
+      // kto jest zalogowany — żeby konta nigdy się nie myliły
+      u ? el('span.pill.account-pill', { title: u.email || '', text: u.name || u.email || '' }) : null,
       level ? el('button.btn.btn--ghost', { onclick: () => drawPicker(), title: 'Zmień poziom' }, [`Poziom: ${level} · zmień`]) : null,
       el('button.btn.btn--ghost', { onclick: () => { auth.signOut(); location.hash = '#/'; location.reload(); } }, ['Wyloguj']),
     ]);

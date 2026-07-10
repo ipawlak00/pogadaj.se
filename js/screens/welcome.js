@@ -21,7 +21,7 @@ export function renderWelcome(mount) {
         el('div.field', {}, [ el('label', { text: 'Email' }), email ]),
         el('div.field', {}, [ el('label', { text: 'Hasło' }), pass ]),
         loginBtn,
-        el('button.btn.auth-create', { style: 'margin-top:14px', onclick: () => navigate('#/onboarding') }, ['Stwórz darmowe konto']),
+        el('button.btn.auth-create', { style: 'margin-top:14px', onclick: createAccount }, ['Stwórz darmowe konto']),
       ]),
 
       el('div.auth-footer', { html: 'POWERED BY <b>IZABELACODE</b>' }),
@@ -31,6 +31,14 @@ export function renderWelcome(mount) {
       }, ['Zacznij od nowa']),
     ])
   );
+
+  // Nowe konto = ZAWSZE czysta karta: wylogowanie + zerowy stan,
+  // żeby onboarding nie przejął imienia/postępów poprzedniego konta.
+  function createAccount() {
+    auth.signOut();
+    store.reset();
+    navigate('#/onboarding');
+  }
 
   async function login() {
     const e = email.value.trim();

@@ -24,10 +24,10 @@ const VOCATIVES = (name) => {
 
 const OPENERS = [
   'z rana jak śmietana', 'nie ma spania', 'ciśniemy', 'lecimy z tematem',
-  'jazda z tematem', 'dawaj dawaj', 'cyk myk i działamy',
+  'jazda z tematem', 'cyk myk i działamy',
 ];
 
-const PUSHES = ['Jazda z tematem!', 'Dawaj dawaj!', 'Ciśniemy!', 'Nie ma spania!', 'Lecimy z tematem!', 'Cyk myk!'];
+const PUSHES = ['Jazda z tematem!', 'Ciśniemy!', 'Nie ma spania!', 'Lecimy z tematem!', 'Cyk myk!', 'Wpadaj śmiało!'];
 
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
