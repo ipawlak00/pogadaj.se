@@ -23,12 +23,18 @@ export function setElevenCreds(key, voice) {
 }
 export function hasEleven() { return !!(ls(EL_KEY) && ls(EL_VOICE)); }
 
-// ---- Google Cloud Text-to-Speech (preferowane: jeden rachunek z Firebase/Gemini) ----
+// ---- Google Cloud Text-to-Speech — GŁÓWNY głos Izabeli (skalowalny) ----
+// Przez proxy (bez klucza) gdy proxyBase ustawione; lokalny klucz to zapas dev.
 const GTTS_KEY = 'pogadajse.gttsKey';
 export function setGoogleTTSKey(key) {
   try { key ? localStorage.setItem(GTTS_KEY, key.trim()) : localStorage.removeItem(GTTS_KEY); } catch {}
 }
-export function hasGoogleTTS() { return !!ls(GTTS_KEY); }
+export function hasGoogleTTS() { return geminiConfigured() || !!ls(GTTS_KEY); }
+function gttsSynthUrl() {
+  const base = (CONFIG.GEMINI.proxyBase || '').replace(/\/$/, '');
+  if (base) return `${base}/v1/text:synthesize`;
+  return `https://texttospeech.googleapis.com/v1/text:synthesize?key=${ls(GTTS_KEY)}`;
+}
 
 // Głosy Izabeli wg języka — od najbardziej naturalnego do zapasowego.
 // Pierwszy, który zadziała na danym kluczu/projekcie, zostaje zapamiętany.
@@ -108,7 +114,7 @@ async function gttsOnce(text, v, rate) {
   // Głosy Chirp3-HD nie wspierają speakingRate — pomijamy je dla nich.
   const isChirp = /chirp/i.test(v.name);
   const audioConfig = isChirp ? { audioEncoding: 'MP3' } : { audioEncoding: 'MP3', speakingRate: rate || 1 };
-  const res = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${ls(GTTS_KEY)}`, {
+  const res = await fetch(gttsSynthUrl(), {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ input: { text }, voice: v, audioConfig }),
   });
@@ -160,11 +166,10 @@ async function speakGoogle(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
     };
     playNext();
   } catch (e) {
-    console.warn('[GoogleTTS] fallback do głosu przeglądarki:', e);
-    if (!ttsErrorShown) {
-      ttsErrorShown = true;
-      toast('Głos Google nie zadziałał (' + (e.message || e) + '). Używam zapasowego. Sprawdź, czy ten klucz ma włączone „Cloud Text-to-Speech API".', 'error');
-    }
+    console.warn('[GoogleTTS] fallback:', e);
+    ttsNotify('Głos Cloud TTS nie zadziałał: ' + (e.message || e));
+    // Zapas nr 1: głos Gemini; dopiero potem głos przeglądarki
+    if (hasGeminiTTS()) return speakGemini(text, { lang, rate, onEnd });
     speakWeb(text, { lang, onEnd });
   }
 }
@@ -270,8 +275,7 @@ async function speakGemini(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
   } catch (e) {
     console.warn('[GeminiTTS] fallback:', e);
     ttsNotify('Głos Gemini nie zadziałał: ' + (e.message || e) + ' — używam zapasowego (robot).');
-    if (hasGoogleTTS()) return speakGoogle(text, { lang, rate, onEnd });
-    return speakWeb(text, { lang, onEnd });
+    return speakWeb(text, { lang, onEnd });   // bez ping-ponga Google<->Gemini
   }
 }
 
@@ -330,15 +334,14 @@ export const speech = {
   },
 
   // --- Synteza mowy (TTS) — głos Izabeli ---
-  // Priorytet: Gemini (naturalny, ten sam klucz co AI) → Google Cloud TTS
-  //            → ElevenLabs → wbudowany głos przeglądarki.
+  // Priorytet: Google Cloud TTS (Chirp 3 HD — skalowalny, wysokie limity)
+  //            → Gemini TTS (zapas) → ElevenLabs → głos przeglądarki.
   speak(text, opts = {}) {
     const clean = forSpeech(text);
     if (!clean) { opts.onEnd?.(); return; }
-    if (hasGeminiTTS()) { announceEngine('Głos: Gemini (naturalny, kobiecy)'); return speakGemini(clean, opts); }
-    if (hasGoogleTTS()) { announceEngine('Głos: Google TTS (naturalny)'); return speakGoogle(clean, opts); }
-    if (hasEleven()) { announceEngine('Głos: ElevenLabs (naturalny)'); return speakEleven(clean, opts); }
-    announceEngine('Głos: przeglądarka (zapasowy, robotyczny). Podłącz Izabelę z AI (Gemini), aby brzmiała naturalnie.', 'error');
+    if (hasGoogleTTS()) return speakGoogle(clean, opts);
+    if (hasGeminiTTS()) return speakGemini(clean, opts);
+    if (hasEleven()) return speakEleven(clean, opts);
     return speakWeb(clean, opts);
   },
 

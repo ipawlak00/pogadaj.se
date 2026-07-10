@@ -18,6 +18,7 @@
 // =============================================================
 
 const API = 'https://generativelanguage.googleapis.com';
+const TTS_API = 'https://texttospeech.googleapis.com';
 
 const ALLOW_ORIGINS = [
   'https://ipawlak00.github.io',
@@ -38,15 +39,20 @@ exports.geminiProxy = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method not allowed' });
   if (ALLOW_ORIGINS.length && origin && !allowed) return res.status(403).json({ error: 'origin not allowed' });
 
-  // Wpuszczamy WYŁĄCZNIE generateContent na modele Gemini (czat + TTS)
+  // Wpuszczamy tylko dwie ścieżki:
+  //  - Gemini: /v1beta/models/<model>:generateContent   (czat, transkrypcja, TTS-fallback)
+  //  - Cloud Text-to-Speech: /v1/text:synthesize        (główny głos Izabeli, skalowalny)
   const path = (req.path || '').replace(/^\/+/, '/');
-  if (!/^\/v1beta\/models\/[A-Za-z0-9.\-]+:generateContent$/.test(path)) {
-    return res.status(403).json({ error: 'forbidden path' });
-  }
-  if (!process.env.GEMINI_KEY) return res.status(500).json({ error: 'GEMINI_KEY not configured' });
+  const isGemini = /^\/v1beta\/models\/[A-Za-z0-9.\-]+:generateContent$/.test(path);
+  const isTts = path === '/v1/text:synthesize';
+  if (!isGemini && !isTts) return res.status(403).json({ error: 'forbidden path' });
+
+  const key = isTts ? (process.env.GTTS_KEY || process.env.GEMINI_KEY) : process.env.GEMINI_KEY;
+  if (!key) return res.status(500).json({ error: 'key not configured' });
+  const base = isTts ? TTS_API : API;
 
   try {
-    const upstream = await fetch(`${API}${path}?key=${process.env.GEMINI_KEY}`, {
+    const upstream = await fetch(`${base}${path}?key=${key}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {}),
