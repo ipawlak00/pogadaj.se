@@ -27,6 +27,7 @@ export function renderConversation(mount, lessonId) {
   let chunks = [], chunkIdx = 0, chunkDoneCb = null;
   let lastLine = null;
   let listening = false, recorder = null, recHandle = null, processing = false;
+  let chatLog = [];               // widoczne dymki (do wznowienia lekcji po przerwie)
 
   // Tryb prowadzenia: AI (Gemini) gdy podłączony, inaczej proste kroki
   const aiLed = ai.provider === 'gemini';
@@ -61,8 +62,9 @@ export function renderConversation(mount, lessonId) {
         trialEnded = true;
         clearInterval(meter);
         speech.stopSpeaking();
+        clearLessonMemory();
         micBtn.disabled = true; micBtn.style.opacity = '0.5';
-        izabelaSay('No i cyk — wykorzystaliśmy cały czas próbny! Było mi mega miło. Nie znikaj, pełne lekcje już niedługo!', {
+        izabelaSay('No i cyk, wykorzystaliśmy cały czas próbny! Było mi mega miło. Nie znikaj, pełne lekcje już niedługo!', {
           lang: 'pl', onEnd: () => navigate('#/lessons'),
         });
       }
@@ -161,11 +163,41 @@ export function renderConversation(mount, lessonId) {
     else setMicLabel('');
   }
 
+  // ---- pamięć lekcji próbnej: rozmowa wraca dokładnie tam, gdzie przerwano ----
+  const HISTORY_CAP = 40;
+  function persistLesson() {
+    if (!isTrial) return;
+    const trimmed = history.length > HISTORY_CAP ? [history[0], ...history.slice(-HISTORY_CAP)] : [...history];
+    store.patchKey('progress', { trialHistory: trimmed, trialChat: chatLog.slice(-12) });
+  }
+  function clearLessonMemory() {
+    if (isTrial) store.patchKey('progress', { trialHistory: [], trialChat: [] });
+  }
+
   async function startAiLesson() {
     const topic = lesson.aiTopic || lesson.title;
-    // Izabela odzywa się OD RAZU (składane powitanie — za każdym razem inne),
-    // a w tle leci zapytanie do AI — zero głuchej ciszy po wejściu w lekcję.
-    const hello = lessonHello((store.get().user?.name || '').trim());
+    const name = (store.get().user?.name || '').trim();
+
+    // Wznowienie: jest zapisana rozmowa → kontynuujemy, nie zaczynamy od zera
+    const saved = isTrial ? store.get().progress : {};
+    if (isTrial && Array.isArray(saved.trialHistory) && saved.trialHistory.length > 1) {
+      history.push(...saved.trialHistory);
+      (saved.trialChat || []).forEach((m) => addMessage(m.who, m.text, { save: false }));
+      chatLog = [...(saved.trialChat || [])];
+      const back = [
+        'No i jesteśmy z powrotem! Lecimy dalej.',
+        'O, wracasz! Kontynuujemy, nie ma spania.',
+        'Alright, jedziemy dalej z tematem!',
+      ][Math.floor(Math.random() * 3)];
+      introGate = new Promise((res) => { speakLine(back, { lang: 'pl', onEnd: res }); setTimeout(res, 7000); });
+      history.push({ role: 'user', text: 'Wróciliśmy po przerwie do tej samej lekcji. NIE witaj się od nowa i NIE zaczynaj tematu od początku. Jednym zdaniem nawiąż do ostatniego ćwiczenia i kontynuuj dokładnie od miejsca, w którym skończyliśmy.' });
+      await aiTurn();
+      return;
+    }
+
+    // Świeży start: Izabela odzywa się OD RAZU (składane powitanie),
+    // a w tle leci zapytanie do AI — zero głuchej ciszy po wejściu.
+    const hello = lessonHello(name);
     introGate = new Promise((res) => { speakLine(hello, { lang: 'pl', onEnd: res }); setTimeout(res, 7000); });
     history.push({ role: 'user', text: `Rozpocznij lekcję mówienia na temat: "${topic}". WAŻNE: już się przywitałaś słowami "${hello}" — NIE witaj się ponownie. Od razu, bez wstępów, naucz pierwszej prostej frazy (po angielsku w cudzysłowie + znaczenie po polsku + poproś o powtórzenie).` });
     await aiTurn();
@@ -181,26 +213,30 @@ export function renderConversation(mount, lessonId) {
     if (r.mistake) setMood('oops');
     speakLine(r.say, { lang: r.lang, onEnd: () => setMood('neutral') });
     setTarget(quotedPhrase(r.say) || (r.suggestions || [])[0] || null);
+    persistLesson();
     if (r.done) {
       store.markLessonDone(lesson.id);
+      clearLessonMemory();
       toast('Lekcja ukończona!');
     }
   }
 
   async function handleAiAnswer(text) {
     history.push({ role: 'user', text });
+    persistLesson();
     await aiTurn();
   }
 
   // ---------- pomocnicze ----------
   // Wspólny czat: dymki Izabeli (od jej strony) + odpowiedzi ucznia, przewijalne.
-  function addMessage(who, text) {
+  function addMessage(who, text, { save = true } = {}) {
     const node = el(`div.msg.msg--${who === 'izabela' ? 'izabela' : 'user'}`, {}, [
       el('div.who', { text: who === 'izabela' ? 'Izabela' : 'Ty' }),
       el('div', { text }),
     ]);
     chatEl.append(node);
     chatEl.scrollTop = chatEl.scrollHeight;
+    if (save) { chatLog.push({ who: who === 'izabela' ? 'izabela' : 'user', text }); persistLesson(); }
   }
   function setSpeaking(on) { setAvSpeaking(on); }
   function setMicLabel(t) { micLabel.textContent = t; }

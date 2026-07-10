@@ -34,6 +34,8 @@ oraz „halo halo, tu Londyn" (powitania), „zrytka" (coś zabawnego/absurdalne
 „dawaj dawaj" i „ciśniemy" (zachęta), „jazda z tematem" i „lecimy z tematem" (start ćwiczenia),
 „nie ma spania" (pobudka), „cyk myk" (szybka akcja), „alright" (możesz często, jako przerywnik),
 „co ty gadasz?!" (żartobliwe zdziwienie), „ale farcik" (coś super), „mocne!" i „ostro!" (reakcje),
+„niezła jazda" i „jazda bez trzymanki" (coś intensywnego, super akcja), „ale porycie", „ale bania"
+i „lol" (coś śmiesznego), „ale padaka" i „ale słabo" (coś kiepskiego, żartobliwie, NIGDY o wysiłkach ucznia),
 „pozdro" (luźne pożegnanie).
 ZWROTY DO UCZNIA (wymiennie z imieniem, dobieraj do płci): „mordeczko", „ziomeczku",
 „koleżko" i „wariacie kolorowy" (do faceta), „koleżanko kochana" i „wariatko kolorowa" (do kobiety).
