@@ -5,7 +5,7 @@ import { ai } from '../services/ai.js';
 import { PHONETIC_WORDS } from '../data/phonetic-words.js';
 
 export function renderPhonetic(mount) {
-  const words = PHONETIC_WORDS;
+  const words = PHONETIC_WORDS.slice(0, 12);   // 12 słówek wystarczy, 20 męczyło
   // Prawdziwa analiza audio gdy Gemini podłączony i przeglądarka umie nagrywać
   const audioMode = ai.provider === 'gemini' && speech.canRecord();
 
@@ -19,8 +19,18 @@ export function renderPhonetic(mount) {
   // Izabela najpierw tłumaczy, PO CO ten cały paszport — bez tego to tylko test
   let introSpoken = false;
   const INTRO = 'Zanim zaczniemy, wyjaśnię o co mi chodzi. Chcę usłyszeć, jaki masz akcent, ' +
-    'żeby lepiej rozumieć Twoje wypowiedzi. Każdy z nas mówi trochę inaczej i nie ma się czego wstydzić! ' +
-    'Powtórz za mną kilka słów i tyle, żadnych ocen z czerwonym długopisem.';
+    'żeby lepiej rozumieć Twoje wypowiedzi. Każdy z nas mówi trochę inaczej i nie ma się czego wstydzić. ' +
+    'Przy mnie nie masz czego się bać, ja sama często kaleczę, ale nigdy się nie poddaję! ' +
+    'Powtórz za mną kilka słów i tyle.';
+
+  // Dymek pod Izabelą pokazuje to, co właśnie mówi (nie statyczny tekst)
+  let izaLine = 'Chcę usłyszeć, jaki masz akcent, żeby lepiej Cię rozumieć. Każdy mówi trochę inaczej i nie ma się czego wstydzić!';
+  function izaSay(text) {
+    izaLine = text;
+    const b = document.getElementById('iza-bubble');
+    if (b) b.textContent = text;
+    speech.speak(text, { lang: 'pl-PL' });
+  }
 
   const screen = el('div.fade-in');
   mount.append(topbar(), screen);
@@ -39,9 +49,7 @@ export function renderPhonetic(mount) {
     const izaSide = el('div.iza-card__stage', {}, [
       el('img', { src: 'assets/scenes/scene-05.jpg', alt: 'Izabela',
         onerror: function () { this.onerror = null; this.src = 'assets/izabela/izabela-lesson.png'; } }),
-      el('div.iza-card__bubble', {
-        text: 'Chcę usłyszeć, jaki masz akcent, żeby lepiej Cię rozumieć. Każdy mówi trochę inaczej — i nie ma się czego wstydzić!',
-      }),
+      el('div.iza-card__bubble', { id: 'iza-bubble', text: izaLine }),
     ]);
     screen.replaceChildren(
       el('div.iza-card.fade-in', {}, [
@@ -70,7 +78,12 @@ export function renderPhonetic(mount) {
     }
     if (phase === 'idle' && lastSpoken !== idx) {
       lastSpoken = idx;
-      if (!introSpoken) { introSpoken = true; speech.speak(INTRO, { lang: 'pl-PL', onEnd: () => speakWord() }); }
+      if (!introSpoken) {
+        introSpoken = true;
+        izaLine = INTRO;
+        const bb = document.getElementById('iza-bubble'); if (bb) bb.textContent = INTRO;
+        speech.speak(INTRO, { lang: 'pl-PL', onEnd: () => speakWord() });
+      }
       else speakWord();
     }
   }
@@ -143,7 +156,7 @@ export function renderPhonetic(mount) {
     if (phase !== 'recording' || !rec) return;
     clearTimeout(recTimer);
     phase = 'analyzing'; draw();
-    speech.speak(pick(FILLERS), { lang: 'pl-PL' });   // natychmiastowa reakcja głosem
+    izaSay(pick(FILLERS));   // natychmiastowa reakcja głosem (i w dymku)
     rec.stop();
     const audio = await rec.done; rec = null;
     const w = words[idx];
@@ -155,8 +168,10 @@ export function renderPhonetic(mount) {
     }
     if (!best || (res.score ?? 0) >= (best.score ?? 0)) best = res;
     phase = 'result'; draw();
-    const line = res.ok ? (res.praise || 'Świetnie!') : (res.tip || '');
-    if (line) speech.speak(line, { lang: 'pl-PL' });
+    const line = res.ok
+      ? (res.praise || pick(['Mocne!', 'No i git!', 'Cyk myk i zrobione!', 'Ale farcik, czysto poszło!']))
+      : (res.tip || '');
+    if (line) izaSay(line);
   }
 
   // Fallback bez Gemini: Web Speech (transkrypcja + heurystyka)
@@ -203,8 +218,11 @@ export function renderPhonetic(mount) {
 
     const hello = pick([
       'No i cyk, mam Cię rozgryzioną!',
-      'Misja zakończona — paszport wbity!',
-      'Uff, przesłuchane. Wiesz, że masz całkiem niezły radiowy głos?',
+      'Misja zakończona, paszport wbity!',
+      'Cyk myk i po sprawie!',
+      'Ale farcik, przesłuchane w całości!',
+      'Mocne! Dobra robota z tym testem!',
+      'No to pozamiatane, znam Twój akcent!',
     ]);
     const challengeLine = chalList.length
       ? `Na celowniku mamy: ${chalSpoken.join(', ')}. Będę Cię na tym łapać podczas gadania — z miłością, rzecz jasna.`
@@ -214,7 +232,7 @@ export function renderPhonetic(mount) {
 
     // Izabela na zdjęciu + dymek od jej ust z tym, co właśnie mówi
     screen.replaceChildren(el('div.passport-scene.fade-in', {}, [
-      el('img.passport-iza', { src: 'assets/scenes/scene-09.jpg', alt: 'Izabela' }),
+      el('div.passport-iza-wrap', {}, [el('img.passport-iza', { src: 'assets/scenes/scene-09.jpg', alt: 'Izabela' })]),
       el('div.passport-bubble', {}, [
         el('div.passport-bubble__title', { text: hello }),
         el('p', { style: 'margin:10px 0 0', text: 'Znam już Twoją wymowę od podszewki.' }),

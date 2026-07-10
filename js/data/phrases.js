@@ -12,24 +12,28 @@ const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const isFemale = (name) =>
   !!name && !/^(kuba|barnaba|kosma|bonawentura|dyzma|saba)$/i.test(name) && /a$/i.test(name);
 
-const HI = ['Siema', 'No hej', 'Hejka', 'O, jesteś', 'Alright', 'Halo halo', 'No i git'];
+const HI = ['Siema', 'No hej', 'Hejka', 'O, jesteś', 'Alright', 'Halo halo, tu Londyn', 'No i git', 'Siemandero'];
 
 const VOCATIVES = (name) => {
-  const base = ['mordeczko', 'ziomeczku', isFemale(name) ? 'koleżanko kochana' : 'koleżko'];
+  const base = ['mordeczko', 'ziomeczku',
+    isFemale(name) ? 'koleżanko kochana' : 'koleżko',
+    isFemale(name) ? 'wariatko kolorowa' : 'wariacie kolorowy'];
   // imię (jeśli znamy) wypada częściej niż ksywki
   return name ? [name, name, name, ...base] : base;
 };
 
 const OPENERS = [
   'z rana jak śmietana', 'nie ma spania', 'ciśniemy', 'lecimy z tematem',
-  'jazda z tym', 'dawaj dawaj', 'silniki rozgrzane',
+  'jazda z tematem', 'dawaj dawaj', 'cyk myk i działamy',
 ];
 
-const PUSHES = ['Jazda z tym!', 'Dawaj dawaj!', 'Ciśniemy!', 'Nie ma spania!', 'Lecimy z tematem!'];
+const PUSHES = ['Jazda z tematem!', 'Dawaj dawaj!', 'Ciśniemy!', 'Nie ma spania!', 'Lecimy z tematem!', 'Cyk myk!'];
 
-// Krótkie powitanie do dymka na ekranie lekcji, np. „Siema, mordeczko — lecimy z tematem!"
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// Krótkie powitanie do dymka na ekranie lekcji, np. „Siema, mordeczko! Lecimy z tematem!"
 export function greetingHi(name) {
-  return `${pick(HI)}, ${pick(VOCATIVES(name))} — ${pick(OPENERS)}!`;
+  return `${pick(HI)}, ${pick(VOCATIVES(name))}! ${cap(pick(OPENERS))}!`;
 }
 
 // Zachęta na koniec dymka, np. „Dawaj dawaj!"
@@ -46,4 +50,13 @@ export function lessonHello(name) {
     'Nie ma spania',
   ]);
   return `${pick(HI)}, ${voc}! ${mid}. ${pick(PUSHES)}`;
+}
+
+// Poprawna polska odmiana: 1 minuta, 2-4 minuty, 5-21 minut, 22-24 minuty...
+export function minutesWord(n) {
+  const abs = Math.abs(n);
+  if (abs === 1) return 'minuta';
+  const d = abs % 10, dd = abs % 100;
+  if (d >= 2 && d <= 4 && !(dd >= 12 && dd <= 14)) return 'minuty';
+  return 'minut';
 }

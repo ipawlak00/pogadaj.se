@@ -3,7 +3,7 @@ import { store } from '../state.js';
 import { auth } from '../services/auth.js';
 import { speech } from '../services/speech.js';
 import { TRIAL_MINUTES } from '../data/lessons.js';
-import { greetingHi, pushLine } from '../data/phrases.js';
+import { greetingHi, pushLine, minutesWord } from '../data/phrases.js';
 
 // Trzy pasma poziomów — wpływają na temat i trudność lekcji próbnej
 const LEVEL_BANDS = [
@@ -33,17 +33,17 @@ export function renderLessons(mount) {
     const name = (store.get().user?.name || '').trim();
     const used = store.get().progress.trialSecondsUsed || 0;
     if (left <= 0) {
-      return { hi: 'No i wyskoczył nam czas próbny!', body: `Ale nie znikaj${name ? ', ' + name : ''} — niedługo ruszamy z pełnymi lekcjami. Trzymaj wymowę w formie!` };
+      return { hi: 'No i wyskoczył nam czas próbny!', body: `Ale nie znikaj${name ? ', ' + name : ''}. Niedługo ruszamy z pełnymi lekcjami. Trzymaj wymowę w formie!` };
     }
     if (used > 0) {
       // Powrót z lekcji — Izabela już się witała, teraz podtrzymuje relację
       const hi = [`I jak wrażenia${name ? ', ' + name : ''}?`, 'No i jak było?', `O, wracasz${name ? ', ' + name : ''}!`][Math.floor(Math.random() * 3)];
-      return { hi, body: `Podobała Ci się nasza rozmowa? Pamiętaj — mamy jeszcze ok. ${left} minut razem do przegadania. Czekam!` };
+      return { hi, body: `Podobała Ci się nasza rozmowa? Pamiętaj, mamy jeszcze około ${left} ${minutesWord(left)} razem do przegadania. Czekam!` };
     }
     // Pierwsze wejście — powitanie składane z klocków, za każdym razem inne
     return {
       hi: greetingHi(name),
-      body: `Żebyśmy mogli się poznać i pogadać na luzie, masz u mnie ${TRIAL_MINUTES} minut lekcji próbnej. Wpadaj kiedy chcesz — możesz zużywać ten czas po kawałku. ${pushLine()}`,
+      body: `Żebyśmy mogli się poznać i pogadać na luzie, masz u mnie ${TRIAL_MINUTES} ${minutesWord(TRIAL_MINUTES)} lekcji próbnej. Wpadaj kiedy chcesz, możesz zużywać ten czas po kawałku. ${pushLine()}`,
     };
   }
 

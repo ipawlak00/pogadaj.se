@@ -144,11 +144,20 @@ async function gttsOnce(text, v, rate) {
   const isChirp = /chirp/i.test(v.name);
   const eff = Math.min(1.25, Math.max(0.85, (rate || 1) * (isChirp ? 1.07 : 1)));
   const audioConfig = { audioEncoding: 'MP3', speakingRate: eff };
-  const res = await fetch(gttsSynthUrl(), {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ input: { text }, voice: v, audioConfig }),
-  });
-  if (!res.ok) throw new Error('Google TTS ' + res.status + ': ' + (await res.text()).slice(0, 220));
+  // Przy przejściowym błędzie (429/503) ponawiamy TEN SAM głos zamiast
+  // przeskakiwać na inny — Izabela ma brzmieć zawsze tak samo.
+  let res = null, errText = '';
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt) await new Promise((r) => setTimeout(r, 1200));
+    res = await fetch(gttsSynthUrl(), {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ input: { text }, voice: v, audioConfig }),
+    });
+    if (res.ok) break;
+    errText = (await res.text()).slice(0, 220);
+    if (res.status !== 429 && res.status !== 503) break;
+  }
+  if (!res || !res.ok) throw new Error('Google TTS ' + (res ? res.status : '?') + ': ' + errText);
   const data = await res.json();
   return 'data:audio/mp3;base64,' + data.audioContent;
 }
