@@ -95,18 +95,33 @@ if (typeof window !== 'undefined') {
 
 // Dzieli tekst na fragmenty: to co w cudzysłowie (przykłady angielskie) → 'en',
 // reszta → język główny. Dzięki temu Izabela czyta angielski angielskim głosem.
+// Czy fragment w cudzysłowie faktycznie wygląda na angielski?
+// Izabela cytuje też POLSKIE słowa — te muszą zostać przy polskim głosie,
+// inaczej angielski lektor czyta polski tekst „bez polskich znaków".
+function looksEnglish(s) {
+  if (/[ąćęłńóśźż]/i.test(s)) return false;               // polskie znaki → polski
+  const words = (s.toLowerCase().match(/[a-z']+/g) || []);
+  if (!words.length) return false;
+  const PL = new Set(['to', 'nie', 'tak', 'jest', 'czy', 'sie', 'na', 'co', 'po', 'ja', 'ty',
+    'dobrze', 'czesc', 'prosze', 'dziekuje', 'i', 'z', 'w', 'o', 'ale', 'juz', 'moze']);
+  const plHits = words.filter((w) => PL.has(w)).length;
+  return plHits / words.length < 0.5;                      // większość polska → polski
+}
+
 function splitByQuotes(text, primary) {
   const QUOTE = /["„“”»«]/;
   const out = [];
   let buf = '', inQ = false;
+  const push = () => {
+    const t = buf.trim();
+    if (t) out.push({ text: t, lang: inQ && looksEnglish(t) ? 'en' : primary });
+    buf = '';
+  };
   for (const ch of text) {
-    if (QUOTE.test(ch)) {
-      if (buf.trim()) out.push({ text: buf.trim(), lang: inQ ? 'en' : primary });
-      buf = ''; inQ = !inQ; continue;
-    }
+    if (QUOTE.test(ch)) { push(); inQ = !inQ; continue; }
     buf += ch;
   }
-  if (buf.trim()) out.push({ text: buf.trim(), lang: inQ ? 'en' : primary });
+  push();
   return out.length ? out : [{ text, lang: primary }];
 }
 
@@ -125,16 +140,22 @@ async function gttsOnce(text, v, rate) {
 
 async function gttsUrl(text, langKey, rate) {
   const key = langKey === 'en' ? 'en' : 'pl';
-  // Jeśli już wiemy, który głos działa — użyj tylko jego.
-  const candidates = chosenVoice[key] ? [chosenVoice[key]] : GTTS_VOICES[key];
+  // Pamiętamy działający głos, ALE zapasowy nie przykleja się na zawsze:
+  // po 90 s znów próbujemy najlepszego (Chirp3-HD), żeby chwilowa czkawka
+  // nie skazywała całej sesji na gorszy, robotyczny głos.
+  const ladder = GTTS_VOICES[key];
+  const mem = chosenVoice[key];
+  const memStale = mem && mem.idx > 0 && Date.now() - mem.ts > 90000;
+  const candidates = mem && !memStale ? [mem.v] : ladder;
   let lastErr = null;
   for (const v of candidates) {
     const cacheKey = v.name + '|' + rate + '|' + text;
     const cached = audioCache.get(cacheKey);
-    if (cached) { chosenVoice[key] = v; return cached; }
+    if (cached) { chosenVoice[key] = { v, idx: ladder.indexOf(v), ts: Date.now() }; return cached; }
     try {
       const url = await gttsOnce(text, v, rate);
-      chosenVoice[key] = v;                 // zapamiętaj działający głos
+      chosenVoice[key] = { v, idx: ladder.indexOf(v), ts: Date.now() };
+      console.info('[TTS] głos:', v.name);
       audioCache.set(cacheKey, url);
       return url;
     } catch (e) { lastErr = e; /* spróbuj kolejny głos z drabinki */ }
@@ -151,8 +172,10 @@ async function speakGoogle(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
     // Zsyntetyzuj wszystkie fragmenty z góry — jeśli KTÓRYKOLWIEK padnie, lecimy
     // na zapasowy głos (żeby uczeń zawsze coś usłyszał), a błąd pokazujemy raz.
     const urls = [];
+    // Tempo nigdy poniżej 0.85 — wolniej brzmi jak zepsuty robot
+    const baseRate = Math.max(0.85, rate || 1);
     for (const seg of segments) {
-      const segRate = seg.lang === 'en' ? (rate || 1) * 0.82 : (rate || 1);   // angielski wolniej
+      const segRate = seg.lang === 'en' ? Math.max(0.85, baseRate * 0.9) : baseRate;
       urls.push(await gttsUrl(seg.text, seg.lang, segRate));
     }
     let i = 0;
