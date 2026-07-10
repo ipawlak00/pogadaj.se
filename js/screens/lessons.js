@@ -67,9 +67,9 @@ export function renderLessons(mount) {
         el('div.logo', { html: 'pogadaj<span class="dot">.</span><span class="se">se</span>' }),
         topRight,
       ]),
-      el('div.lessons-fs__head', {}, [
-        el('h1.lessons-title', { text: 'Sprawdź jak łatwo możemy ze sobą pogadać!' }),
-        el('p.lessons-sub', { text: '3 lekcje na rozgrzewkę' }),
+      el('div.lessons-fs__bubble', {}, [
+        el('div.lessons-fs__bubble-hi', { text: 'Siema, z rana jak śmietana!' }),
+        el('p', { style: 'margin:6px 0 0', text: 'Na początek, żebyśmy mogli się lepiej poznać i zobaczyć, co razem zdziałamy — mam dla Ciebie 3 próbne lekcje. Wybieraj i lecimy!' }),
       ]),
       ...lessons.map(lessonTile),
       deskBox,
