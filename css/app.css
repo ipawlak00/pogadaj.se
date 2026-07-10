@@ -262,7 +262,36 @@ body.in-lesson .msg--user {
 }
 @keyframes pulse { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(1.25); opacity: 0; } }
 
-/* ---------- Onboarding ---------- */
+/* ---------- Onboarding — jasny motyw jak w lekcjach, z Izabelą obok ---------- */
+.onboard-layout {
+  display: grid; grid-template-columns: minmax(230px, .75fr) 1.25fr;
+  gap: 22px; align-items: start; max-width: 1050px; margin: 0 auto;
+}
+@media (max-width: 760px) { .onboard-layout { grid-template-columns: 1fr; } }
+.onboard-card {
+  background: rgba(255,255,255,.95); border: 2px solid #cfe6f8; border-radius: 18px;
+  padding: 22px 24px; color: #14314f;
+  box-shadow: 0 16px 44px rgba(10,40,80,.35);
+}
+.onboard-card h2 { color: #14314f; }
+.onboard-card .progress { background: #e3eef9; }
+.onboard-card .progress > i { background: linear-gradient(90deg, #4f86c6, #84c4ff); }
+.onboard-card .choice {
+  background: radial-gradient(ellipse at center, #ffffff 25%, #e3eef9 65%, #c4d8ea 100%);
+  border: 2px solid #16305a; border-radius: 10px; color: #14314f;
+}
+.onboard-card .choice:hover { border-color: #1d9fd8; }
+.onboard-card .choice.selected {
+  border-color: #1d9fd8; background: radial-gradient(ellipse at center, #ffffff 30%, #d9edfb 70%, #b9dcf2 100%);
+  box-shadow: 0 0 0 2px #1d9fd8, 0 10px 26px rgba(6,25,55,.3);
+}
+.onboard-card .choice .title { color: #16305a; }
+.onboard-card .choice .desc { color: #46688c; }
+.onboard-card .btn--ghost { border-color: #b5d9f0; color: #2c5a80; background: rgba(255,255,255,.7); }
+.onboard-card .field input { background: #f2f8fd; color: #14314f; border: 1px solid #cfe6f8; }
+.onboard-card .field input:focus { border-color: #1d9fd8; }
+.onboard-card .field input::placeholder { color: #8aa5bf; }
+
 .choice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
 .choice {
   text-align: left; padding: 18px; border-radius: var(--radius);

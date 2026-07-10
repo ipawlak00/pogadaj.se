@@ -1,12 +1,13 @@
 import { el, topbar, toast, navigate } from '../ui.js';
 import { store } from '../state.js';
 import { auth } from '../services/auth.js';
+import { speech } from '../services/speech.js';
 
 const GOALS = [
-  { id: 'work',   emoji: '', title: 'Praca / kariera',  desc: 'Rozmowy, maile, spotkania po angielsku.' },
-  { id: 'travel', emoji: '', title: 'Podróże',          desc: 'Dogadać się wszędzie na świecie.' },
-  { id: 'exam',   emoji: '', title: 'Egzamin / matura',  desc: 'Konkretne przygotowanie do testu.' },
-  { id: 'fun',    emoji: '', title: 'Dla siebie',        desc: 'Filmy, gry, znajomi — czysta frajda.' },
+  { id: 'work',   title: 'Praca / kariera',  desc: 'Rozmowy, maile, spotkania po angielsku.' },
+  { id: 'travel', title: 'Podróże',          desc: 'Dogadać się wszędzie na świecie.' },
+  { id: 'exam',   title: 'Egzamin / matura', desc: 'Konkretne przygotowanie do testu.' },
+  { id: 'fun',    title: 'Dla siebie',       desc: 'Filmy, gry, znajomi — czysta frajda.' },
 ];
 
 const LEVELS = [
@@ -17,6 +18,14 @@ const LEVELS = [
   { id: 'C1', title: 'C1 — Zaawansowany', desc: 'Płynnie, poleruję detale.' },
 ];
 
+// Izabela mówi w PIERWSZEJ osobie — to ona rozmawia z uczniem, nikt o niej nie opowiada
+const BUBBLES = [
+  'Cześć! Jestem Izabela — Twoja kosmiczna nauczycielka angielskiego. A Ty? Zdradź mi swoje imię!',
+  'Do czego potrzebujesz angielskiego? Dzięki temu dobiorę Ci tematy rozmów.',
+  'Jak oceniasz swój poziom? Tylko bez stresu — i tak sprawdzę w praktyce.',
+  'Ostatni krok! Zapisz postępy, żebym Cię pamiętała następnym razem.',
+];
+
 export function renderOnboarding(mount) {
   let step = 0;          // 0=imię, 1=cel, 2=poziom, 3=login
   const data = { name: '', goal: null, level: null };
@@ -25,14 +34,17 @@ export function renderOnboarding(mount) {
   mount.append(topbar(), screen);
   draw();
 
+  // Izabela przedstawia się głosem (raz, na wejściu); wyjście z ekranu = cisza
+  speech.speak('Cześć! Jestem Izabela, Twoja kosmiczna nauczycielka angielskiego. A Ty? Jak masz na imię?', { lang: 'pl-PL' });
+  window.addEventListener('hashchange', () => speech.stopSpeaking(), { once: true });
+
   function progressBar() {
-    return el('div.progress', { style: 'margin:8px 0 28px' }, [ el('i', { style: `width:${(step / 4) * 100 + 10}%` }) ]);
+    return el('div.progress', { style: 'margin:4px 0 20px' }, [ el('i', { style: `width:${(step / 4) * 100 + 10}%` }) ]);
   }
 
   function choiceGrid(items, selectedId, onPick) {
     return el('div.choice-grid', {}, items.map((it) =>
       el(`button.choice${selectedId === it.id ? '.selected' : ''}`, { onclick: () => onPick(it.id) }, [
-        it.emoji ? el('div.emoji', { text: it.emoji }) : null,
         el('div.title', { text: it.title }),
         el('div.desc', { text: it.desc }),
       ])
@@ -40,66 +52,69 @@ export function renderOnboarding(mount) {
   }
 
   function draw() {
-    screen.replaceChildren();
-    screen.append(progressBar());
+    // Lewa strona: Izabela (patrzy na ucznia) + dymek z jej kwestią do tego kroku
+    const izaSide = el('div.phonetic-iza', {}, [
+      el('img', { src: 'assets/scenes/scene-05.jpg', alt: 'Izabela',
+        onerror: function () { this.onerror = null; this.src = 'assets/izabela/izabela-lesson.png'; } }),
+      el('div.phonetic-iza__bubble', { text: BUBBLES[step] }),
+    ]);
+
+    const card = el('div.onboard-card.stack', { style: 'gap:6px' });
+    card.append(progressBar());
 
     if (step === 0) {
       const nameInput = el('input', { type: 'text', placeholder: 'np. Kasia', value: data.name, maxlength: '30', autocomplete: 'given-name' });
       const goNext = () => {
         const v = nameInput.value.trim();
-        if (!v) { toast('Podaj imię — Izabela chce wiedzieć, jak się do Ciebie zwracać', 'error'); return; }
+        if (!v) { toast('Zdradź imię — chcę wiedzieć, jak się do Ciebie zwracać', 'error'); return; }
         data.name = v; step = 1; draw();
       };
       nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') goNext(); });
-      screen.append(el('div.stack', { style: 'max-width:460px;margin:0 auto' }, [
-        el('h1.display', { text: 'Jak masz na imię?' }),
-        el('p.muted', { text: 'Izabela będzie zwracać się do Ciebie po imieniu — w końcu budujecie ekipę.' }),
-        el('div.field', {}, [nameInput]),
-        el('div.row', { style: 'justify-content:flex-end;margin-top:24px' }, [
+      card.append(
+        el('h2.display', { style: 'margin:0', text: 'Jak masz na imię?' }),
+        el('div.field', { style: 'margin-top:12px' }, [nameInput]),
+        el('div.row', { style: 'justify-content:flex-end;margin-top:18px' }, [
           el('button.btn.btn--primary', { onclick: goNext }, ['Dalej']),
         ]),
-      ]));
+      );
       setTimeout(() => nameInput.focus(), 50);
     }
 
     if (step === 1) {
-      screen.append(el('div.stack', {}, [
-        el('h1.display', { text: 'Do czego potrzebujesz angielskiego?' }),
-        el('p.muted', { text: 'Dzięki temu Izabela dobierze tematy rozmów.' }),
+      card.append(
+        el('h2.display', { style: 'margin:0 0 12px', text: 'Do czego potrzebujesz angielskiego?' }),
         choiceGrid(GOALS, data.goal, (id) => { data.goal = id; draw(); }),
-        el('div.row', { style: 'justify-content:space-between;margin-top:24px' }, [
+        el('div.row', { style: 'justify-content:space-between;margin-top:18px' }, [
           el('button.btn.btn--ghost', { onclick: () => { step = 0; draw(); } }, ['Wstecz']),
           el('button.btn.btn--primary', { disabled: !data.goal, onclick: () => { step = 2; draw(); } }, ['Dalej']),
         ]),
-      ]));
+      );
     }
 
     if (step === 2) {
-      screen.append(el('div.stack', {}, [
-        el('h1.display', { text: 'Jak oceniasz swój poziom?' }),
-        el('p.muted', { text: 'Bez stresu — Izabela i tak sprawdzi to w praktyce.' }),
+      card.append(
+        el('h2.display', { style: 'margin:0 0 12px', text: 'Jak oceniasz swój poziom?' }),
         choiceGrid(LEVELS, data.level, (id) => { data.level = id; draw(); }),
-        el('div.row', { style: 'justify-content:space-between;margin-top:24px' }, [
+        el('div.row', { style: 'justify-content:space-between;margin-top:18px' }, [
           el('button.btn.btn--ghost', { onclick: () => { step = 1; draw(); } }, ['Wstecz']),
           el('button.btn.btn--primary', { disabled: !data.level, onclick: () => { step = 3; draw(); } }, ['Dalej']),
         ]),
-      ]));
+      );
     }
 
     if (step === 3) {
-      screen.append(el('div.stack.center', { style: 'max-width:420px;margin:4vh auto' }, [
-        el('h1.display', { text: 'Ostatni krok' }),
-        el('p.muted', { text: 'Zaloguj się, żeby zapisać postępy i swój profil fonetyczny.' }),
-        el('button.btn.btn--block.btn--lg', {
-          style: 'background:#fff;color:#1a1a1a',
-          onclick: handleLogin,
-        }, ['Zaloguj się przez Google']),
-        el('button.btn.btn--ghost.btn--block', { onclick: handleLogin }, ['Wejdź jako gość (na próbę)']),
-        el('div.row', { style: 'justify-content:center;margin-top:8px' }, [
+      card.append(
+        el('h2.display', { style: 'margin:0', text: 'Ostatni krok' }),
+        el('p', { style: 'margin:8px 0 14px;color:#46688c', text: 'Zapisz postępy i swój profil wymowy.' }),
+        el('button.btn.btn--block.btn--lg', { style: 'background:#fff;color:#16305a;border:2px solid #cfe6f8', onclick: handleLogin }, ['Zaloguj się przez Google']),
+        el('button.btn.btn--ghost.btn--block', { style: 'margin-top:10px', onclick: handleLogin }, ['Wejdź jako gość (na próbę)']),
+        el('div.row', { style: 'justify-content:center;margin-top:10px' }, [
           el('button.btn.btn--ghost', { onclick: () => { step = 2; draw(); } }, ['Wstecz']),
         ]),
-      ]));
+      );
     }
+
+    screen.replaceChildren(el('div.onboard-layout', {}, [izaSide, card]));
   }
 
   async function handleLogin() {
