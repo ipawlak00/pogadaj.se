@@ -538,11 +538,18 @@ body:not([data-route="welcome"]) .mic-btn {
 /* ---------- Toasty ---------- */
 .toasts { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 8px; }
 .toast {
-  background: var(--bg-600); border: 1px solid var(--surface-border);
-  padding: 12px 20px; border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-card); animation: toastIn .25s ease;
+  background: #ffffff; color: #14314f;
+  border: 2px solid #16305a; border-left-width: 8px; border-left-color: #1d9fd8;
+  padding: 12px 18px; border-radius: 10px;
+  font-weight: 600; font-size: .95rem;
+  max-width: min(92vw, 560px);
+  box-shadow: 0 12px 30px rgba(6, 25, 55, .35);
+  animation: toastIn .25s ease;
 }
-.toast--error { border-color: var(--error); }
+.toast--error {
+  border-color: #8f1d1d; border-left-color: #d23c37;
+  background: #fff5f5; color: #7a1330;
+}
 @keyframes toastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; } }
 
 /* ---------- Ekran logowania / powitania ---------- */
@@ -814,6 +821,12 @@ body.on-lessons .cosmos { display: none; }
 }
 .lessons-fs__top .logo { font-size: 1.5rem; text-shadow: 0 2px 10px rgba(0,0,0,.5); }
 .lessons-fs__tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.lessons-fs__tools .btn {
+  background: radial-gradient(ellipse at center, #ffffff 25%, #e3eef9 70%, #c4d8ea 100%);
+  color: #16305a; border: 2px solid #16305a; border-radius: 10px;
+  font-size: .85rem; padding: 8px 14px; backdrop-filter: none;
+}
+.lessons-fs__tools .btn:hover { box-shadow: 0 6px 16px rgba(6,25,55,.4); }
 .account-pill { background: rgba(255,255,255,.92); color: #16305a; border-color: #aee0f5; font-weight: 600; }
 .lessons-fs__tools .btn { font-size: .82rem; padding: 8px 14px; background: rgba(10,14,24,.6); backdrop-filter: blur(6px); }
 
@@ -900,13 +913,13 @@ body.on-lessons .cosmos { display: none; }
 
 /* Lekcja próbna: DUŻY kafelek + zegarek z pozostałym czasem pod spodem */
 .trial-wrap {
-  position: absolute; left: 7%; top: 52%; transform: translateY(-50%); z-index: 4;
+  position: absolute; left: 27%; top: 44%; transform: translate(-50%, -50%); z-index: 4;
   display: flex; flex-direction: column; align-items: center; gap: 14px;
 }
 /* telefon/pion: Izabela i kafelek na ŚRODKU, nie przy lewej krawędzi */
 @media (max-width: 760px), (orientation: portrait) {
   .lessons-fs { background-size: cover; background-position: 50% 30%; }
-  .trial-wrap { left: 50%; top: 62%; transform: translate(-50%, -50%); }
+  .trial-wrap { left: 50%; top: 62%; }
 }
 .trial-reset {
   margin-top: 2px; background: none; border: none; cursor: pointer;
@@ -917,7 +930,7 @@ body.on-lessons .cosmos { display: none; }
 .trial-reset:hover { opacity: 1; }
 .trial-tile {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-  width: clamp(190px, 20vw, 260px); padding: 30px 20px; cursor: pointer;
+  width: clamp(210px, 22vw, 300px); padding: 34px 22px; cursor: pointer;
   color: #14314f; text-align: center;
   background: radial-gradient(ellipse at center, #ffffff 25%, #e3eef9 62%, #b9d2e8 100%);
   border: 3px solid #16305a; border-radius: 12px;
@@ -925,7 +938,7 @@ body.on-lessons .cosmos { display: none; }
   transition: transform .18s ease, box-shadow .18s ease;
 }
 .trial-tile:hover { transform: scale(1.05); box-shadow: 0 0 26px rgba(120,190,255,.5), 0 18px 40px rgba(6,25,55,.55); }
-.trial-tile__num { font-family: var(--font-display); font-weight: 700; font-size: 2.6rem; line-height: 1; color: #16305a; }
+.trial-tile__num { font-family: var(--font-display); font-weight: 700; font-size: 3rem; line-height: 1; color: #16305a; }
 .trial-tile__name { font-family: var(--font-display); font-size: 1.05rem; color: #24486e; font-weight: 600; }
 .trial-tile.is-locked { cursor: default; opacity: .85; filter: saturate(.6); }
 .trial-tile.is-locked:hover { transform: none; }
@@ -979,4 +992,90 @@ body.on-lessons .cosmos { display: none; }
   .orbit-pos-2 { top: 50%; }
   .orbit-pos-3 { top: 66%; }
   .lessons-fs__desk { width: 88%; bottom: 5%; }
+}
+
+
+/* ============================================================
+   Finał triala (koty), pełna wersja (tablica) i historia lekcji
+   ============================================================ */
+.lessons-fs--cats {
+  background: url('../assets/scenes/scene-01.jpg') center 32% / cover no-repeat;
+}
+.lessons-fs__bubble--end { left: 50%; top: 10%; transform: translateX(-50%); width: min(92%, 560px); cursor: default; }
+
+/* Pełna wersja: Izabela przy tablicy (scene-06); czas wyświetlany NA tablicy */
+.home-fs {
+  position: fixed; inset: 0; z-index: 50;
+  background: url('../assets/scenes/scene-06.jpg') center 30% / cover no-repeat #0c1018;
+  font-family: var(--font-body);
+}
+.home-board {
+  position: absolute; left: 27%; top: 34%; transform: translate(-50%, -50%);
+  width: min(38%, 430px); text-align: center; color: #dff4ff;
+  background: rgba(8, 26, 34, .55); border: 2px solid rgba(120, 230, 255, .55);
+  border-radius: 12px; padding: 18px 20px;
+  box-shadow: 0 0 30px rgba(90, 220, 255, .25), inset 0 0 24px rgba(90, 220, 255, .12);
+  backdrop-filter: blur(2px);
+}
+.home-board__title { font-family: var(--font-display); font-size: .95rem; letter-spacing: .04em; text-transform: uppercase; color: #9fe6ff; }
+.home-board__time { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 4.5vw, 3.2rem); line-height: 1.1; color: #eafcff; text-shadow: 0 0 18px rgba(120,230,255,.6); }
+.home-board__sub { color: #bfeefc; font-size: .9rem; margin-bottom: 10px; }
+.home-board__bar { height: 14px; border-radius: 8px; background: rgba(255,255,255,.18); overflow: hidden; border: 1px solid rgba(120,230,255,.5); }
+.home-board__bar > i { display: block; height: 100%; background: linear-gradient(90deg, #4f86c6, #7fd6ff); }
+.home-board__pct { margin-top: 6px; font-size: .8rem; color: #9fe6ff; }
+
+.home-history-btn { position: absolute; right: 6%; top: 42%; z-index: 4; }
+.home-actions {
+  position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); z-index: 4;
+  display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+}
+
+/* Historia: Izabela przy komputerze (scene-08), panel wysuwa się z prawej */
+.history-fs {
+  position: fixed; inset: 0; z-index: 50;
+  background: url('../assets/scenes/scene-08.jpg') center 30% / cover no-repeat #0c1018;
+  font-family: var(--font-body);
+}
+.history-open-btn { position: absolute; left: 55%; top: 55%; z-index: 4; }
+.history-panel {
+  position: absolute; right: 0; top: 0; bottom: 0; width: min(92vw, 380px);
+  background: rgba(255,255,255,.96); border-left: 3px solid #16305a;
+  padding: 74px 18px 18px; overflow-y: auto; z-index: 5;
+  transform: translateX(105%); transition: transform .35s ease;
+  box-shadow: -14px 0 34px rgba(6,25,55,.35);
+}
+.history-panel.show { transform: translateX(0); }
+.history-list { display: flex; flex-direction: column; gap: 10px; }
+.history-item {
+  background: radial-gradient(ellipse at center, #ffffff 30%, #eaf3fb 75%, #d9e8f4 100%);
+  border: 2px solid #16305a; border-radius: 10px; padding: 10px 12px;
+}
+.history-item__head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.history-item__kind { font-family: var(--font-display); font-weight: 700; color: #16305a; }
+.history-item__meta { font-size: .78rem; color: #5b7f9e; }
+.history-item__sum { margin: 6px 0 0; font-size: .88rem; color: #2c4a68; }
+
+/* Rożek „zostaw opinię Izabeli!" + okienko opinii */
+.feedback-corner {
+  position: fixed; right: 14px; bottom: 14px; z-index: 90;
+  background: rgba(255,255,255,.95); color: #16305a;
+  border: 2px solid #16305a; border-radius: 12px 12px 2px 12px;
+  padding: 7px 12px; font-size: .8rem; font-weight: 600; cursor: pointer;
+  box-shadow: 0 8px 20px rgba(6,25,55,.35);
+}
+.feedback-corner:hover { box-shadow: 0 10px 24px rgba(6,25,55,.45), 0 0 14px rgba(120,190,255,.4); }
+.feedback-box { text-align: left; }
+.feedback-text {
+  width: 100%; min-height: 140px; resize: vertical;
+  border: 2px solid #cfe6f8; border-radius: 10px; padding: 12px 14px;
+  font-family: var(--font-body); font-size: .95rem; color: #14314f;
+  background: #f7fbff; margin-bottom: 12px;
+}
+.feedback-text::placeholder { color: #8aa5bf; font-style: italic; transform: skewX(-6deg); }
+.feedback-text:focus { outline: none; border-color: #1d9fd8; }
+
+@media (max-width: 760px), (orientation: portrait) {
+  .home-board { left: 50%; top: 26%; width: 88%; }
+  .home-history-btn { right: 50%; transform: translateX(50%); top: auto; bottom: 20%; }
+  .history-open-btn { left: 50%; transform: translateX(-50%); top: 60%; }
 }

@@ -10,6 +10,8 @@ import { renderWelcome } from './screens/welcome.js';
 import { renderOnboarding } from './screens/onboarding.js';
 import { renderIntro } from './screens/intro.js';
 import { renderPhonetic } from './screens/phonetic.js';
+import { renderHome } from './screens/home.js';
+import { renderHistory } from './screens/history.js';
 import { renderLessons } from './screens/lessons.js';
 import { renderConversation } from './screens/conversation.js';
 
@@ -34,6 +36,12 @@ function resolve() {
       if (!st.onboarding.completed) return redirect('#/onboarding');
       return renderPhonetic(appEl);
     case '#/lessons': return guarded(st, () => renderLessons(appEl));
+    case '#/home':
+      if (!st.progress.fullUnlocked) return redirect('#/');
+      return guarded(st, () => renderHome(appEl));
+    case '#/history':
+      if (!st.progress.fullUnlocked) return redirect('#/');
+      return guarded(st, () => renderHistory(appEl));
     case '#/':
     default:
       // Kolejność: konto → film → cel/poziom → paszport → lekcje
@@ -41,7 +49,7 @@ function resolve() {
       if (!st.progress.introSeen) return redirect('#/intro');
       if (!st.onboarding.completed) return redirect('#/onboarding');
       if (!st.phonetic.completed) return redirect('#/phonetic');
-      return renderLessons(appEl);
+      return st.progress.fullUnlocked ? renderHome(appEl) : renderLessons(appEl);
   }
 }
 

@@ -152,6 +152,8 @@ const stubProvider = {
 
   // Lekcja AI niedostępna bez Gemini — sygnał do fallbacku na proste kroki
   async lessonReply() { return { say: '', lang: 'pl', suggestions: [], done: true, unsupported: true }; },
+  async reactToName() { return null; },
+  async summarizeLesson() { return null; },
   async transcribe() { return null; },     // brak Gemini → użyjemy rozpoznawania przeglądarki
 
   // Analiza wymowy niedostępna bez Gemini → sygnał do fallbacku (Web Speech)
@@ -286,6 +288,28 @@ Zwróć JSON:
     }
   },
 
+  // Żywa, personalna reakcja Izabeli na imię ucznia (krótkie zdanie)
+  async reactToName(name) {
+    try {
+      const sys = IZABELA.systemPrompt;
+      const contents = [{ role: 'user', parts: [{ text: `Uczeń właśnie przedstawił się imieniem "${name}". Zareaguj JEDNYM krótkim zdaniem po polsku (max 14 słów), luźno i po swojemu, nawiąż jakoś do tego konkretnego imienia. Jeśli imię jest takie samo jak Twoje (Izabela), autentycznie i entuzjastycznie się podjaraj. NIE zdrabniaj imienia. Zwróć JSON: {"say":"..."}` }] }];
+      const r = await this._callContents(contents, sys, CONFIG.GEMINI.fastModel);
+      return (r.say || '').trim() || null;
+    } catch (e) { return null; }
+  },
+
+  // Krótkie streszczenie rozmowy (do historii lekcji)
+  async summarizeLesson(chatText) {
+    try {
+      const sys = 'Streszczasz rozmowę z lekcji angielskiego. Zwracasz wyłącznie JSON.';
+      const contents = [{ role: 'user', parts: [{ text: `Streść PO POLSKU w 1-2 zdaniach, o czym była ta rozmowa ucznia z Izabelą i czego uczeń się uczył. Bez ozdobników. Rozmowa:
+${String(chatText).slice(0, 4000)}
+Zwróć JSON: {"summary":"..."}` }] }];
+      const r = await this._callContents(contents, sys, CONFIG.GEMINI.fastModel);
+      return (r.summary || '').trim() || null;
+    } catch (e) { return null; }
+  },
+
   // Transkrypcja mowy ucznia — Gemini słucha nagrania i wyłapuje MIKS PL+EN
   async transcribe({ base64, mimeType }) {
     try {
@@ -313,4 +337,6 @@ export const ai = {
   buildProfile: (...a) => provider.buildProfile(...a),
   lessonReply: (...a) => provider.lessonReply(...a),
   transcribe: (...a) => provider.transcribe(...a),
+  reactToName: (...a) => provider.reactToName(...a),
+  summarizeLesson: (...a) => provider.summarizeLesson(...a),
 };

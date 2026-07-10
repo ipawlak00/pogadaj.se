@@ -1,4 +1,4 @@
-import { el, topbar, toast, navigate } from '../ui.js';
+import { el, topbar, toast, navigate, feedbackCorner } from '../ui.js';
 import { store } from '../state.js';
 import { speech } from '../services/speech.js';
 import { ai } from '../services/ai.js';
@@ -18,9 +18,10 @@ export function renderPhonetic(mount) {
 
   // Izabela najpierw tłumaczy, PO CO ten cały paszport — bez tego to tylko test
   let introSpoken = false;
+  const selfOops = pick(['sama często kaleczę', 'sama robię błędy', 'samej często mi się myli', 'sama się czasem mieszam']);
   const INTRO = 'Zanim zaczniemy, wyjaśnię o co mi chodzi. Chcę usłyszeć, jaki masz akcent, ' +
     'żeby lepiej rozumieć Twoje wypowiedzi. Każdy z nas mówi trochę inaczej i nie ma się czego wstydzić. ' +
-    'Przy mnie nie masz czego się bać, ja sama często kaleczę, ale nigdy się nie poddaję! ' +
+    'Przy mnie nie masz czego się bać, ja ' + selfOops + ', ale nigdy się nie poddaję! ' +
     'Powtórz za mną kilka słów i tyle.';
 
   // Dymek pod Izabelą pokazuje to, co właśnie mówi (nie statyczny tekst)
@@ -33,7 +34,7 @@ export function renderPhonetic(mount) {
   }
 
   const screen = el('div.fade-in');
-  mount.append(topbar(), screen);
+  mount.append(topbar(), screen, feedbackCorner('test fonetyczny'));
   draw();
 
   function speakWord(rate = 0.85) { speech.speak(words[idx].word, { lang: 'en-US', rate }); }
@@ -243,7 +244,7 @@ export function renderPhonetic(mount) {
             ])
           : el('p', { style: 'margin-top:8px', text: 'Nie mam się do czego przyczepić. Aż podejrzane...' }),
         el('div.spacer-sm'),
-        el('button.btn.btn--primary.btn--lg', { onclick: () => navigate('#/lessons') }, ['Dobra, dawaj!']),
+        el('button.btn.btn--primary.btn--lg', { onclick: () => navigate('#/lessons') }, ['Gadamy!']),
       ]),
     ]));
     speech.speak(spokenAll, { lang: 'pl-PL' });

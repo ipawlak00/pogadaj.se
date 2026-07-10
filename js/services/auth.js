@@ -37,14 +37,23 @@ const lastAccount = () => { try { return localStorage.getItem(LAST_KEY) || ''; }
 const rememberAccount = (email) => { try { localStorage.setItem(LAST_KEY, email); } catch {} };
 
 export const auth = {
-  // Nowe konto: imię + email + hasło. Świeże konto = CZYSTY start
-  // (zero odziedziczonych postępów, historii lekcji i paszportu z tego urządzenia).
-  async register({ name, email, password }) {
-    const d = await call('/auth/register', { name, email, password });
+  // Nowe konto: email + hasło (imię Izabela pozna po filmie).
+  // Świeże konto = CZYSTY start (zero odziedziczonych postępów z urządzenia).
+  async register({ email, password }) {
+    const d = await call('/auth/register', { name: '', email, password });
     store.reset();
     rememberAccount(d.email);
-    store.setUser({ name: d.name, email: d.email, token: d.token, provider: 'pogadaj' });
+    store.setUser({ id: d.id || '', name: d.name || '', email: d.email, token: d.token, provider: 'pogadaj' });
     return d;
+  },
+
+  // Imię ustawiane PO filmie — zapis na serwerze, a lokalnie zawsze
+  async setName(name) {
+    const u = store.get().user || {};
+    store.patchKey('user', { ...u, name });
+    if (!u.token || !u.email) return;
+    try { await call('/auth/setname', { email: u.email, token: u.token, name }); }
+    catch (e) { console.warn('[setname]', e); /* lokalnie już ustawione */ }
   },
 
   // Logowanie na istniejące konto. Przełączenie na INNE konto niż ostatnio
@@ -54,7 +63,7 @@ export const auth = {
     const prev = store.get().user?.email || lastAccount();
     if (prev && prev !== d.email) store.reset();
     rememberAccount(d.email);
-    store.setUser({ name: d.name, email: d.email, token: d.token, provider: 'pogadaj' });
+    store.setUser({ id: d.id || '', name: d.name, email: d.email, token: d.token, provider: 'pogadaj' });
     return d;
   },
 

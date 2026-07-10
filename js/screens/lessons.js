@@ -4,6 +4,7 @@ import { auth } from '../services/auth.js';
 import { speech } from '../services/speech.js';
 import { TRIAL_MINUTES } from '../data/lessons.js';
 import { greetingHi, pushLine, minutesWord } from '../data/phrases.js';
+import { openFeedback, feedbackCorner } from '../ui.js';
 
 // Trzy pasma poziomów — wpływają na temat i trudność lekcji próbnej
 const LEVEL_BANDS = [
@@ -53,6 +54,13 @@ export function renderLessons(mount) {
   function draw() {
     const level = store.get().onboarding.level;
     const left = remainingMinutes();
+
+    // Pełna wersja odblokowana → ten ekran już nie obowiązuje
+    if (store.get().progress.fullUnlocked) { navigate('#/home'); return; }
+
+    // Czas próbny wykorzystany → scena z kotami i pytanie o dalszą naukę
+    if (left <= 0) { drawTrialEnd(); return; }
+
     const bt = bubbleText(left);
     const spoken = `${bt.hi} ${bt.body}`;
 
@@ -114,6 +122,7 @@ export function renderLessons(mount) {
       ]),
       bubble,
       el('div.trial-wrap', {}, [tile, clock]),
+      feedbackCorner('ekran lekcji próbnej'),
     );
 
     // Izabela mówi to, co w dymku (raz na wejście)
@@ -121,6 +130,47 @@ export function renderLessons(mount) {
 
     // Bez wybranego poziomu — najpierw pytamy, żeby rozmowa nie była nudna ani za trudna
     if (!level) drawPicker();
+  }
+
+  // Po wykorzystaniu triala: bliskie, szerokie ujęcie z kotami + decyzja
+  function drawTrialEnd() {
+    screen.classList.add('lessons-fs--cats');
+    const name = (store.get().user?.name || '').trim();
+    const ask = `I co myślisz${name ? ', ' + name : ''}? Chcesz się uczyć ze mną dalej?`;
+
+    const bubble = el('div.lessons-fs__bubble.lessons-fs__bubble--end', {}, [
+      el('div.lessons-fs__bubble-hi', { id: 'end-hi', text: ask }),
+      el('div.row', { id: 'end-actions', style: 'gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center' }, [
+        el('button.btn.btn--primary', { onclick: yes }, ['Oczywiście, że tak!']),
+        el('button.btn.btn--sq', { onclick: () => openFeedback('koniec lekcji próbnej') }, ['Wystaw opinię dla autora!']),
+      ]),
+    ]);
+
+    function yes() {
+      const line = 'Wiedziałam! W takim razie rozgość się na moim statku. Mam nadzieję, że zostaniesz ze mną na dłużej.';
+      document.getElementById('end-hi').textContent = line;
+      speech.speak('Wiedziałam!... ' + line.slice(11), { lang: 'pl-PL' });
+      const actions = document.getElementById('end-actions');
+      actions.replaceChildren(
+        el('button.btn.btn--primary.btn--lg', {
+          onclick: () => { store.patchKey('progress', { fullUnlocked: true }); navigate('#/home'); },
+        }, ['Przejdź na pełną wersję']),
+      );
+    }
+
+    const u = store.get().user;
+    screen.replaceChildren(
+      el('header.lessons-fs__top', {}, [
+        el('div.logo', { html: 'pogadaj<span class="dot">.</span><span class="se">se</span>' }),
+        el('div.lessons-fs__tools', {}, [
+          u ? el('span.pill.account-pill', { title: u.email || '', text: u.name || u.email || '' }) : null,
+          el('button.btn.btn--ghost', { onclick: () => { auth.signOut(); location.hash = '#/'; location.reload(); } }, ['Wyloguj']),
+        ]),
+      ]),
+      bubble,
+      feedbackCorner('ekran po lekcji próbnej'),
+    );
+    speech.speak(ask, { lang: 'pl-PL' });
   }
 
   function drawPicker() {

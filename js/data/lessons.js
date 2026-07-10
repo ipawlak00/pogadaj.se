@@ -229,6 +229,29 @@ export const setForLevel = (lvl) =>
   ['A1', 'A2'].includes(lvl) ? 'basic' : ['B1', 'B2'].includes(lvl) ? 'mid' : lvl ? 'high' : 'basic';
 export const getLessonsForLevel = (lvl) => LESSON_SETS[setForLevel(lvl)];
 
+// Portretowe kadry Izabeli do widoku lekcji (blisko, od pasa w górę)
+export const LESSON_PORTRAITS = ['assets/scenes/scene-05.jpg', 'assets/scenes/scene-09.jpg', 'assets/scenes/scene-10.jpg'];
+
+// Pełna wersja: miesięczny budżet rozmów (w minutach)
+export const FULL_MONTH_MINUTES = 15 * 60;   // 15 godzin
+
+export function getFullLesson(level) {
+  const band = setForLevel(level);
+  const base = LESSON_SETS[band][0];
+  return {
+    id: 'full',
+    num: 1,
+    title: 'Lekcja z Izabelą',
+    badge: 'full',
+    desc: 'Swobodna rozmowa dopasowana do Twojego poziomu.',
+    type: 'lesson',
+    scene: null,                                  // portret losowany w lekcji
+    aiTopic: TRIAL_TOPICS[band],
+    intro: base.intro,
+    steps: base.steps,
+  };
+}
+
 export const getLesson = (id) =>
   [...LESSONS, ...LESSONS_MID, ...LESSONS_HIGH].find((l) => l.id === id);
 

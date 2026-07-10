@@ -22,6 +22,8 @@ const TTS_API = 'https://texttospeech.googleapis.com';
 
 const ALLOW_ORIGINS = [
   'https://ipawlak00.github.io',
+  'https://pogadaj.se',
+  'https://www.pogadaj.se',
   'http://localhost:8000',
   'http://127.0.0.1:8000',
 ];
@@ -60,6 +62,7 @@ async function fsGetUser(email) {
   const d = await r.json();
   const f = d.fields || {};
   return {
+    id: f.id?.stringValue || '',
     name: f.name?.stringValue || '',
     email: f.email?.stringValue || '',
     salt: f.salt?.stringValue || '',
@@ -71,6 +74,7 @@ async function fsPutUser(u) {
   const [token, project] = await Promise.all([gcpToken(), gcpProject()]);
   const url = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/users/${userDocId(u.email)}`;
   const body = { fields: {
+    id: { stringValue: u.id || '' },
     name: { stringValue: u.name },
     email: { stringValue: u.email },
     salt: { stringValue: u.salt },
@@ -98,6 +102,15 @@ function makeToken(email) {
   return Buffer.from(`${payload}|${sig}`).toString('base64url');
 }
 
+function verifyToken(tok, email) {
+  try {
+    const [em, exp, sig] = Buffer.from(String(tok), 'base64url').toString().split('|');
+    if (em !== email || Date.now() > Number(exp)) return false;
+    const good = crypto.createHmac('sha256', sessionSecret()).update(`${em}|${exp}`).digest('hex');
+    return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(good));
+  } catch { return false; }
+}
+
 // Hasło: min 8 znaków, wielka litera, znak specjalny
 function passwordProblem(p) {
   if (typeof p !== 'string' || p.length < 8) return 'Hasło musi mieć co najmniej 8 znaków.';
@@ -106,20 +119,51 @@ function passwordProblem(p) {
   return null;
 }
 
+// Opinia użytkownika — zapis do Firestore (kolekcja feedback);
+// przekierowanie na maila izabela@izabelacode.pl można dopiąć po podaniu SMTP.
+async function fsAddFeedback(entry) {
+  const [token, project] = await Promise.all([gcpToken(), gcpProject()]);
+  const url = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/feedback`;
+  const body = { fields: {
+    to: { stringValue: 'izabela@izabelacode.pl' },
+    email: { stringValue: entry.email || '' },
+    name: { stringValue: entry.name || '' },
+    page: { stringValue: entry.page || '' },
+    text: { stringValue: entry.text || '' },
+    createdAt: { stringValue: new Date().toISOString() },
+  } };
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error('Firestore feedback ' + r.status + ': ' + (await r.text()).slice(0, 200));
+}
+
 async function handleAuth(path, body, res) {
   const email = String(body.email || '').trim().toLowerCase();
   const password = String(body.password || '');
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'Podaj poprawny adres email.' });
 
   if (path === '/auth/register') {
-    const name = String(body.name || '').trim().slice(0, 40);
-    if (!name) return res.status(400).json({ error: 'Podaj imię.' });
+    const name = String(body.name || '').trim().slice(0, 40);   // imię dołącza po filmie
     const pp = passwordProblem(password);
     if (pp) return res.status(400).json({ error: pp });
     if (await fsGetUser(email)) return res.status(409).json({ error: 'Konto z tym adresem już istnieje. Zaloguj się.' });
     const salt = crypto.randomBytes(16).toString('hex');
-    await fsPutUser({ name, email, salt, hash: hashPassword(password, salt) });
-    return res.status(200).json({ ok: true, name, email, token: makeToken(email) });
+    const id = crypto.randomUUID();                       // unikalne ID użytkownika
+    await fsPutUser({ id, name, email, salt, hash: hashPassword(password, salt) });
+    return res.status(200).json({ ok: true, id, name, email, token: makeToken(email) });
+  }
+
+  if (path === '/auth/setname') {
+    const name = String(body.name || '').trim().slice(0, 40);
+    if (!name) return res.status(400).json({ error: 'Podaj imię.' });
+    if (!verifyToken(body.token, email)) return res.status(401).json({ error: 'Sesja wygasła. Zaloguj się ponownie.' });
+    const u = await fsGetUser(email);
+    if (!u) return res.status(404).json({ error: 'Nie ma takiego konta.' });
+    await fsPutUser({ ...u, name });
+    return res.status(200).json({ ok: true, name });
   }
 
   if (path === '/auth/login') {
@@ -127,7 +171,7 @@ async function handleAuth(path, body, res) {
     if (!u || hashPassword(password, u.salt) !== u.hash) {
       return res.status(401).json({ error: 'Zły email albo hasło.' });
     }
-    return res.status(200).json({ ok: true, name: u.name, email: u.email, token: makeToken(email) });
+    return res.status(200).json({ ok: true, id: u.id, name: u.name, email: u.email, token: makeToken(email) });
   }
 
   return res.status(404).json({ error: 'unknown auth path' });
@@ -148,8 +192,22 @@ exports.geminiProxy = async (req, res) => {
 
   const path = (req.path || '').replace(/^\/+/, '/');
 
+  // Opinie użytkowników
+  if (path === '/feedback') {
+    try {
+      const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+      const text = String(body.text || '').trim().slice(0, 4000);
+      if (!text) return res.status(400).json({ error: 'Pusta opinia.' });
+      await fsAddFeedback({ email: String(body.email || '').slice(0, 120), name: String(body.name || '').slice(0, 60), page: String(body.page || '').slice(0, 60), text });
+      return res.status(200).json({ ok: true });
+    } catch (e) {
+      console.error('[feedback]', e);
+      return res.status(500).json({ error: 'Nie udało się zapisać opinii.' });
+    }
+  }
+
   // Konta użytkowników
-  if (path === '/auth/register' || path === '/auth/login') {
+  if (path === '/auth/register' || path === '/auth/login' || path === '/auth/setname') {
     try {
       const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
       return await handleAuth(path, body, res);

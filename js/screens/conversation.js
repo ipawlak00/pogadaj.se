@@ -2,22 +2,47 @@ import { el, topbar, toast, navigate } from '../ui.js';
 import { store } from '../state.js';
 import { speech, isEnglishText } from '../services/speech.js';
 import { ai } from '../services/ai.js';
-import { getLesson, getTrialLesson, SCENES, TRIAL_MINUTES } from '../data/lessons.js';
+import { getLesson, getTrialLesson, getFullLesson, SCENES, TRIAL_MINUTES, FULL_MONTH_MINUTES, LESSON_PORTRAITS } from '../data/lessons.js';
 import { lessonHello } from '../data/phrases.js';
 
 // Lekcja = rozmowa z Izabelą (AI) albo sekwencja prostych kroków (bez AI).
 export function renderConversation(mount, lessonId) {
   const lesson = lessonId === 'trial'
     ? getTrialLesson(store.get().onboarding.level)
-    : getLesson(lessonId);
+    : (lessonId === 'full' ? getFullLesson(store.get().onboarding.level) : getLesson(lessonId));
   if (!lesson) { navigate('#/lessons'); return; }
   const steps = lesson.steps || [];
 
-  // Lekcja próbna: 45 minut do zużycia po kawałku — licznik bije tylko,
-  // gdy karta jest widoczna; stan trzymamy w postępach użytkownika.
+  // Budżety czasu: trial 45 min łącznie; pełna wersja 15 h / miesiąc.
   const isTrial = lesson.id === 'trial';
+  const isFull = lesson.id === 'full';
   if (isTrial && (store.get().progress.trialSecondsUsed || 0) >= TRIAL_MINUTES * 60) {
     navigate('#/lessons'); return;
+  }
+  if (isFull) {
+    // miesięczny reset budżetu
+    const mk = new Date().toISOString().slice(0, 7);
+    if (store.get().progress.fullMonth !== mk) {
+      store.patchKey('progress', { fullMonth: mk, fullSecondsUsed: 0 });
+    }
+    if ((store.get().progress.fullSecondsUsed || 0) >= FULL_MONTH_MINUTES * 60) {
+      navigate('#/home'); return;
+    }
+    // wpis w historii dla bieżącej sesji pełnej wersji
+    if (!store.get().progress.currentFullId) {
+      const id = 'full-' + Date.now();
+      const history = store.get().progress.history || [];
+      history.push({ id, kind: 'full', startedAt: Date.now(), seconds: 0, summary: '' });
+      store.patchKey('progress', { currentFullId: id, history });
+    }
+  }
+  if (isTrial) {
+    // lekcja próbna widnieje w historii od pierwszego wejścia
+    const history = store.get().progress.history || [];
+    if (!history.find((h) => h.id === 'trial')) {
+      history.unshift({ id: 'trial', kind: 'trial', startedAt: Date.now(), seconds: 0, summary: '' });
+      store.patchKey('progress', { history });
+    }
   }
 
   // stan
@@ -47,28 +72,71 @@ export function renderConversation(mount, lessonId) {
     document.body.classList.remove('in-lesson');
     speech.stopSpeaking();
     if (meter) clearInterval(meter);
+    if ((isTrial || isFull) && !trialEnded) updateHistoryOnExit();
     try { recHandle?.stop(); recorder?.stop(); } catch (e) { /* ignore */ }
   }, { once: true });
 
-  // Licznik czasu próbnego (co 5 s, tylko gdy karta widoczna)
+  // Licznik czasu (co 5 s, tylko gdy karta widoczna): trial i pełna wersja
   let meter = null;
   let trialEnded = false;
+  let sessionSeconds = 0;                      // czas TEJ wizyty (do historii)
   if (isTrial) {
     meter = setInterval(() => {
       if (document.hidden || trialEnded) return;
+      sessionSeconds += 5;
       const used = (store.get().progress.trialSecondsUsed || 0) + 5;
       store.patchKey('progress', { trialSecondsUsed: used });
       if (used >= TRIAL_MINUTES * 60) {
         trialEnded = true;
         clearInterval(meter);
         speech.stopSpeaking();
+        updateHistoryOnExit();
         clearLessonMemory();
         micBtn.disabled = true; micBtn.style.opacity = '0.5';
-        izabelaSay('No i cyk, wykorzystaliśmy cały czas próbny! Było mi mega miło. Nie znikaj, pełne lekcje już niedługo!', {
+        izabelaSay('No i cyk, wykorzystaliśmy cały czas próbny! Było mi mega miło. Zobacz, co dla Ciebie mam!', {
           lang: 'pl', onEnd: () => navigate('#/lessons'),
         });
       }
     }, 5000);
+  }
+  if (isFull) {
+    meter = setInterval(() => {
+      if (document.hidden || trialEnded) return;
+      sessionSeconds += 5;
+      const used = (store.get().progress.fullSecondsUsed || 0) + 5;
+      store.patchKey('progress', { fullSecondsUsed: used });
+      if (used >= FULL_MONTH_MINUTES * 60) {
+        trialEnded = true;
+        clearInterval(meter);
+        speech.stopSpeaking();
+        updateHistoryOnExit();
+        micBtn.disabled = true; micBtn.style.opacity = '0.5';
+        izabelaSay('Wow, wygadaliśmy cały miesięczny czas! Szanuję. Widzimy się od nowego miesiąca!', {
+          lang: 'pl', onEnd: () => navigate('#/home'),
+        });
+      }
+    }, 5000);
+  }
+
+  // Historia: dopisz czas tej wizyty i (w tle) krótkie streszczenie rozmowy
+  function updateHistoryOnExit() {
+    const p = store.get().progress;
+    const history = p.history || [];
+    const id = isTrial ? 'trial' : p.currentFullId;
+    const entry = history.find((h) => h.id === id);
+    if (!entry) return;
+    entry.seconds = isTrial ? (p.trialSecondsUsed || 0) : (entry.seconds + sessionSeconds);
+    store.patchKey('progress', { history });
+    const talk = chatLog.slice(-12).map((m) => `${m.who === 'izabela' ? 'Izabela' : 'Uczeń'}: ${m.text}`).join('\n');
+    if (talk.length > 40) {
+      ai.summarizeLesson(talk).then((sum) => {
+        if (!sum) return;
+        const p2 = store.get().progress;
+        const h2 = p2.history || [];
+        const e2 = h2.find((h) => h.id === id);
+        if (e2) { e2.summary = sum; store.patchKey('progress', { history: h2 }); }
+      }).catch(() => {});
+    }
   }
 
   // ---------- UI: jedna karta czatu — Izabela (lewo) + rozmowa (prawo) ----------
@@ -88,7 +156,6 @@ export function renderConversation(mount, lessonId) {
   // Co uczeń ma teraz powiedzieć — klik odtwarza wzór jeszcze raz
   const targetEl = el('div.say-target', { id: 'say-target' });
   const replayBtn = el('button.btn.btn--ghost', { onclick: () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); } }, ['Powtórz']);
-  const skipBtn = el('button.btn.btn--ghost.skip-corner', { onclick: skipTask, title: 'Pomiń to ćwiczenie' }, ['Pomiń']);
   const stopBtn = el('button.btn.btn--ghost', { onclick: () => { speech.stopSpeaking(); setSpeaking(false); } }, ['Przerwij']);
 
   function setTarget(phrase) {
@@ -113,10 +180,11 @@ export function renderConversation(mount, lessonId) {
     return eng.length ? eng[eng.length - 1] : null;
   };
 
-  // Każda lekcja ma SWOJE zdjęcie (lesson.scene); losujemy tylko gdy go brak.
+  // Lekcje AI (trial/full): portretowe kadry Izabeli. Inne: scena lekcji.
   function nextScene() {
-    const path = lesson.scene
-      || (SCENES.length ? SCENES[Math.floor(Math.random() * SCENES.length)] : null);
+    const path = (isTrial || isFull)
+      ? LESSON_PORTRAITS[Math.floor(Math.random() * LESSON_PORTRAITS.length)]
+      : (lesson.scene || (SCENES.length ? SCENES[Math.floor(Math.random() * SCENES.length)] : null));
     if (!path) return;
     sceneImg.onerror = () => { sceneImg.onerror = null; sceneImg.src = 'assets/izabela/izabela-lesson.png'; };
     sceneImg.src = path;
@@ -128,8 +196,7 @@ export function renderConversation(mount, lessonId) {
     el('div.lesson-chat-card.fade-in', {}, [
       stage,
       el('div.lc-main', {}, [
-        skipBtn,
-        el('div.row', { style: 'justify-content:space-between;align-items:center;padding-right:78px' }, [
+        el('div.row', { style: 'justify-content:space-between;align-items:center' }, [
           el('h2.display', { style: 'margin:0;font-size:1.2rem', text: lesson.title }),
           progressEl,
         ]),
@@ -147,14 +214,17 @@ export function renderConversation(mount, lessonId) {
 
   // ---- pamięć lekcji próbnej: rozmowa wraca dokładnie tam, gdzie przerwano ----
   const HISTORY_CAP = 40;
+  const memKeys = isFull ? ['fullHistory', 'fullChat'] : ['trialHistory', 'trialChat'];
   function persistLesson() {
-    if (!isTrial) return;
+    if (!isTrial && !isFull) return;
     const trimmed = history.length > HISTORY_CAP ? [history[0], ...history.slice(-HISTORY_CAP)] : [...history];
-    store.patchKey('progress', { trialHistory: trimmed, trialChat: chatLog.slice(-12) });
+    store.patchKey('progress', { [memKeys[0]]: trimmed, [memKeys[1]]: chatLog.slice(-12) });
   }
   function clearLessonMemory() {
-    if (isTrial) store.patchKey('progress', { trialHistory: [], trialChat: [] });
+    if (isTrial || isFull) store.patchKey('progress', { [memKeys[0]]: [], [memKeys[1]]: [] });
   }
+
+  mount.append(feedbackCorner('lekcja'));
 
   // Start: AI prowadzi lekcję, albo proste kroki (fallback bez Gemini)
   if (aiLed) {
@@ -179,11 +249,12 @@ export function renderConversation(mount, lessonId) {
     const name = (store.get().user?.name || '').trim();
 
     // Wznowienie: jest zapisana rozmowa → kontynuujemy, nie zaczynamy od zera
-    const saved = isTrial ? store.get().progress : {};
-    if (isTrial && Array.isArray(saved.trialHistory) && saved.trialHistory.length > 1) {
-      history.push(...saved.trialHistory);
-      (saved.trialChat || []).forEach((m) => addMessage(m.who, m.text, { save: false }));
-      chatLog = [...(saved.trialChat || [])];
+    const saved = (isTrial || isFull) ? store.get().progress : {};
+    const savedHist = saved[memKeys[0]], savedChat = saved[memKeys[1]];
+    if ((isTrial || isFull) && Array.isArray(savedHist) && savedHist.length > 1) {
+      history.push(...savedHist);
+      (savedChat || []).forEach((m) => addMessage(m.who, m.text, { save: false }));
+      chatLog = [...(savedChat || [])];
       const back = [
         'No i jesteśmy z powrotem! Lecimy dalej.',
         'O, wracasz! Kontynuujemy, nie ma spania.',

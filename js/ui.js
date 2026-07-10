@@ -2,6 +2,7 @@
 //  UI — drobne helpery DOM (bez frameworka)
 // =============================================================
 
+import { CONFIG } from './config.js';
 import { setGeminiKey, hasGeminiKey } from './services/ai.js';
 import { setGoogleTTSKey, hasGoogleTTS } from './services/speech.js';
 
@@ -25,6 +26,56 @@ export function el(selector, props = {}, children = []) {
 }
 
 export function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+// ---------- Opinie: „zostaw opinię Izabeli!" ----------
+// Dymek w rogu każdego widoku + okienko z pochyłą podpowiedzią.
+// Opinie lecą na serwer (kolekcja feedback, adresat: izabela@izabelacode.pl).
+export function feedbackCorner(page) {
+  return el('button.feedback-corner', { onclick: () => openFeedback(page), title: 'Podziel się wrażeniami' },
+    ['zostaw opinię Izabeli!']);
+}
+
+export function openFeedback(page) {
+  const area = el('textarea.feedback-text', {
+    placeholder: 'Napisz, co myślisz o aplikacji i lekcji. Coś nie działało? Masz pomysł, co poprawić albo naprawić? Pisz śmiało, czytam wszystko!',
+    maxlength: '4000',
+  });
+  const sendBtn = el('button.btn.btn--primary.btn--block', { onclick: send }, ['Wyślij do Izabeli']);
+  const overlay = el('div.level-overlay', {
+    onclick: (e) => { if (e.target === overlay) overlay.remove(); },
+  }, [
+    el('div.level-box.feedback-box', {}, [
+      el('button.level-close', { onclick: () => overlay.remove(), 'aria-label': 'Zamknij' }, ['X']),
+      el('h2.display', { style: 'margin:0 0 4px;color:#14314f', text: 'Zostaw opinię Izabeli' }),
+      el('p', { style: 'margin:0 0 12px;color:#46688c', text: 'Każda uwaga trafia prosto do autorki. Dzięki!' }),
+      area,
+      sendBtn,
+    ]),
+  ]);
+
+  async function send() {
+    const text = area.value.trim();
+    if (!text) { toast('Napisz chociaż słowo, mordeczko', 'error'); return; }
+    sendBtn.disabled = true; sendBtn.textContent = 'Wysyłam…';
+    try {
+      const base = (CONFIG.GEMINI.proxyBase || '').replace(/\/$/, '');
+      const st = JSON.parse(localStorage.getItem('pogadajse.state') || '{}');
+      const res = await fetch(base + '/feedback', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, page: page || '', email: st.user?.email || '', name: st.user?.name || '' }),
+      });
+      if (!res.ok) throw new Error('send failed');
+      overlay.remove();
+      toast('Dzięki! Opinia poleciała do Izabeli.');
+    } catch (e) {
+      sendBtn.disabled = false; sendBtn.textContent = 'Wyślij do Izabeli';
+      toast('Nie udało się wysłać. Spróbuj za chwilę.', 'error');
+    }
+  }
+
+  document.body.append(overlay);
+  setTimeout(() => area.focus(), 50);
+}
 
 export function toast(message, type = '') {
   const wrap = document.getElementById('toasts');
