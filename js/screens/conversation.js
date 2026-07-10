@@ -145,6 +145,17 @@ export function renderConversation(mount, lessonId) {
     ])
   );
 
+  // ---- pamięć lekcji próbnej: rozmowa wraca dokładnie tam, gdzie przerwano ----
+  const HISTORY_CAP = 40;
+  function persistLesson() {
+    if (!isTrial) return;
+    const trimmed = history.length > HISTORY_CAP ? [history[0], ...history.slice(-HISTORY_CAP)] : [...history];
+    store.patchKey('progress', { trialHistory: trimmed, trialChat: chatLog.slice(-12) });
+  }
+  function clearLessonMemory() {
+    if (isTrial) store.patchKey('progress', { trialHistory: [], trialChat: [] });
+  }
+
   // Start: AI prowadzi lekcję, albo proste kroki (fallback bez Gemini)
   if (aiLed) {
     startAiLesson();
@@ -161,17 +172,6 @@ export function renderConversation(mount, lessonId) {
     micBtn.style.opacity = on ? '0.5' : '1';
     if (on) setMicLabel('Izabela myśli…');
     else setMicLabel('');
-  }
-
-  // ---- pamięć lekcji próbnej: rozmowa wraca dokładnie tam, gdzie przerwano ----
-  const HISTORY_CAP = 40;
-  function persistLesson() {
-    if (!isTrial) return;
-    const trimmed = history.length > HISTORY_CAP ? [history[0], ...history.slice(-HISTORY_CAP)] : [...history];
-    store.patchKey('progress', { trialHistory: trimmed, trialChat: chatLog.slice(-12) });
-  }
-  function clearLessonMemory() {
-    if (isTrial) store.patchKey('progress', { trialHistory: [], trialChat: [] });
   }
 
   async function startAiLesson() {
