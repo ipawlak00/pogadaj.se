@@ -210,14 +210,16 @@ body.in-lesson .msg--user {
   color: #123a5e; border: 1px solid #a8d4f5;
 }
 
-/* „Powtórz: ..." — aktualna fraza do powiedzenia; klik = Izabela czyta ją znowu */
-.say-target { display: flex; align-items: center; gap: 10px; min-height: 34px; flex-wrap: wrap; justify-content: center; }
-.say-target__label { color: var(--text-dim); font-size: .92rem; }
+/* „Powtórz: ..." — aktualna fraza do powiedzenia; klik = Izabela czyta ją znowu.
+   Wyrównane w pionie z przyciskiem mikrofonu (ta sama szerokość, wyśrodkowane). */
+.say-target { display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 34px; width: 100%; }
+.say-target__label { color: var(--text-dim); font-size: .85rem; }
 .say-target__phrase {
+  width: min(340px, 90%); text-align: center;
   font-family: var(--font-display); font-weight: 700; font-size: 1.05rem;
   color: #16305a; cursor: pointer;
   background: radial-gradient(ellipse at center, #ffffff 20%, #e3eef9 62%, #bcd4e8 100%);
-  border: 2px solid #16305a; border-radius: 10px; padding: 8px 16px;
+  border: 2px solid #16305a; border-radius: 10px; padding: 10px 16px;
   transition: transform .12s ease, box-shadow .15s ease;
 }
 .say-target__phrase:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(6,25,55,.35); }
@@ -848,7 +850,10 @@ body.on-lessons .cosmos { display: none; }
 }
 .orbit-lesson__num { font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; line-height: 1; color: #16305a; }
 .orbit-lesson__name { font-size: .95rem; color: #24486e; line-height: 1.15; font-weight: 600; }
+.orbit-lesson__sub { font-size: .78rem; color: #5b7f9e; }
 .orbit-lesson.is-done .orbit-lesson__num { color: #17b8ae; }
+.orbit-lesson.is-locked { cursor: default; opacity: .8; filter: saturate(.6); }
+.orbit-lesson.is-locked:hover { transform: translateY(-50%); box-shadow: 0 12px 30px rgba(6,25,55,.5); }
 
 /* Wybór poziomu przed lekcjami próbnymi */
 .level-overlay {

@@ -2,14 +2,22 @@ import { el, topbar, toast, navigate } from '../ui.js';
 import { store } from '../state.js';
 import { speech } from '../services/speech.js';
 import { ai } from '../services/ai.js';
-import { getLesson, SCENES } from '../data/lessons.js';
+import { getLesson, getTrialLesson, SCENES, TRIAL_MINUTES } from '../data/lessons.js';
 
-// Lekcja = sekwencja krótkich ćwiczeń mówienia. Izabela czyta po angielsku,
-// tłumaczy na polski, a uczeń powtarza. Gdy nie wychodzi — dzieli na kawałki.
+// Lekcja = rozmowa z Izabelą (AI) albo sekwencja prostych kroków (bez AI).
 export function renderConversation(mount, lessonId) {
-  const lesson = getLesson(lessonId);
+  const lesson = lessonId === 'trial'
+    ? getTrialLesson(store.get().onboarding.level)
+    : getLesson(lessonId);
   if (!lesson) { navigate('#/lessons'); return; }
   const steps = lesson.steps || [];
+
+  // Lekcja próbna: 45 minut do zużycia po kawałku — licznik bije tylko,
+  // gdy karta jest widoczna; stan trzymamy w postępach użytkownika.
+  const isTrial = lesson.id === 'trial';
+  if (isTrial && (store.get().progress.trialSecondsUsed || 0) >= TRIAL_MINUTES * 60) {
+    navigate('#/lessons'); return;
+  }
 
   // stan
   let stepIdx = 0;
@@ -36,8 +44,29 @@ export function renderConversation(mount, lessonId) {
   window.addEventListener('hashchange', () => {
     document.body.classList.remove('in-lesson');
     speech.stopSpeaking();
+    if (meter) clearInterval(meter);
     try { recHandle?.stop(); recorder?.stop(); } catch (e) { /* ignore */ }
   }, { once: true });
+
+  // Licznik czasu próbnego (co 5 s, tylko gdy karta widoczna)
+  let meter = null;
+  let trialEnded = false;
+  if (isTrial) {
+    meter = setInterval(() => {
+      if (document.hidden || trialEnded) return;
+      const used = (store.get().progress.trialSecondsUsed || 0) + 5;
+      store.patchKey('progress', { trialSecondsUsed: used });
+      if (used >= TRIAL_MINUTES * 60) {
+        trialEnded = true;
+        clearInterval(meter);
+        speech.stopSpeaking();
+        micBtn.disabled = true; micBtn.style.opacity = '0.5';
+        izabelaSay('No i cyk — wykorzystaliśmy cały czas próbny! Było mi mega miło. Nie znikaj, pełne lekcje już niedługo!', {
+          lang: 'pl', onEnd: () => navigate('#/lessons'),
+        });
+      }
+    }, 5000);
+  }
 
   // ---------- UI: jedna karta czatu — Izabela (lewo) + rozmowa (prawo) ----------
   // Dymki Izabeli "wychodzą" od niej w prawo, pod spodem odpowiedzi ucznia.

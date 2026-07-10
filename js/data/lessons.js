@@ -231,3 +231,30 @@ export const getLessonsForLevel = (lvl) => LESSON_SETS[setForLevel(lvl)];
 
 export const getLesson = (id) =>
   [...LESSONS, ...LESSONS_MID, ...LESSONS_HIGH].find((l) => l.id === id);
+
+// ---- JEDNA lekcja próbna: 45 minut rozmowy do zużycia po kawałku ----
+// Temat dobiera się do poziomu; Izabela prowadzi swobodnie i adaptacyjnie.
+export const TRIAL_MINUTES = 45;
+
+const TRIAL_TOPICS = {
+  basic: 'Swobodna pierwsza rozmowa dla początkujących: powitania, przedstawianie się, codzienne zwroty, proste zdania o sobie. Ucz krok po kroku, bardzo prostymi frazami, płynnie przechodź między podtematami wg zainteresowań ucznia.',
+  mid: 'Swobodna rozmowa na poziomie B1/B2: small talk, opowiadanie o swoim dniu i planach, realne sytuacje (sklep, podróż, praca). Płynnie zmieniaj podtematy wg zainteresowań ucznia, koryguj naturalnie.',
+  high: 'Swobodna rozmowa na poziomie C1: dyskusja z wyrażaniem opinii, angielski zawodowy, idiomy i niuanse. Graj partnera do rozmowy z charakterem, podbijaj poziom, łap za słówka.',
+};
+
+export function getTrialLesson(level) {
+  const band = setForLevel(level);
+  const base = LESSON_SETS[band][0];               // kroki awaryjne (bez AI)
+  return {
+    id: 'trial',
+    num: 1,
+    title: 'Lekcja próbna',
+    badge: 'free',
+    desc: `${TRIAL_MINUTES} minut rozmowy z Izabelą — do wykorzystania po kawałku, kiedy chcesz.`,
+    type: 'lesson',
+    scene: base.scene,
+    aiTopic: TRIAL_TOPICS[band],
+    intro: base.intro,
+    steps: base.steps,
+  };
+}
