@@ -3,6 +3,7 @@ import { store } from '../state.js';
 import { speech } from '../services/speech.js';
 import { ai } from '../services/ai.js';
 import { getLesson, getTrialLesson, SCENES, TRIAL_MINUTES } from '../data/lessons.js';
+import { lessonHello } from '../data/phrases.js';
 
 // Lekcja = rozmowa z Izabelą (AI) albo sekwencja prostych kroków (bez AI).
 export function renderConversation(mount, lessonId) {
@@ -171,13 +172,9 @@ export function renderConversation(mount, lessonId) {
 
   async function startAiLesson() {
     const topic = lesson.aiTopic || lesson.title;
-    // Izabela odzywa się OD RAZU (lokalny tekst), a w tle leci zapytanie do AI —
-    // zero głuchej ciszy po wejściu w lekcję.
-    const hello = [
-      'No hej! Rozgrzewam silniki... dobra, działa. Zaczynamy!',
-      'O, jesteś! Czekałam. Siadaj, gadamy.',
-      'Hej hej! Kawa jest, mikrofon jest — no to lecimy.',
-    ][Math.floor(Math.random() * 3)];
+    // Izabela odzywa się OD RAZU (składane powitanie — za każdym razem inne),
+    // a w tle leci zapytanie do AI — zero głuchej ciszy po wejściu w lekcję.
+    const hello = lessonHello((store.get().user?.name || '').trim());
     introGate = new Promise((res) => { speakLine(hello, { lang: 'pl', onEnd: res }); setTimeout(res, 7000); });
     history.push({ role: 'user', text: `Rozpocznij lekcję mówienia na temat: "${topic}". WAŻNE: już się przywitałaś słowami "${hello}" — NIE witaj się ponownie. Od razu, bez wstępów, naucz pierwszej prostej frazy (po angielsku w cudzysłowie + znaczenie po polsku + poproś o powtórzenie).` });
     await aiTurn();

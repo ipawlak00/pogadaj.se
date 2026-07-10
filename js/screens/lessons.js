@@ -3,6 +3,7 @@ import { store } from '../state.js';
 import { auth } from '../services/auth.js';
 import { speech } from '../services/speech.js';
 import { TRIAL_MINUTES } from '../data/lessons.js';
+import { greetingHi, pushLine } from '../data/phrases.js';
 
 // Trzy pasma poziomów — wpływają na temat i trudność lekcji próbnej
 const LEVEL_BANDS = [
@@ -29,12 +30,14 @@ export function renderLessons(mount) {
   }
 
   function bubbleText(left) {
+    const name = (store.get().user?.name || '').trim();
     if (left <= 0) {
-      return { hi: 'No i wyskoczył nam czas próbny!', body: 'Ale nie znikaj — niedługo ruszamy z pełnymi lekcjami. Trzymaj wymowę w formie!' };
+      return { hi: 'No i wyskoczył nam czas próbny!', body: `Ale nie znikaj${name ? ', ' + name : ''} — niedługo ruszamy z pełnymi lekcjami. Trzymaj wymowę w formie!` };
     }
+    // Powitanie składane z klocków — za każdym wejściem inne
     return {
-      hi: 'Siema, z rana jak śmietana!',
-      body: `Żebyśmy mogli się poznać i pogadać na luzie, masz u mnie ${TRIAL_MINUTES} minut lekcji próbnej. Wpadaj kiedy chcesz — możesz zużywać ten czas po kawałku. Jazda z tym!`,
+      hi: greetingHi(name),
+      body: `Żebyśmy mogli się poznać i pogadać na luzie, masz u mnie ${TRIAL_MINUTES} minut lekcji próbnej. Wpadaj kiedy chcesz — możesz zużywać ten czas po kawałku. ${pushLine()}`,
     };
   }
 
