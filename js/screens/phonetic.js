@@ -35,28 +35,37 @@ export function renderPhonetic(mount) {
 
   function draw() {
     const w = words[idx];
+    // Izabela obok testu — patrzy na ucznia, w dymku tłumaczy, o co chodzi
+    const izaSide = el('div.phonetic-iza', {}, [
+      el('img', { src: 'assets/scenes/scene-05.jpg', alt: 'Izabela',
+        onerror: function () { this.onerror = null; this.src = 'assets/izabela/izabela-lesson.png'; } }),
+      el('div.phonetic-iza__bubble', {
+        text: 'Chcę usłyszeć, jaki masz akcent, żeby lepiej Cię rozumieć. Każdy mówi trochę inaczej — i nie ma się czego wstydzić!',
+      }),
+    ]);
     screen.replaceChildren(
-      el('div.center.stack', { style: 'gap:6px;margin-bottom:16px' }, [
-        idx === 0 ? el('p.muted', { style: 'margin:6px auto 0;max-width:560px', text: 'Chcę usłyszeć, jaki masz akcent, żeby lepiej rozumieć Twoje wypowiedzi. Każdy mówi trochę inaczej — i nie ma się czego wstydzić!' }) : null,
-        el('p.muted', { style: 'margin:6px 0 0', text: '1) Posłuchaj, jak czytam słowo.  2) Powtórz je do mikrofonu.' }),
-      ]),
-      el('div.card.center.stack', { style: 'max-width:580px;margin:0 auto;gap:14px' }, [
-        el('div.phonetic-word', { text: w.word }),
-        el('div.phonetic-ipa', { text: w.ipa }),
-        el('div.phonetic-pl', { text: w.pl }),
-        el('button.btn.btn--sq', { style: 'margin:0 auto', onclick: () => speakWord() }, ['Posłuchaj jeszcze raz']),
-        el('div.phonetic-hint', { text: w.hint }),
-        el('div.spacer-sm'),
-        micArea(),
-        el('div.faint', { style: 'font-size:.85rem', text: `${idx + 1}/${words.length} słówek` }),
-        resultArea(),
-        el('div.row', { style: 'justify-content:center;gap:10px;margin-top:6px' }, [
-          el('button.btn.btn--sq', { onclick: skip }, ['Pomiń słowo']),
-          el('button.btn.btn--sq', { onclick: finish }, ['Pomiń cały test']),
+      el('div.phonetic-layout', {}, [
+        izaSide,
+        el('div.phonetic-main.stack', { style: 'gap:14px' }, [
+          el('p.muted.center', { style: 'margin:0', text: '1) Posłuchaj, jak czytam słowo.  2) Powtórz je do mikrofonu.' }),
+          el('div.card.center.stack', { style: 'gap:14px' }, [
+            el('div.phonetic-word', { text: w.word }),
+            el('div.phonetic-ipa', { text: w.ipa }),
+            el('div.phonetic-pl', { text: w.pl }),
+            el('button.btn.btn--sq', { style: 'margin:0 auto', onclick: () => speakWord() }, ['Posłuchaj jeszcze raz']),
+            el('div.phonetic-hint', { text: w.hint }),
+            el('div.spacer-sm'),
+            micArea(),
+            el('div.faint', { style: 'font-size:.85rem', text: `${idx + 1}/${words.length} słówek` }),
+            resultArea(),
+            el('div.row', { style: 'justify-content:center;gap:10px;margin-top:6px' }, [
+              el('button.btn.btn--sq', { onclick: skip }, ['Pomiń słowo']),
+              el('button.btn.btn--sq', { onclick: finish }, ['Pomiń cały test']),
+            ]),
+          ]),
+          dots(),
         ]),
       ]),
-      el('div.spacer'),
-      dots(),
     );
     if (!audioMode && !speech.isRecognitionSupported()) {
       setStatus('Ta przeglądarka nie wspiera mikrofonu — możesz pomijać słowa.');
