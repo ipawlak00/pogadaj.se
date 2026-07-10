@@ -1,5 +1,6 @@
 import { el, navigate } from '../ui.js';
 import { speech } from '../services/speech.js';
+import { store } from '../state.js';
 
 // Wejście na pokład: film na cały ekran (bez kontrolek, startuje sam),
 // a po nim OD RAZU test fonetyczny — tam wita Izabela.
@@ -18,5 +19,11 @@ export function renderIntro(mount) {
   video.play().catch(() => {});
   video.onclick = () => { if (video.paused) video.play().catch(() => {}); };
 
-  function goTest() { speech.stopSpeaking(); navigate('#/phonetic'); }
+  function goTest() {
+    speech.stopSpeaking();
+    store.patchKey('progress', { introSeen: true });
+    const st = store.get();
+    navigate(!st.onboarding.completed ? '#/onboarding'
+      : (!st.phonetic.completed ? '#/phonetic' : '#/lessons'));
+  }
 }

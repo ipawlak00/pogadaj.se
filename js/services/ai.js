@@ -290,11 +290,12 @@ Zwróć JSON:
   async transcribe({ base64, mimeType }) {
     try {
       const sys = 'Jesteś precyzyjnym systemem transkrypcji mowy. Zwracasz wyłącznie poprawny JSON, bez markdown.';
-      const prompt = `Przepisz DOKŁADNIE, co osoba powiedziała na nagraniu. Osoba uczy się angielskiego i MOŻE MIESZAĆ polski z angielskim w jednym zdaniu — zapisz każde słowo w języku, w jakim je wypowiedziano (angielskie słowa po angielsku, polskie po polsku). Nie tłumacz, nie poprawiaj gramatyki, nie dodawaj nic od siebie. Jeśli nic nie słychać, zwróć pusty tekst.
+      const prompt = `Przepisz DOKŁADNIE, co osoba powiedziała na nagraniu. Osoba uczy się angielskiego i MOŻE MIESZAĆ polski z angielskim w jednym zdaniu — zapisz każde słowo w języku, w jakim je wypowiedziano (angielskie słowa po angielsku, polskie po polsku). Nie tłumacz, nie poprawiaj gramatyki, nie dodawaj nic od siebie. BEZ znaczników czasu (żadnych 00:01), bez numeracji, bez didaskaliów. Jeśli nic nie słychać, zwróć pusty tekst.
 Zwróć JSON: {"text": "dokładna transkrypcja"}`;
       const contents = [{ role: 'user', parts: [{ text: prompt }, { inline_data: { mime_type: mimeType || 'audio/webm', data: base64 } }] }];
       const r = await this._callContents(contents, sys, CONFIG.GEMINI.fastModel);   // szybki model — mniejsze opóźnienie
-      return (r.text || '').trim();
+      // pas bezpieczeństwa: wytnij znaczniki czasu, gdyby model je dodał
+      return (r.text || '').replace(/\b\d{1,2}:\d{2}(?::\d{2})?\b/g, ' ').replace(/\s{2,}/g, ' ').trim();
     } catch (e) { reportAiError(e); return null; }
   },
 };

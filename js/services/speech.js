@@ -64,6 +64,7 @@ function ttsNotify(msg) {
 }
 
 let currentAudio = null;
+let speakSeq = 0;               // numer wypowiedzi — starsze (spóźnione) audio nie zagra
 const audioCache = new Map();   // cache audio po (voice|rate|text) — oszczędza koszt znaków
 
 // --- Odblokowanie dźwięku na telefonie ---
@@ -203,7 +204,9 @@ async function gttsUrl(text, langKey, rate) {
 }
 
 async function speakGoogle(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
+  const my = ++speakSeq;
   try {
+    try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
     // O języku decyduje TREŚĆ, nie etykietka: jeśli w tekście są polskie znaki,
     // to zdanie jest polskie (z angielskimi cytatami), nawet gdy AI oznaczyło 'en'.
@@ -220,8 +223,10 @@ async function speakGoogle(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
       const segRate = seg.lang === 'en' ? Math.max(0.85, baseRate * 0.9) : baseRate;
       urls.push(await gttsUrl(seg.text, seg.lang, segRate));
     }
+    if (my !== speakSeq) { onEnd?.(); return; }   // ktoś zaczął mówić później — ustępujemy
     let i = 0;
     const playNext = () => {
+      if (my !== speakSeq) { onEnd?.(); return; }  // nowsza wypowiedź przejęła głos
       if (i >= urls.length) { onEnd?.(); return; }
       const audio = new Audio(urls[i++]);
       currentAudio = audio;
@@ -326,9 +331,12 @@ async function geminiTtsUrl(text) {
 }
 
 async function speakGemini(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
+  const my = ++speakSeq;
   try {
+    try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
     if (currentAudio) { try { currentAudio.pause(); } catch (e) {} }
     const url = await geminiTtsUrl(text);
+    if (my !== speakSeq) { onEnd?.(); return; }   // nowsza wypowiedź przejęła głos
     const audio = getAudioEl();           // współdzielony, odblokowany element (mobile)
     audio.muted = false;
     audio.playbackRate = (rate && rate < 1) ? Math.max(0.85, rate) : 1;
@@ -345,6 +353,7 @@ async function speakGemini(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
 }
 
 function speakWeb(clean, { lang = CONFIG.SPEECH.ttsLang, rate = 1, pitch = 1.0, onEnd } = {}) {
+  ++speakSeq;                      // unieważnij trwające syntezy innych silników
   if (!('speechSynthesis' in window) || !clean) { onEnd?.(); return; }
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(clean);
@@ -414,6 +423,7 @@ export const speech = {
   unlockAudio() { unlockAudio(); },
 
   stopSpeaking() {
+    ++speakSeq;                    // ucisza też wypowiedzi w trakcie syntezy
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     if (currentAudio) { try { currentAudio.pause(); } catch (e) {} currentAudio = null; }
   },

@@ -27,16 +27,18 @@ function resolve() {
   switch (hash) {
     case '#/onboarding': return renderOnboarding(appEl);
     case '#/intro':
-      if (!st.onboarding.completed) return redirect('#/onboarding');
+      if (!st.user) return redirect('#/');       // film dopiero PO założeniu konta
       return renderIntro(appEl);
     case '#/phonetic':
+      if (!st.user) return redirect('#/');
       if (!st.onboarding.completed) return redirect('#/onboarding');
       return renderPhonetic(appEl);
     case '#/lessons': return guarded(st, () => renderLessons(appEl));
     case '#/':
     default:
-      // Niezalogowany → ekran logowania. Zalogowany → dalej wg etapu.
+      // Kolejność: konto → film → cel/poziom → paszport → lekcje
       if (!st.user) return renderWelcome(appEl);
+      if (!st.progress.introSeen) return redirect('#/intro');
       if (!st.onboarding.completed) return redirect('#/onboarding');
       if (!st.phonetic.completed) return redirect('#/phonetic');
       return renderLessons(appEl);

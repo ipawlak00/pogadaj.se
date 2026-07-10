@@ -89,8 +89,11 @@ export function renderLessons(mount) {
           el('span.trial-tile__num', { text: '0′' }),
           el('span.trial-tile__name', { text: 'Czas próbny wykorzystany' }),
         ]);
+    const deg = Math.round(frac * 360);
     const clock = el('div.trial-clock', {}, [
-      el('div.trial-clock__face', {}, [
+      el('div.trial-clock__face', {
+        style: `background: conic-gradient(#4f86c6 ${deg}deg, #eef6fd ${deg}deg)`,
+      }, [
         el('i.trial-clock__hand', { style: `transform: rotate(${Math.round(frac * 360)}deg)` }),
         el('i.trial-clock__dot'),
       ]),

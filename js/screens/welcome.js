@@ -48,8 +48,7 @@ export function renderWelcome(mount) {
     try {
       await auth.login({ email: e, password: pass.value });
       toast('Miło Cię widzieć!');
-      const st = store.get();
-      navigate(st.onboarding.completed ? '#/lessons' : '#/onboarding');
+      navigate('#/');   // router pokieruje wg etapu (film / pytania / paszport / lekcje)
     } catch (err) {
       loginBtn.disabled = false; loginBtn.textContent = 'Zaloguj się';
       toast(err.message || 'Nie udało się zalogować', 'error');
