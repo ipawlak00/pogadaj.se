@@ -478,6 +478,7 @@ function forSpeech(text) {
     .replace(/\/(aś|eś|am|em|ą|a)(?![a-ząćęłńóśźż])/gi, '')   // resztki form „zrobiłeś/aś" — nie czytamy ukośnika
     .replace(/[—–]/g, ',')                     // myślnik = pauza, nie „minus"
     .replace(/…|\.{3,}/g, ',')                  // wielokropek = pauza, nie „yyy"
+    .replace(/\*/g, '')                        // gwiazdki markdown — nie czytamy
     .replace(/\s-\s/g, ', ')
     .replace(/\s{2,}/g, ' ')
     .trim();
