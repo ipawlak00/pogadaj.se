@@ -40,14 +40,14 @@ function gttsSynthUrl() {
 // Pierwszy, który zadziała na danym kluczu/projekcie, zostaje zapamiętany.
 const GTTS_VOICES = {
   pl: [
-    { languageCode: 'pl-PL', name: 'pl-PL-Chirp3-HD-Leda' },           // najnaturalniejszy (HD)
+    { languageCode: 'pl-PL', name: 'pl-PL-Chirp3-HD-Despina' },        // wybrany przez Izabelę (odsłuch)
+    { languageCode: 'pl-PL', name: 'pl-PL-Chirp3-HD-Leda' },
     { languageCode: 'pl-PL', name: 'pl-PL-Wavenet-A', ssmlGender: 'FEMALE' },
-    { languageCode: 'pl-PL', name: 'pl-PL-Standard-A', ssmlGender: 'FEMALE' },
   ],
   en: [
+    { languageCode: 'en-US', name: 'en-US-Chirp3-HD-Despina' },        // ten sam głos po angielsku
     { languageCode: 'en-US', name: 'en-US-Chirp3-HD-Leda' },
     { languageCode: 'en-US', name: 'en-US-Neural2-F', ssmlGender: 'FEMALE' },
-    { languageCode: 'en-US', name: 'en-US-Wavenet-F', ssmlGender: 'FEMALE' },
   ],
 };
 const chosenVoice = { pl: null, en: null };   // zapamiętany działający głos

@@ -489,10 +489,12 @@ body:not([data-route="welcome"]) .mic-btn {
   background: var(--grad-brand); -webkit-background-clip: text; background-clip: text; color: transparent;
   display: flex; align-items: center; gap: .12em;
 }
+/* Kropka jak w domenie pogadaj.se — siedzi na linii tekstu, nie w połowie */
 .auth-title .planet-dot {
-  width: .32em; height: .32em; border-radius: 50%;
+  width: .22em; height: .22em; border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #d8efff, #4f86c6 60%, #23405f);
-  box-shadow: 0 0 16px rgba(130,196,255,.75); display: inline-block;
+  box-shadow: 0 0 14px rgba(130,196,255,.75); display: inline-block;
+  align-self: flex-end; margin-bottom: .1em;
 }
 .auth-sub {
   font-family: var(--font-display); font-weight: 700; text-transform: uppercase;
@@ -525,6 +527,13 @@ body:not([data-route="welcome"]) .mic-btn {
 .auth-create:hover { border-color: var(--accent); }
 .auth-footer { margin-top: 22px; color: var(--text-faint); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; }
 .auth-footer b { color: var(--accent-bright); font-weight: 700; }
+/* dyskretny reset postępów (przydatny do testów „świeżego" użytkownika) */
+.auth-reset {
+  margin-top: 10px; background: none; border: none; cursor: pointer;
+  color: var(--text-faint); font-size: .72rem; opacity: .6;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.auth-reset:hover { opacity: 1; color: var(--text-dim); }
 
 /* Pływający badge Izabeli (lewy dolny róg — jak w projekcie) */
 .iza-badge { position: fixed; left: 18px; bottom: 18px; width: 52px; height: 52px; border-radius: 50%;

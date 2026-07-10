@@ -21,6 +21,10 @@ export function renderWelcome(mount) {
       ]),
 
       el('div.auth-footer', { html: 'POWERED BY <b>IZABELACODE</b>' }),
+      el('button.auth-reset', {
+        onclick: () => { store.reset(); location.hash = '#/'; location.reload(); },
+        title: 'Czyści postępy i ustawienia zapisane na tym urządzeniu',
+      }, ['Zacznij od nowa']),
     ])
   );
 
