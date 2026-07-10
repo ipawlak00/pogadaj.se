@@ -18,8 +18,8 @@ const VOCATIVES = (name) => {
   const base = ['mordeczko', 'ziomeczku',
     isFemale(name) ? 'koleżanko kochana' : 'koleżko',
     isFemale(name) ? 'wariatko kolorowa' : 'wariacie kolorowy'];
-  // imię (jeśli znamy) wypada częściej niż ksywki
-  return name ? [name, name, name, ...base] : base;
+  // imię na równi z ksywkami — bez wałkowania go w kółko
+  return name ? [name, ...base] : base;
 };
 
 const OPENERS = [
@@ -33,7 +33,9 @@ const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 // Krótkie powitanie do dymka na ekranie lekcji, np. „Siema, mordeczko! Lecimy z tematem!"
 export function greetingHi(name) {
-  return `${pick(HI)}, ${pick(VOCATIVES(name))}! ${cap(pick(OPENERS))}!`;
+  // często BEZ zwrotu do ucznia — ciągłe „mordeczko/imię" brzmi sztucznie
+  const voc = Math.random() < 0.55 ? `, ${pick(VOCATIVES(name))}` : '';
+  return `${pick(HI)}${voc}! ${cap(pick(OPENERS))}!`;
 }
 
 // Zachęta na koniec dymka, np. „Dawaj dawaj!"
@@ -41,7 +43,7 @@ export function pushLine() { return pick(PUSHES); }
 
 // Powitanie na wejściu w lekcję (mówione od razu, zanim AI się dogra)
 export function lessonHello(name) {
-  const voc = pick(VOCATIVES(name));
+  const voc = Math.random() < 0.5 ? `, ${pick(VOCATIVES(name))}` : '';
   const mid = pick([
     'Rozgrzewam silniki... dobra, działa',
     'Kawa jest, mikrofon jest',
@@ -49,7 +51,7 @@ export function lessonHello(name) {
     'Mikrofon gotowy, ja gotowa',
     'Nie ma spania',
   ]);
-  return `${pick(HI)}, ${voc}! ${mid}. ${pick(PUSHES)}`;
+  return `${pick(HI)}${voc}! ${mid}. ${pick(PUSHES)}`;
 }
 
 // Poprawna polska odmiana: 1 minuta, 2-4 minuty, 5-21 minut, 22-24 minuty...

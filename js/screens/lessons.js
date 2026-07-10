@@ -36,9 +36,12 @@ export function renderLessons(mount) {
       return { hi: 'No i wyskoczył nam czas próbny!', body: `Ale nie znikaj${name ? ', ' + name : ''}. Niedługo ruszamy z pełnymi lekcjami. Trzymaj wymowę w formie!` };
     }
     if (used > 0) {
-      // Powrót z lekcji — Izabela już się witała, teraz podtrzymuje relację
-      const hi = [`I jak wrażenia${name ? ', ' + name : ''}?`, 'No i jak było?', `O, wracasz${name ? ', ' + name : ''}!`][Math.floor(Math.random() * 3)];
-      return { hi, body: `Podobała Ci się nasza rozmowa? Pamiętaj, mamy jeszcze około ${left} ${minutesWord(left)} razem do przegadania. Czekam!` };
+      // Powrót z lekcji — Izabela już się witała, podtrzymuje kontakt naturalnie
+      const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+      const hi = pick(['I jak wrażenia?', 'No i jak było?', 'O, wracasz!', `Miło Cię znowu widzieć${name ? ', ' + name : ''}!`, 'No hej, znowu razem!']);
+      const opener = pick(['Podobała Ci się nasza rozmowa?', 'Fajnie się gadało, co?', 'Dobrze nam szło ostatnio.']);
+      const closer = pick(['Wpadaj śmiało.', 'No to jak, wchodzisz?', 'Ja tu zawsze gotowa do gadania.', 'Klikaj i lecimy dalej.', 'Na spokojnie, bez spiny.', 'Czekam!']);
+      return { hi, body: `${opener} Mamy jeszcze około ${left} ${minutesWord(left)} razem do przegadania. ${closer}` };
     }
     // Pierwsze wejście — powitanie składane z klocków, za każdym razem inne
     return {
