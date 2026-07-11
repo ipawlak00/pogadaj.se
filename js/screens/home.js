@@ -66,19 +66,33 @@ export function renderHome(mount) {
 
   // Dymek z tym, co mówi Izabela (klik = powtórka) — w bezpiecznej strefie sceny
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
-  const hi = pick([
-    `Witaj w pełnej wersji${name ? ', ' + name : ''}!`,
-    'No i jesteśmy u siebie!',
-    'Rozgość się, to nasz statek!',
-  ]);
-  const spoken = `${hi} Masz jeszcze ${leftH} godzin i ${leftM} ${minutesWord(leftM)} rozmów w tym miesiącu. Klikaj i gadamy!`;
+  const firstTime = !store.get().progress.homeWelcomed;
+
+  let hi, bodyText;
+  if (firstTime) {
+    // Pierwsze wejście do pełnej wersji: ciepłe przywitanie + kim jest Izabela
+    store.patchKey('progress', { homeWelcomed: true });
+    hi = `Cześć${name ? ', ' + name : ''}! Ale się cieszę, że zostajesz ze mną na dłużej.`;
+    bodyText = 'Poznamy się teraz lepiej. Wiesz, ja tak sobie lecę przez kosmos, w ciągłej podróży, ' +
+      'szukając przygód. Ze mną lecą moje koty, Kocin i Peja, a od teraz też Ty. ' +
+      `Na naszą wspólną podróż mam dla Ciebie ${leftH} godzin w miesiącu na rozmowy, ` +
+      'żebyśmy razem szlifowali Twój angielski. No to zaczynamy!';
+  } else {
+    hi = pick([
+      `Witaj z powrotem${name ? ', ' + name : ''}!`,
+      'No i znów razem, świetnie!',
+      'O, jesteś! Dobrze Cię widzieć.',
+    ]);
+    bodyText = `Masz jeszcze ${leftH} h ${leftM} min rozmów w tym miesiącu. Klikaj i gadamy!`;
+  }
+  const spoken = `${hi} ${bodyText}`;
   const bubble = el('div.scene-bubble', {
     style: layout.bubble, title: 'Kliknij, a powtórzę',
     onclick: () => speech.speak(spoken, { lang: 'pl-PL' }),
   }, [
     el('div.scene-bubble__who', { text: 'Izabela' }),
     el('div.scene-bubble__hi', { text: hi }),
-    el('p', { style: 'margin:4px 0 0', text: `Masz jeszcze ${leftH} h ${leftM} min rozmów w tym miesiącu. Klikaj i gadamy!` }),
+    el('p', { style: 'margin:4px 0 0', text: bodyText }),
   ]);
 
   screen.replaceChildren(

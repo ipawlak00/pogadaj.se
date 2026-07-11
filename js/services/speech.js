@@ -226,18 +226,23 @@ async function speakGoogle(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
     // Ktoś zaczął mówić później — ustępujemy. onEnd dostaje {cancelled:true},
     // żeby łańcuszki (onEnd → kolejna kwestia) NIE odzywały się na nowszej wypowiedzi.
     if (my !== speakSeq) { onEnd?.({ cancelled: true }); return; }
+    // Gramy przez WSPÓŁDZIELONY element audio, który został odblokowany pierwszym
+    // gestem użytkownika. Nowe `new Audio()` po asynchronicznej syntezie bywa
+    // blokowane przez autoplay (gest już „wygasł") — stąd cisza do kliknięcia.
+    const audioEl = getAudioEl();
+    audioEl.muted = false;
+    currentAudio = audioEl;
     let i = 0;
     const playNext = () => {
       if (my !== speakSeq) { onEnd?.({ cancelled: true }); return; }  // nowsza wypowiedź przejęła głos
       if (i >= urls.length) { onEnd?.(); return; }
-      const audio = new Audio(urls[i++]);
-      currentAudio = audio;
-      audio.onended = () => { if (currentAudio === audio) currentAudio = null; playNext(); };
-      audio.onerror = () => playNext();
-      audio.play().catch(() => {
-        // Autoplay zablokowany (np. wejście bez gestu) — NIE pomijamy wypowiedzi:
-        // czekamy na pierwszy dotyk/klik i gramy ją od tego miejsca.
-        const retry = () => { if (my === speakSeq) { currentAudio = audio; audio.play().catch(() => playNext()); } };
+      audioEl.src = urls[i++];
+      audioEl.onended = () => playNext();
+      audioEl.onerror = () => playNext();
+      const p = audioEl.play();
+      if (p && p.catch) p.catch(() => {
+        // Gdyby mimo wszystko zablokowane — dogrywamy po pierwszym geście, bez gubienia kwestii
+        const retry = () => { if (my === speakSeq) audioEl.play().catch(() => playNext()); };
         window.addEventListener('pointerdown', retry, { once: true });
       });
     };

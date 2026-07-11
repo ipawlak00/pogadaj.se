@@ -45,11 +45,13 @@ export function renderHistory(mount) {
   ];
   const spoken = entries.length < 1 ? pick(fewJokes) : pick(manyLines);
 
-  // Strefy na okienka — górny pas i dolny środek (z dala od twarzy w centrum
-  // i kota z prawej na scene-17). Kolejne lekcje układają się warstwami.
+  // Strefy na okienka — z dala od dymka (lewy górny róg), twarzy Izabeli
+  // (środek) oraz kota/robota i hologramu z tekstem (prawa i prawa-góra).
+  // Zostają: pas nad głową, dolny pas przy biurku i dolny lewy róg.
   const SLOTS = [
-    { l: 4, t: 6 }, { l: 30, t: 4 }, { l: 55, t: 5 }, { l: 76, t: 7 },
-    { l: 3, t: 26 }, { l: 40, t: 84 }, { l: 60, t: 86 }, { l: 20, t: 88 },
+    { l: 34, t: 3 }, { l: 50, t: 2 },                 // nad głową (nad twarzą)
+    { l: 3, t: 62 }, { l: 3, t: 80 },                 // lewy dolny (fotel/podłoga)
+    { l: 28, t: 85 }, { l: 46, t: 88 }, { l: 63, t: 86 }, { l: 20, t: 70 }, // dolny pas
   ];
   const cards = el('div.history-cards', {},
     entries.length
