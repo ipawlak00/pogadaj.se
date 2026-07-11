@@ -79,7 +79,10 @@ function profileForPrompt() {
   const p = store.get().phonetic.profile;
   if (!p) return 'brak (test fonetyczny jeszcze przed nami)';
   const issues = (p.issues || []).map((i) => `${i.word}${i.issue ? ': ' + i.issue : ''}`).filter(Boolean);
-  return JSON.stringify({ challenges: p.challenges || [], strengths: p.strengths || [], problemy: issues });
+  return JSON.stringify({
+    challenges: p.challenges || [], strengths: p.strengths || [], problemy: issues,
+    trudnosciZgloszonePrzezUcznia: p.selfReported || '',
+  });
 }
 
 // Poziom ucznia → ile polskiego. Początkujący prowadzeni PO POLSKU.
@@ -103,7 +106,7 @@ TRYB LEKCJI — prowadzisz interaktywną, DŁUGĄ lekcję mówienia (cel ~45 min
 - Gdy powtórzy dobrze: krótko pochwal i wprowadź kolejną frazę albo proste pytanie. Gdy nie wychodzi: rozbij frazę na krótsze KAWAŁKI i ćwicz fragment po fragmencie, mów wolniej.
 - Stopniowo zwiększaj trudność, zmieniaj podtematy, wplataj krótkie pytania do ucznia. Lekcja ma być długa i angażująca — NIE kończ jej szybko.
 - WAŻNE: uczeń może mówić do Ciebie PO POLSKU lub PO ANGIELSKU i w każdej chwili zadać własne pytanie albo Ci przerwać. Gdy zadaje pytanie (np. „jak powiedzieć…?", „co znaczy…?", „dlaczego…?") — najpierw naturalnie i krótko ODPOWIEDZ na to pytanie, a dopiero potem płynnie wróć do nauki. Nigdy nie ignoruj pytania ucznia.
-- Jedna wypowiedź = 1-3 krótkie zdania.
+- Jedna wypowiedź = 2-4 pełne zdania. Mów jak człowiek, płynnie i z życiem — nie rzucaj samych haseł ani skrótów myślowych.
 - "suggestions" to 2-4 krótkie angielskie frazy, które uczeń może teraz powiedzieć.
 Zwracaj WYŁĄCZNIE JSON:
 {"say":"...", "lang":"pl"|"en", "suggestions":["..."], "correction":{"spoken":"..."}|null, "mistake":{"bad":"...","good":"...","note":"...","tag":"grammar|vocab|pronunciation"}|null, "done":false}

@@ -87,7 +87,7 @@ export function renderPhonetic(mount) {
         introSpoken = true;
         izaLine = INTRO;
         const bb = document.getElementById('iza-bubble'); if (bb) bb.textContent = INTRO;
-        speech.speak(INTRO, { lang: 'pl-PL', onEnd: () => speakWord() });
+        speech.speak(INTRO, { lang: 'pl-PL', onEnd: (e) => { if (!e?.cancelled) speakWord(); } });
       }
       else speakWord();
     }
@@ -233,27 +233,100 @@ export function renderPhonetic(mount) {
     const challengeLine = chalList.length
       ? `Na celowniku mamy: ${chalSpoken.join(', ')}. Będę Cię na tym łapać podczas gadania, z miłością rzecz jasna.`
       : 'I szczerze? Nie mam się do czego przyczepić. Aż podejrzane...';
-    // Bez procentów — zero stresu, tylko konkret nad czym popracujemy
-    const spokenAll = `${hello} Znam już Twoją wymowę od podszewki. ${challengeLine} Dobra, dawaj, pogadamy w końcu!`;
+    // Wypowiedź jest DŁUŻSZA i bogatsza niż tekst na ekranie — Izabela opowiada,
+    // ekran pokazuje esencję. Bez procentów — zero stresu, tylko konkrety.
+    const spokenAll = `${hello} Znam już Twoją wymowę od podszewki i wiem dokładnie, ` +
+      `nad czym będziemy razem pracować. ${challengeLine} ` +
+      'A zanim ruszymy dalej, mam do Ciebie jeszcze jedno pytanie. ' +
+      'Powiedz mi albo napisz, co Tobie osobiście sprawia największą trudność w mówieniu po angielsku. ' +
+      'Może czasy, może brakuje Ci słówek, a może po prostu stres, że powiesz coś źle? ' +
+      'Zapamiętam to i będziemy nad tym pracować razem, krok po kroku.';
 
-    // Izabela na zdjęciu + dymek od jej ust z tym, co właśnie mówi
-    screen.replaceChildren(el('div.passport-scene.fade-in', {}, [
-      el('div.passport-iza-wrap', {}, [el('img.passport-iza', { src: 'assets/scenes/scene-09.jpg', alt: 'Izabela' })]),
-      // klik w dymek = powtórka całej kwestii
-      el('div.passport-bubble', { title: 'Kliknij, a powtórzę', style: 'cursor:pointer',
-        onclick: (e) => { if (e.target.closest('button')) return; speech.speak(spokenAll, { lang: 'pl-PL' }); } }, [
-        el('div.passport-bubble__title', { text: hello }),
-        el('p', { style: 'margin:10px 0 0', text: 'Znam już Twoją wymowę od podszewki.' }),
-        chalList.length
-          ? el('div', { style: 'margin-top:8px' }, [
-              el('div.passport-bubble__label', { text: 'Popracujemy nad:' }),
-              el('div.passport-chips', {}, chalSpoken.map((c) => el('span.passport-chip', { text: c }))),
-            ])
-          : el('p', { style: 'margin-top:8px', text: 'Nie mam się do czego przyczepić. Aż podejrzane...' }),
-        el('div.spacer-sm'),
-        el('button.btn.btn--primary.btn--lg', { onclick: () => navigate('#/lessons') }, ['Gadamy!']),
+    // ---- sekcja „co sprawia Ci trudność" — można POWIEDZIEĆ albo NAPISAĆ ----
+    izaLine = spokenAll;
+    const diffArea = el('textarea.feedback-text', {
+      style: 'min-height:84px',
+      placeholder: 'Np. czasy przeszłe, rozumienie ze słuchu, stres przy mówieniu…',
+      maxlength: '500',
+    });
+    const diffStatus = el('div.faint', { style: 'min-height:1.2em', text: '' });
+    let recD = null;
+
+    async function diffMic() {
+      if (recD) { recD.stop(); return; }   // ręczny Stop — nagranie dokończy się niżej
+      if (!audioMode) { toast('Mikrofon niedostępny w tej przeglądarce. Wpisz tekst.', 'error'); return; }
+      try {
+        recD = await speech.recordAudio({ autoStop: true, silenceMs: 1500, maxMs: 20000 });
+      } catch (e) { toast('Mikrofon: ' + (e.message || e), 'error'); return; }
+      diffMicBtn.classList.add('recording'); diffMicBtn.textContent = 'Stop';
+      diffStatus.textContent = 'Słucham, mów śmiało. Sama skończę, gdy ucichniesz.';
+      const audio = await recD.done;   // koniec ręczny albo po ciszy
+      recD = null;
+      diffMicBtn.classList.remove('recording'); diffMicBtn.textContent = 'Powiedz';
+      diffStatus.textContent = 'Przesłuchuję…';
+      const text = await ai.transcribe({ base64: audio.base64, mimeType: audio.mimeType });
+      diffStatus.textContent = '';
+      if (text) diffArea.value = diffArea.value ? diffArea.value + ' ' + text : text;
+      else diffStatus.textContent = 'Nie dosłyszałam. Spróbuj jeszcze raz albo wpisz.';
+    }
+    const diffMicBtn = el('button.btn.btn--sq', { onclick: diffMic }, ['Powiedz']);
+
+    let diffSaved = false;
+    function saveDifficulty() {
+      const text = diffArea.value.trim().slice(0, 500);
+      if (!text || diffSaved) return false;
+      diffSaved = true;
+      const prof = { ...store.get().phonetic.profile, selfReported: text };
+      store.setPhoneticProfile(prof);
+      auth.saveProfile(prof).catch(() => {});
+      return true;
+    }
+
+    function go() {
+      const saved = saveDifficulty();
+      if (saved) {
+        izaSay(pick([
+          'Zanotowane. Będę o tym pamiętać przy każdej naszej rozmowie. No to gadamy!',
+          'Dzięki, że mi to mówisz. Właśnie to zapisałam i wezmę pod lupę. Lecimy!',
+          'Rozumiem Cię doskonale. Mam to zapisane, popracujemy nad tym razem. Jazda z tematem!',
+        ]));
+        setTimeout(() => navigate('#/lessons'), 2600);
+      } else {
+        navigate('#/lessons');
+      }
+    }
+
+    // ---- ekran: białe „sklejenie" ze zdjęciem, jak inne sceny (iza-card) ----
+    screen.replaceChildren(
+      el('div.iza-card.fade-in', {}, [
+        el('div.iza-card__stage', {}, [
+          el('img', { src: 'assets/scenes/scene-09.jpg', alt: 'Izabela',
+            onerror: function () { this.onerror = null; this.src = 'assets/izabela/izabela-lesson.png'; } }),
+          el('div.iza-card__bubble', { id: 'iza-bubble', text: hello + ' Znam już Twoją wymowę od podszewki.',
+            title: 'Kliknij, a powtórzę', style: 'cursor:pointer',
+            onclick: () => speech.speak(izaLine, { lang: 'pl-PL' }) }),
+        ]),
+        el('div.iza-card__main', { style: 'gap:10px;display:flex;flex-direction:column;justify-content:center' }, [
+          el('h2.display', { style: 'margin:0;color:#14314f', text: hello }),
+          el('p', { style: 'margin:0;color:#2a4a70', text: 'Znam już Twoją wymowę od podszewki.' }),
+          chalList.length
+            ? el('div', {}, [
+                el('div.passport-bubble__label', { text: 'Popracujemy nad:' }),
+                el('div.passport-chips', {}, chalSpoken.map((c) => el('span.passport-chip', { text: c }))),
+              ])
+            : el('p', { style: 'margin:0;color:#2a4a70', text: 'Nie mam się do czego przyczepić. Aż podejrzane...' }),
+          el('div', { style: 'border-top:1px solid #dce9f5;margin:6px 0' }),
+          el('p', { style: 'margin:0;color:#14314f;font-weight:700', text: 'A co Tobie sprawia największą trudność w mówieniu po angielsku?' }),
+          el('p', { style: 'margin:0;color:#46688c;font-size:.9rem', text: 'Powiedz mi to albo napisz. Zapamiętam i będziemy nad tym pracować.' }),
+          diffArea,
+          el('div.row', { style: 'gap:10px;flex-wrap:wrap;align-items:center' }, [
+            diffMicBtn,
+            diffStatus,
+          ]),
+          el('button.btn.btn--primary.btn--lg', { style: 'align-self:flex-start', onclick: go }, ['Gadamy!']),
+        ]),
       ]),
-    ]));
+    );
     speech.speak(spokenAll, { lang: 'pl-PL' });
   }
 }

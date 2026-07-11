@@ -223,16 +223,23 @@ async function speakGoogle(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
       const segRate = seg.lang === 'en' ? Math.max(0.85, baseRate * 0.9) : baseRate;
       urls.push(await gttsUrl(seg.text, seg.lang, segRate));
     }
-    if (my !== speakSeq) { onEnd?.(); return; }   // ktoś zaczął mówić później — ustępujemy
+    // Ktoś zaczął mówić później — ustępujemy. onEnd dostaje {cancelled:true},
+    // żeby łańcuszki (onEnd → kolejna kwestia) NIE odzywały się na nowszej wypowiedzi.
+    if (my !== speakSeq) { onEnd?.({ cancelled: true }); return; }
     let i = 0;
     const playNext = () => {
-      if (my !== speakSeq) { onEnd?.(); return; }  // nowsza wypowiedź przejęła głos
+      if (my !== speakSeq) { onEnd?.({ cancelled: true }); return; }  // nowsza wypowiedź przejęła głos
       if (i >= urls.length) { onEnd?.(); return; }
       const audio = new Audio(urls[i++]);
       currentAudio = audio;
       audio.onended = () => { if (currentAudio === audio) currentAudio = null; playNext(); };
       audio.onerror = () => playNext();
-      audio.play().catch(() => playNext());
+      audio.play().catch(() => {
+        // Autoplay zablokowany (np. wejście bez gestu) — NIE pomijamy wypowiedzi:
+        // czekamy na pierwszy dotyk/klik i gramy ją od tego miejsca.
+        const retry = () => { if (my === speakSeq) { currentAudio = audio; audio.play().catch(() => playNext()); } };
+        window.addEventListener('pointerdown', retry, { once: true });
+      });
     };
     playNext();
   } catch (e) {
@@ -336,7 +343,7 @@ async function speakGemini(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
     try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
     if (currentAudio) { try { currentAudio.pause(); } catch (e) {} }
     const url = await geminiTtsUrl(text);
-    if (my !== speakSeq) { onEnd?.(); return; }   // nowsza wypowiedź przejęła głos
+    if (my !== speakSeq) { onEnd?.({ cancelled: true }); return; }   // nowsza wypowiedź przejęła głos
     const audio = getAudioEl();           // współdzielony, odblokowany element (mobile)
     audio.muted = false;
     audio.playbackRate = (rate && rate < 1) ? Math.max(0.85, rate) : 1;

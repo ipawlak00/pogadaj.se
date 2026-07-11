@@ -230,7 +230,7 @@ export function renderConversation(mount, lessonId) {
   if (aiLed) {
     startAiLesson();
   } else if (lesson.intro) {
-    speakLine(lesson.intro, { lang: 'pl', onEnd: startStep });
+    speakLine(lesson.intro, { lang: 'pl', onEnd: (e) => { if (!e?.cancelled) startStep(); } });
   } else {
     startStep();
   }
@@ -319,11 +319,11 @@ export function renderConversation(mount, lessonId) {
     lastLine = { text, lang, slow };
     setSpeaking(true);
     speech.speak(text, { lang: lang === 'en' ? 'en-US' : 'pl-PL', rate: slow ? 0.7 : 1,
-      onEnd: () => { setSpeaking(false); onEnd?.(); } });
+      onEnd: (e) => { setSpeaking(false); onEnd?.(e); } });
   }
   function izabelaSay(text, { lang = 'pl', slow = false, mood = 'neutral', onEnd } = {}) {
     setMood(mood);
-    speakLine(text, { lang, slow, onEnd: () => { setMood('neutral'); onEnd?.(); } });
+    speakLine(text, { lang, slow, onEnd: (e) => { setMood('neutral'); onEnd?.(e); } });
   }
   // (chipsy z podpowiedziami zastąpione jednym „Powtórz: ..." przy mikrofonie)
   function renderSuggestions(list) { setTarget((list || [])[0] || null); }
@@ -426,7 +426,7 @@ export function renderConversation(mount, lessonId) {
     if (overlapOf(text, chunks[chunkIdx]) >= 0.6) {
       chunkIdx++;
       if (chunkIdx >= chunks.length) {
-        izabelaSay('Super, wszystkie kawałki Ci wyszły!', { lang: 'pl', mood: 'happy', onEnd: () => chunkDoneCb && chunkDoneCb() });
+        izabelaSay('Super, wszystkie kawałki Ci wyszły!', { lang: 'pl', mood: 'happy', onEnd: (e) => { if (!e?.cancelled && chunkDoneCb) chunkDoneCb(); } });
       } else {
         izabelaSay(`Świetnie! Teraz: „${chunks[chunkIdx]}"`, { lang: 'pl', slow: true, mood: 'happy' });
         renderSuggestions([chunks[chunkIdx]]);
@@ -448,7 +448,7 @@ export function renderConversation(mount, lessonId) {
 
   function handleSay(step, text) {
     if (overlapOf(text, step.en) >= 0.6) {
-      izabelaSay(`Brawo! „${step.en}" — dokładnie tak!`, { lang: 'pl', mood: 'happy', onEnd: nextStep });
+      izabelaSay(`Brawo! „${step.en}" — dokładnie tak!`, { lang: 'pl', mood: 'happy', onEnd: (e) => { if (!e?.cancelled) nextStep(); } });
     } else {
       attempts++;
       if (wordCount(step.en) > 2 && attempts >= 1) {
@@ -473,7 +473,7 @@ export function renderConversation(mount, lessonId) {
       }
     } else if (phase === 'sentence') {
       if (overlapOf(text, step.fullSentence) >= 0.6) {
-        izabelaSay('Brawo! Całe zdanie, super Ci poszło!', { lang: 'pl', mood: 'happy', onEnd: nextStep });
+        izabelaSay('Brawo! Całe zdanie, super Ci poszło!', { lang: 'pl', mood: 'happy', onEnd: (e) => { if (!e?.cancelled) nextStep(); } });
       } else {
         startChunks(step.fullSentence, nextStep);
       }
