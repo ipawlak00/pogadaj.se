@@ -232,6 +232,10 @@ export const getLessonsForLevel = (lvl) => LESSON_SETS[setForLevel(lvl)];
 // Portretowe kadry Izabeli do widoku lekcji (blisko, od pasa w górę)
 export const LESSON_PORTRAITS = ['assets/scenes/scene-05.jpg', 'assets/scenes/scene-09.jpg', 'assets/scenes/scene-10.jpg'];
 
+// Pełna wersja: na początek dwa nowe kadry (biurko i tablica) wymieniają się
+// naprzemiennie. Gdy plików jeszcze nie ma, widok spada na LESSON_PORTRAITS.
+export const FULL_PORTRAITS = ['assets/scenes/scene-16.jpg', 'assets/scenes/scene-17.jpg'];
+
 // Pełna wersja: miesięczny budżet rozmów (w minutach)
 export const FULL_MONTH_MINUTES = 15 * 60;   // 15 godzin
 

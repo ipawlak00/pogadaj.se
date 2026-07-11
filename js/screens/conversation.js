@@ -1,8 +1,8 @@
-import { el, topbar, toast, navigate } from '../ui.js';
+import { el, topbar, toast, navigate, feedbackCorner } from '../ui.js';
 import { store } from '../state.js';
 import { speech, isEnglishText } from '../services/speech.js';
 import { ai } from '../services/ai.js';
-import { getLesson, getTrialLesson, getFullLesson, SCENES, TRIAL_MINUTES, FULL_MONTH_MINUTES, LESSON_PORTRAITS } from '../data/lessons.js';
+import { getLesson, getTrialLesson, getFullLesson, SCENES, TRIAL_MINUTES, FULL_MONTH_MINUTES, LESSON_PORTRAITS, FULL_PORTRAITS } from '../data/lessons.js';
 import { lessonHello } from '../data/phrases.js';
 
 // Lekcja = rozmowa z Izabelą (AI) albo sekwencja prostych kroków (bez AI).
@@ -180,13 +180,20 @@ export function renderConversation(mount, lessonId) {
     return eng.length ? eng[eng.length - 1] : null;
   };
 
-  // Lekcje AI (trial/full): portretowe kadry Izabeli. Inne: scena lekcji.
+  // Lekcje AI: pełna wersja wymienia naprzemiennie dwa nowe kadry,
+  // trial losuje portrety. Inne lekcje: scena lekcji.
+  let fullSceneIdx = 0;
   function nextScene() {
-    const path = (isTrial || isFull)
-      ? LESSON_PORTRAITS[Math.floor(Math.random() * LESSON_PORTRAITS.length)]
-      : (lesson.scene || (SCENES.length ? SCENES[Math.floor(Math.random() * SCENES.length)] : null));
+    let path;
+    if (isFull) path = FULL_PORTRAITS[(fullSceneIdx++) % FULL_PORTRAITS.length];
+    else if (isTrial) path = LESSON_PORTRAITS[Math.floor(Math.random() * LESSON_PORTRAITS.length)];
+    else path = lesson.scene || (SCENES.length ? SCENES[Math.floor(Math.random() * SCENES.length)] : null);
     if (!path) return;
-    sceneImg.onerror = () => { sceneImg.onerror = null; sceneImg.src = 'assets/izabela/izabela-lesson.png'; };
+    sceneImg.onerror = () => {
+      // brak nowego kadru → dotychczasowy portret, a w ostateczności rysunek Izabeli
+      sceneImg.onerror = () => { sceneImg.onerror = null; sceneImg.src = 'assets/izabela/izabela-lesson.png'; };
+      sceneImg.src = LESSON_PORTRAITS[Math.floor(Math.random() * LESSON_PORTRAITS.length)];
+    };
     sceneImg.src = path;
   }
   nextScene();

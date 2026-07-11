@@ -9,7 +9,7 @@
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
 // płeć z imienia (heurystyka jak w ai.js)
-const isFemale = (name) =>
+export const isFemale = (name) =>
   !!name && !/^(kuba|barnaba|kosma|bonawentura|dyzma|saba)$/i.test(name) && /a$/i.test(name);
 
 const HI = ['Siema', 'No hej', 'Hejka', 'O, jesteś', 'Alright', 'Halo halo, tu Londyn', 'No i git', 'Siemandero'];

@@ -91,7 +91,16 @@ export function topbar(rightNode) {
   ]);
 }
 
-export const navigate = (hash) => { location.hash = hash; };
+// Nawigacja hashem. Gdy hash się NIE zmienia (np. logowanie na '#/'),
+// przeglądarka nie wyśle hashchange — wysyłamy go sami, żeby router
+// przerysował ekran (inaczej „Zaloguj" nic nie robiło).
+export const navigate = (hash) => {
+  if (location.hash === hash || (!location.hash && hash === '#/')) {
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  } else {
+    location.hash = hash;
+  }
+};
 
 // Przycisk podłączenia prawdziwego AI (Gemini). Klucz wpisuje użytkownik u siebie
 // — trafia tylko do localStorage tego urządzenia, nigdy do repo.

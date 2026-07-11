@@ -1030,13 +1030,17 @@ body.on-lessons .cosmos { display: none; }
   display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
 }
 
-/* Historia: Izabela przy komputerze (scene-08), panel wysuwa się z prawej */
+/* Historia: przytulna scena z kotami (scene-15), panel z lekcjami po prawej.
+   Dopóki scene-15 nie jest wgrane, spod spodu widać dotychczasowe scene-08. */
 .history-fs {
   position: fixed; inset: 0; z-index: 50;
-  background: url('../assets/scenes/scene-08.jpg') center 30% / cover no-repeat #0c1018;
+  background-color: #0c1018;
+  background-image: url('../assets/scenes/scene-15.jpg'), url('../assets/scenes/scene-08.jpg');
+  background-size: cover, cover;
+  background-position: center 30%, center 30%;
+  background-repeat: no-repeat, no-repeat;
   font-family: var(--font-body);
 }
-.history-open-btn { position: absolute; left: 55%; top: 55%; z-index: 4; }
 .history-panel {
   position: absolute; right: 0; top: 0; bottom: 0; width: min(92vw, 380px);
   background: rgba(255,255,255,.96); border-left: 3px solid #16305a;
@@ -1078,5 +1082,4 @@ body.on-lessons .cosmos { display: none; }
 @media (max-width: 760px), (orientation: portrait) {
   .home-board { left: 50%; top: 26%; width: 88%; }
   .home-history-btn { right: 50%; transform: translateX(50%); top: auto; bottom: 20%; }
-  .history-open-btn { left: 50%; transform: translateX(-50%); top: 60%; }
 }
