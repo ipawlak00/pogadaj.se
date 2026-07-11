@@ -66,3 +66,12 @@ export function minutesWord(n) {
   if (d >= 2 && d <= 4 && !(dd >= 12 && dd <= 14)) return 'minuty';
   return 'minut';
 }
+
+// Odmiana godzin: 1 godzina, 2-4 godziny, 5-21 godzin...
+export function hoursWord(n) {
+  const abs = Math.abs(n);
+  if (abs === 1) return 'godzina';
+  const d = abs % 10, dd = abs % 100;
+  if (d >= 2 && d <= 4 && !(dd >= 12 && dd <= 14)) return 'godziny';
+  return 'godzin';
+}

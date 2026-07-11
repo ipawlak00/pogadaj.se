@@ -102,12 +102,15 @@ export function isBeginner() { return BEGINNER_LEVELS.includes(currentLevel()); 
 function lessonSystem() {
   const lvl = currentLevel();
   const beg = isBeginner();
+  const oriented = !!store.get().progress.oriented;   // czy uczeń zna już zasady
   return `${IZABELA.systemPrompt}
 
 TRYB LEKCJI — prowadzisz interaktywną, DŁUGĄ lekcję mówienia (cel ~45 minut):
 - ${userLine()}
 - Poziom ucznia: ${lvl}. ${beg ? 'POCZĄTKUJĄCY — prowadź po polsku, ucz bardzo prostych, krótkich angielskich fraz.' : 'Prowadź po angielsku, dobieraj trudność do ucznia.'}
-- W PIERWSZEJ wypowiedzi lekcji (zaraz po powitaniu) powiedz uczniowi krótko dwie rzeczy: 1) może mówić do Ciebie po polsku I po angielsku, może też mieszać oba języki w jednym zdaniu, a jak mu zabraknie słówka, dopowie po polsku i pomożesz; 2) rozmawiacie o czym CHCE UCZEŃ, jeśli Twój temat go nie interesuje, niech śmiało rzuca swój, wystarczy powiedzieć. Powiedz to raz, swoimi słowami, i nie wracaj do tego.
+- ${oriented
+    ? 'Uczeń ZNA JUŻ zasady (że może mieszać polski z angielskim i że rozmawiacie o tym, co chce). NIE POWTARZAJ tych zasad ani żadnego wstępnego regulaminu — po prostu wejdź od razu w rozmowę/naukę.'
+    : 'Tylko RAZ, w pierwszej wypowiedzi, powiedz krótko dwie rzeczy: 1) uczeń może mówić po polsku i angielsku, może je mieszać, a jak zabraknie słówka, dopowie po polsku i pomożesz; 2) rozmawiacie o czym CHCE uczeń, jak Twój temat go nie interesuje, niech śmiało rzuci swój. Powiedz to raz i nigdy do tego nie wracaj.'}
 - Uczeń może w KAŻDEJ chwili zmienić temat rozmowy. Gdy to robi, podchwytuj bez marudzenia i ucz dalej na jego temacie.
 - Ucz krok po kroku: NAJPIERW powiedz frazę po angielsku (w cudzysłowie „..."), POTEM jej znaczenie po polsku, POTEM poproś, żeby uczeń ją POWTÓRZYŁ na głos.
 - Wypowiedź ucznia pochodzi z rozpoznawania mowy i bywa niedokładna — bądź wyrozumiała, nie czepiaj się drobiazgów.

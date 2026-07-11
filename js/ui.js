@@ -38,9 +38,15 @@ export function feedbackCorner(page) {
 }
 
 export function openFeedback(page) {
+  const st = JSON.parse(localStorage.getItem('pogadajse.state') || '{}');
   const area = el('textarea.feedback-text', {
     placeholder: 'Napisz, co myślisz o aplikacji i lekcji. Coś nie działało? Masz pomysł, co poprawić albo naprawić? Pisz śmiało, czytam wszystko.',
     maxlength: '4000',
+  });
+  // Podpis OPCJONALNY — imię albo ksywka (można zostawić puste)
+  const signIn = el('input.feedback-sign', {
+    type: 'text', maxlength: '40', value: st.user?.name || '',
+    placeholder: 'Imię lub ksywka (opcjonalnie)',
   });
   const sendBtn = el('button.btn.btn--sq.btn--block', { onclick: send }, ['Wyślij do Izabeli']);
   const overlay = el('div.level-overlay', {
@@ -51,6 +57,7 @@ export function openFeedback(page) {
       el('h2.display', { style: 'margin:0 0 4px;color:#14314f', text: 'Zostaw opinię Izabeli' }),
       el('p', { style: 'margin:0 0 12px;color:#46688c', text: 'Każda uwaga trafia prosto do autorki. Dzięki.' }),
       area,
+      signIn,
       sendBtn,
     ]),
   ]);
@@ -61,10 +68,9 @@ export function openFeedback(page) {
     sendBtn.disabled = true; sendBtn.textContent = 'Wysyłam…';
     try {
       const base = (CONFIG.GEMINI.proxyBase || '').replace(/\/$/, '');
-      const st = JSON.parse(localStorage.getItem('pogadajse.state') || '{}');
       const res = await fetch(base + '/feedback', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, page: page || '', email: st.user?.email || '', name: st.user?.name || '' }),
+        body: JSON.stringify({ text, page: page || '', email: st.user?.email || '', name: signIn.value.trim() }),
       });
       if (!res.ok) throw new Error('send failed');
       overlay.remove();

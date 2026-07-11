@@ -39,39 +39,28 @@ export function renderHistory(mount) {
     'Cieniutko tu jeszcze. Wpadaj na lekcję, a zaraz się zaroi.',
   ];
   const manyLines = [
-    'Proszę bardzo, wszystko skrzętnie notuję. Zobacz, o czym gadaliśmy.',
-    'Cała nasza historia jak na dłoni. Nieźle nam idzie, co?',
-    'Wszystko zapisane, co do minuty. Lubię porządek w papierach.',
+    'O, patrz, cała nasza historia jak na dłoni. Nieźle nam idzie, co?',
+    'Wszystko tu mam, o czym gadaliśmy. Fajnie się to ogląda.',
+    'Zobacz, ile już razem przegadaliśmy. Robi wrażenie!',
   ];
   const spoken = entries.length < 1 ? pick(fewJokes) : pick(manyLines);
 
-  // Strefy na okienka — z dala od dymka (lewy górny róg), twarzy Izabeli
-  // (środek) oraz kota/robota i hologramu z tekstem (prawa i prawa-góra).
-  // Zostają: pas nad głową, dolny pas przy biurku i dolny lewy róg.
-  const SLOTS = [
-    { l: 34, t: 3 }, { l: 50, t: 2 },                 // nad głową (nad twarzą)
-    { l: 3, t: 62 }, { l: 3, t: 80 },                 // lewy dolny (fotel/podłoga)
-    { l: 28, t: 85 }, { l: 46, t: 88 }, { l: 63, t: 86 }, { l: 20, t: 70 }, // dolny pas
-  ];
+  // Kolumna okienek po PRAWEJ stronie, w dolnej części (biurko/konsola) —
+  // nie zasłania twarzy Izabeli ani kotów. Zwinięte = tytuł, klik rozwija.
   const cards = el('div.history-cards', {},
-    entries.length
-      ? entries.map((e, i) => {
-          const s = SLOTS[i % SLOTS.length];
-          const shift = (Math.floor(i / SLOTS.length) * 4) % 12;
-          const card = el('div.history-item', {
-            style: `left:${s.l + shift / 2}%; top:${Math.min(88, s.t + shift)}%`,
-            title: 'Kliknij, aby rozwinąć',
-            onclick: () => card.classList.toggle('open'),
-          }, [
-            el('div.history-item__head', {}, [
-              el('span.history-item__kind', { text: e.kind === 'trial' ? 'Lekcja próbna' : 'Lekcja' }),
-              el('span.history-item__meta', { text: `${fmtDate(e.startedAt)} · ${fmtDur(e.seconds)}` }),
-            ]),
-            el('p.history-item__sum', { text: e.summary || 'Podsumowanie pojawi się po rozmowie.' }),
-          ]);
-          return card;
-        })
-      : [],
+    entries.map((e) => {
+      const card = el('div.history-item', {
+        title: 'Kliknij, aby rozwinąć',
+        onclick: () => card.classList.toggle('open'),
+      }, [
+        el('div.history-item__head', {}, [
+          el('span.history-item__kind', { text: e.kind === 'trial' ? 'Lekcja próbna' : 'Lekcja' }),
+          el('span.history-item__meta', { text: `${fmtDate(e.startedAt)} · ${fmtDur(e.seconds)}` }),
+        ]),
+        el('p.history-item__sum', { text: e.summary || 'Podsumowanie pojawi się po rozmowie.' }),
+      ]);
+      return card;
+    }),
   );
 
   // Dymek z tym, co mówi Izabela (lewy górny róg — bezpieczna strefa)

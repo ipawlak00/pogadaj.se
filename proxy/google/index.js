@@ -128,8 +128,36 @@ function passwordProblem(p) {
   return null;
 }
 
-// Opinia użytkownika — zapis do Firestore (kolekcja feedback);
-// przekierowanie na maila izabela@izabelacode.pl można dopiąć po podaniu SMTP.
+// Wysyłka opinii MAILEM na izabela@izabelacode.pl (przez Resend API).
+// Działa, gdy ustawiony jest sekret RESEND_KEY; bez niego pomijamy (zostaje
+// zapis w Firestore). FROM/TO można nadpisać zmiennymi FEEDBACK_FROM/FEEDBACK_TO.
+async function sendFeedbackEmail(entry) {
+  const key = process.env.RESEND_KEY;
+  if (!key) return { sent: false, reason: 'no RESEND_KEY' };
+  const to = process.env.FEEDBACK_TO || 'izabela@izabelacode.pl';
+  const from = process.env.FEEDBACK_FROM || 'Pogadaj.se <onboarding@resend.dev>';
+  const sig = entry.name ? entry.name : 'Anonim';
+  const lines = [
+    `Podpis: ${sig}`,
+    entry.email ? `Konto (email): ${entry.email}` : 'Konto: (brak / gość)',
+    entry.page ? `Ekran: ${entry.page}` : '',
+    '',
+    entry.text,
+  ].filter((l) => l !== '').join('\n');
+  const body = {
+    from, to: [to], subject: `Opinia z pogadaj.se — ${sig}`, text: lines,
+  };
+  if (entry.email) body.reply_to = entry.email;
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error('Resend ' + r.status + ': ' + (await r.text()).slice(0, 200));
+  return { sent: true };
+}
+
+// Opinia użytkownika — zapis do Firestore (kolekcja feedback) jako trwały ślad.
 async function fsAddFeedback(entry) {
   const [token, project] = await Promise.all([gcpToken(), gcpProject()]);
   const url = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/feedback`;
@@ -247,7 +275,10 @@ exports.geminiProxy = async (req, res) => {
       const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
       const text = String(body.text || '').trim().slice(0, 4000);
       if (!text) return res.status(400).json({ error: 'Pusta opinia.' });
-      await fsAddFeedback({ email: String(body.email || '').slice(0, 120), name: String(body.name || '').slice(0, 60), page: String(body.page || '').slice(0, 60), text });
+      const entry = { email: String(body.email || '').slice(0, 120), name: String(body.name || '').slice(0, 60), page: String(body.page || '').slice(0, 60), text };
+      await fsAddFeedback(entry);                       // trwały zapis (zawsze)
+      try { await sendFeedbackEmail(entry); }           // mail best-effort (gdy jest RESEND_KEY)
+      catch (e) { console.error('[feedback-mail]', e); }
       return res.status(200).json({ ok: true });
     } catch (e) {
       console.error('[feedback]', e);

@@ -3,7 +3,7 @@ import { store } from '../state.js';
 import { auth } from '../services/auth.js';
 import { speech } from '../services/speech.js';
 import { FULL_MONTH_MINUTES, HOME_SCENES } from '../data/lessons.js';
-import { minutesWord } from '../data/phrases.js';
+import { minutesWord, hoursWord } from '../data/phrases.js';
 
 // Poziomy do zmiany z pełnej wersji (te same co w onboardingu)
 const HOME_LEVELS = [
@@ -77,24 +77,31 @@ export function renderHome(mount) {
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
   const firstTime = !store.get().progress.homeWelcomed;
 
-  let hi, bodyText;
+  // Czas: w dymku skrót (15 h 0 min), a MÓWIONY pełnymi słowami (lektor czyta
+  // „h" jako „hyy"), z poprawną odmianą godzin/minut.
+  const timeShort = `${leftH} h ${leftM} min`;
+  const timeSpoken = `${leftH} ${hoursWord(leftH)} i ${leftM} ${minutesWord(leftM)}`;
+
+  let hi, bodyText, bodySpoken;
   if (firstTime) {
     // Pierwsze wejście do pełnej wersji: ciepłe przywitanie + kim jest Izabela
     store.patchKey('progress', { homeWelcomed: true });
     hi = `Cześć${name ? ', ' + name : ''}! Ale się cieszę, że zostajesz ze mną na dłużej.`;
     bodyText = 'Poznamy się teraz lepiej. Wiesz, ja tak sobie lecę przez kosmos, w ciągłej podróży, ' +
       'szukając przygód. Ze mną lecą moje koty, Kocin i Peja, a od teraz też Ty. ' +
-      `Na naszą wspólną podróż mam dla Ciebie ${leftH} godzin w miesiącu na rozmowy, ` +
+      `Na naszą wspólną podróż mam dla Ciebie ${timeSpoken} w miesiącu na rozmowy, ` +
       'żebyśmy razem szlifowali Twój angielski. No to zaczynamy!';
+    bodySpoken = bodyText;
   } else {
     hi = pick([
       `Witaj z powrotem${name ? ', ' + name : ''}!`,
       'No i znów razem, świetnie!',
       'O, jesteś! Dobrze Cię widzieć.',
     ]);
-    bodyText = `Masz jeszcze ${leftH} h ${leftM} min rozmów w tym miesiącu. Klikaj i gadamy!`;
+    bodyText = `Masz jeszcze ${timeShort} rozmów w tym miesiącu. Klikaj i gadamy!`;
+    bodySpoken = `Masz jeszcze ${timeSpoken} rozmów w tym miesiącu. Klikaj i gadamy!`;
   }
-  const spoken = `${hi} ${bodyText}`;
+  const spoken = `${hi} ${bodySpoken}`;
   const bubble = el('div.scene-bubble', {
     style: layout.bubble, title: 'Kliknij, a powtórzę',
     onclick: () => speech.speak(spoken, { lang: 'pl-PL' }),

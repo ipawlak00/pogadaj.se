@@ -308,6 +308,9 @@ Już się przywitałaś słowami "${hello}" — NIE witaj się ponownie. Teraz: 
     setBusy(false);
     if (r.unsupported) { startStep(); return; }     // brak Gemini → kroki
     history.push({ role: 'model', text: r.say });
+    // Po pierwszej odpowiedzi uczeń zna już zasady (mieszanie języków, wybór
+    // tematu) — kolejne lekcje nie będą ich powtarzać.
+    if (!store.get().progress.oriented) store.patchKey('progress', { oriented: true });
     if (r.mistake) setMood('oops');
     speakLine(r.say, { lang: r.lang, onEnd: () => setMood('neutral') });
     setTarget(quotedPhrase(r.say) || (r.suggestions || [])[0] || null);

@@ -1050,18 +1050,23 @@ body.on-lessons .cosmos { display: none; }
   background: #0c1018 url('../assets/scenes/scene-17.jpg') center 30% / cover no-repeat;
   font-family: var(--font-body);
 }
-/* Okienka lekcji rozrzucone po całym ekranie (bez białego panelu).
-   Zwinięte = sam tytuł z datą; klik rozwija podsumowanie. */
-.history-cards { position: absolute; inset: 70px 0 0; z-index: 4; }
+/* Okienka lekcji w kolumnie po PRAWEJ stronie (dolna część = biurko),
+   nie zasłaniają twarzy Izabeli ani kotów. Zwinięte = tytuł, klik rozwija. */
+.history-cards {
+  position: absolute; right: 1.5%; top: 50%; bottom: 5%; z-index: 4;
+  width: min(320px, 40vw);
+  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+  overflow-y: auto;
+}
 .history-item {
-  position: absolute; width: max-content; max-width: min(86vw, 320px);
+  width: max-content; max-width: 100%;
   background: radial-gradient(ellipse at center, #ffffff 30%, #eaf3fb 75%, #d9e8f4 100%);
   border: 2px solid #16305a; border-radius: 10px; padding: 7px 12px;
   box-shadow: 0 10px 26px rgba(6,25,55,.4);
   cursor: pointer;
 }
 .history-item .history-item__sum { display: none; }
-.history-item.open { width: min(86vw, 320px); padding: 10px 12px; z-index: 6; }
+.history-item.open { width: 100%; padding: 10px 12px; }
 .history-item.open .history-item__sum { display: block; }
 .history-item__head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
 .history-item__kind { font-family: var(--font-display); font-weight: 700; color: #16305a; }
@@ -1098,6 +1103,13 @@ body.on-lessons .cosmos { display: none; }
 }
 .feedback-text::placeholder { color: #8aa5bf; font-style: italic; transform: skewX(-6deg); }
 .feedback-text:focus { outline: none; border-color: #1d9fd8; }
+.feedback-sign {
+  width: 100%; padding: 12px 14px; margin-bottom: 12px;
+  border: 2px solid #cfe6f8; border-radius: 10px;
+  font-family: var(--font-body); font-size: .95rem; color: #14314f; background: #f7fbff;
+}
+.feedback-sign::placeholder { color: #8aa5bf; }
+.feedback-sign:focus { outline: none; border-color: #1d9fd8; }
 
 @media (max-width: 760px), (orientation: portrait) {
   /* Na telefonie kadr jest przycięty — układamy UI w bezpieczne pasy
