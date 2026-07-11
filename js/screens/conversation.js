@@ -2,7 +2,7 @@ import { el, topbar, toast, navigate, feedbackCorner } from '../ui.js';
 import { store } from '../state.js';
 import { speech, isEnglishText } from '../services/speech.js';
 import { ai, isBeginner } from '../services/ai.js';
-import { getLesson, getTrialLesson, getFullLesson, SCENES, TRIAL_MINUTES, FULL_MONTH_MINUTES, LESSON_PORTRAITS, FULL_PORTRAITS } from '../data/lessons.js';
+import { getLesson, getTrialLesson, getFullLesson, SCENES, TRIAL_MINUTES, FULL_MONTH_MINUTES, LESSON_PORTRAITS } from '../data/lessons.js';
 import { lessonHello } from '../data/phrases.js';
 
 // Lekcja = rozmowa z Izabelą (AI) albo sekwencja prostych kroków (bez AI).
@@ -180,19 +180,10 @@ export function renderConversation(mount, lessonId) {
     return eng.length ? eng[eng.length - 1] : null;
   };
 
-  // Lekcje AI: pełna wersja wymienia kadry po kolei (brakujący plik jest
-  // pomijany i próbujemy następnego), trial losuje portrety.
-  let fullSceneIdx = 0;
-  function showFullScene(idx, attemptsLeft) {
-    sceneImg.onerror = () => {
-      if (attemptsLeft > 1) showFullScene(idx + 1, attemptsLeft - 1);
-      else { sceneImg.onerror = null; sceneImg.src = 'assets/izabela/izabela-lesson.png'; }
-    };
-    sceneImg.src = FULL_PORTRAITS[idx % FULL_PORTRAITS.length];
-  }
+  // Wewnątrz lekcji (trial i pełna): WYŁĄCZNIE portretowe kadry Izabeli.
+  // Zdjęcia z kotami itp. przewijają się na ekranie głównym, nie tutaj.
   function nextScene() {
-    if (isFull) { showFullScene(fullSceneIdx++, FULL_PORTRAITS.length); return; }
-    const path = isTrial
+    const path = (isTrial || isFull)
       ? LESSON_PORTRAITS[Math.floor(Math.random() * LESSON_PORTRAITS.length)]
       : (lesson.scene || (SCENES.length ? SCENES[Math.floor(Math.random() * SCENES.length)] : null));
     if (!path) return;

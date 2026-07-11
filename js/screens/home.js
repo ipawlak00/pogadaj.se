@@ -2,11 +2,11 @@ import { el, navigate, openFeedback, feedbackCorner, accountButton } from '../ui
 import { store } from '../state.js';
 import { auth } from '../services/auth.js';
 import { speech } from '../services/speech.js';
-import { FULL_MONTH_MINUTES } from '../data/lessons.js';
+import { FULL_MONTH_MINUTES, HOME_SCENES } from '../data/lessons.js';
 import { minutesWord } from '../data/phrases.js';
 
-// PEŁNA WERSJA — Izabela przy cyfrowej tablicy (scene-06).
-// Na tablicy: dostępny czas w tym miesiącu (domyślnie 15 h) + pasek zużycia.
+// PEŁNA WERSJA — tła przewijają się płynnie (Izabela z kotami itd.),
+// na wierzchu panel z dostępnym czasem w tym miesiącu (domyślnie 15 h).
 export function renderHome(mount) {
   document.body.classList.add('on-lessons');
   window.addEventListener('hashchange', () => {
@@ -63,7 +63,32 @@ export function renderHome(mount) {
     }, ['Zacznij nową lekcję']),
   ]);
 
+  // Przewijane tła: dwie warstwy przenikają się co kilkanaście sekund.
+  // Brakujący plik (np. scene-17 przed wgraniem) jest po prostu pomijany.
+  const bgA = el('div.home-bg');
+  const bgB = el('div.home-bg');
+  let bgCur = bgA, bgNext = bgB, bgIdx = 0;
+  function showBg(k, attemptsLeft) {
+    if (attemptsLeft <= 0) return;
+    const src = HOME_SCENES[k % HOME_SCENES.length];
+    const im = new Image();
+    im.onload = () => {
+      bgNext.style.backgroundImage = `url('${src}')`;
+      bgNext.classList.add('show');
+      bgCur.classList.remove('show');
+      [bgCur, bgNext] = [bgNext, bgCur];
+      bgIdx = k + 1;
+    };
+    im.onerror = () => showBg(k + 1, attemptsLeft - 1);
+    im.src = src;
+  }
+  showBg(0, HOME_SCENES.length);
+  const bgTimer = setInterval(() => showBg(bgIdx, HOME_SCENES.length), 14000);
+  window.addEventListener('hashchange', () => clearInterval(bgTimer), { once: true });
+
   screen.replaceChildren(
+    bgA,
+    bgB,
     el('header.lessons-fs__top', {}, [
       el('div.logo', { html: 'pogadaj<span class="dot">.</span><span class="se">se</span>' }),
       el('div.lessons-fs__tools', {}, [

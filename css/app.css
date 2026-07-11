@@ -1003,13 +1003,21 @@ body.on-lessons .cosmos { display: none; }
 }
 .lessons-fs__bubble--end { left: 50%; top: 10%; transform: translateX(-50%); width: min(92%, 560px); cursor: default; }
 
-/* Pełna wersja: Izabela przy tablicy (scene-06); czas wyświetlany NA tablicy */
+/* Pełna wersja: tła przewijają się (dwie warstwy z przenikaniem),
+   na wierzchu panel z czasem */
 .home-fs {
   position: fixed; inset: 0; z-index: 50;
-  background: url('../assets/scenes/scene-06.jpg') center 30% / cover no-repeat #0c1018;
+  background: #0c1018;
   font-family: var(--font-body);
 }
+.home-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-position: center 30%; background-size: cover; background-repeat: no-repeat;
+  opacity: 0; transition: opacity 1.4s ease;
+}
+.home-bg.show { opacity: 1; }
 .home-board {
+  z-index: 2;
   position: absolute; left: 27%; top: 34%; transform: translate(-50%, -50%);
   width: min(38%, 430px); text-align: center; color: #dff4ff;
   background: rgba(8, 26, 34, .55); border: 2px solid rgba(120, 230, 255, .55);

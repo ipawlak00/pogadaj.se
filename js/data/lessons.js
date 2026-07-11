@@ -184,7 +184,7 @@ export const LESSONS_HIGH = [
   },
   {
     id: 'work-english',
-    scene: 'assets/scenes/scene-13.jpg',
+    scene: 'assets/scenes/scene-07.jpg',
     num: 2,
     title: 'Angielski w robocie',
     badge: 'free',
@@ -217,10 +217,10 @@ export const LESSONS_HIGH = [
 // Sceny (tła) przeplatające się przy lekcjach/zadaniach — Twoje grafiki.
 export const SCENES = [
   'assets/scenes/scene-01.jpg', 'assets/scenes/scene-02.jpg', 'assets/scenes/scene-03.jpg',
-  'assets/scenes/scene-04.jpg', 'assets/scenes/scene-05.jpg', 'assets/scenes/scene-06.jpg',
+  'assets/scenes/scene-04.jpg', 'assets/scenes/scene-05.jpg',
   'assets/scenes/scene-07.jpg', 'assets/scenes/scene-08.jpg', 'assets/scenes/scene-09.jpg',
   'assets/scenes/scene-10.jpg', 'assets/scenes/scene-11.jpg', 'assets/scenes/scene-12.jpg',
-  'assets/scenes/scene-13.jpg', 'assets/scenes/scene-14.jpg',
+  'assets/scenes/scene-14.jpg',
 ];
 
 // ---- Dobór zestawu lekcji do poziomu ucznia ----
@@ -232,10 +232,11 @@ export const getLessonsForLevel = (lvl) => LESSON_SETS[setForLevel(lvl)];
 // Portretowe kadry Izabeli do widoku lekcji (blisko, od pasa w górę)
 export const LESSON_PORTRAITS = ['assets/scenes/scene-05.jpg', 'assets/scenes/scene-09.jpg', 'assets/scenes/scene-10.jpg'];
 
-// Pełna wersja: kadry wymieniają się po kolei (bez klasy z Present Continuous).
+// Ekran główny pełnej wersji: tła przewijają się (Izabela z kotami itd.).
 // scene-17 (rysowanie przy konsoli) i scene-18 (kanapa z laptopem i kotami)
 // włączą się same, gdy pliki trafią do assets/scenes — do tego czasu są pomijane.
-export const FULL_PORTRAITS = [
+export const HOME_SCENES = [
+  'assets/scenes/scene-15.jpg',   // warsztat z kotami (Peja śpi, Kocin na kablach)
   'assets/scenes/scene-16.jpg',   // Izabela z kotem na kolanach, czyta tablet
   'assets/scenes/scene-17.jpg',   // rysowanie rysikiem przy konsoli (do wgrania)
   'assets/scenes/scene-18.jpg',   // kanapa z laptopem i dwoma kotami (do wgrania)
