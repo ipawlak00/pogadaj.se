@@ -232,9 +232,15 @@ export const getLessonsForLevel = (lvl) => LESSON_SETS[setForLevel(lvl)];
 // Portretowe kadry Izabeli do widoku lekcji (blisko, od pasa w górę)
 export const LESSON_PORTRAITS = ['assets/scenes/scene-05.jpg', 'assets/scenes/scene-09.jpg', 'assets/scenes/scene-10.jpg'];
 
-// Pełna wersja: na początek biurko z robotem i klasa przy tablicy
-// wymieniają się naprzemiennie.
-export const FULL_PORTRAITS = ['assets/scenes/scene-07.jpg', 'assets/scenes/scene-13.jpg'];
+// Pełna wersja: kadry wymieniają się po kolei. scene-17 (rysowanie przy
+// konsoli) i scene-18 (kanapa z laptopem i kotami) włączą się same,
+// gdy tylko pliki trafią do assets/scenes — do tego czasu są pomijane.
+export const FULL_PORTRAITS = [
+  'assets/scenes/scene-16.jpg',   // Izabela z kotem na kolanach, czyta tablet
+  'assets/scenes/scene-13.jpg',   // klasa przy tablicy (Present Continuous)
+  'assets/scenes/scene-17.jpg',   // rysowanie rysikiem przy konsoli (do wgrania)
+  'assets/scenes/scene-18.jpg',   // kanapa z laptopem i dwoma kotami (do wgrania)
+];
 
 // Pełna wersja: miesięczny budżet rozmów (w minutach)
 export const FULL_MONTH_MINUTES = 15 * 60;   // 15 godzin

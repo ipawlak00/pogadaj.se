@@ -180,20 +180,23 @@ export function renderConversation(mount, lessonId) {
     return eng.length ? eng[eng.length - 1] : null;
   };
 
-  // Lekcje AI: pełna wersja wymienia naprzemiennie dwa nowe kadry,
-  // trial losuje portrety. Inne lekcje: scena lekcji.
+  // Lekcje AI: pełna wersja wymienia kadry po kolei (brakujący plik jest
+  // pomijany i próbujemy następnego), trial losuje portrety.
   let fullSceneIdx = 0;
-  function nextScene() {
-    let path;
-    if (isFull) path = FULL_PORTRAITS[(fullSceneIdx++) % FULL_PORTRAITS.length];
-    else if (isTrial) path = LESSON_PORTRAITS[Math.floor(Math.random() * LESSON_PORTRAITS.length)];
-    else path = lesson.scene || (SCENES.length ? SCENES[Math.floor(Math.random() * SCENES.length)] : null);
-    if (!path) return;
+  function showFullScene(idx, attemptsLeft) {
     sceneImg.onerror = () => {
-      // brak nowego kadru → dotychczasowy portret, a w ostateczności rysunek Izabeli
-      sceneImg.onerror = () => { sceneImg.onerror = null; sceneImg.src = 'assets/izabela/izabela-lesson.png'; };
-      sceneImg.src = LESSON_PORTRAITS[Math.floor(Math.random() * LESSON_PORTRAITS.length)];
+      if (attemptsLeft > 1) showFullScene(idx + 1, attemptsLeft - 1);
+      else { sceneImg.onerror = null; sceneImg.src = 'assets/izabela/izabela-lesson.png'; }
     };
+    sceneImg.src = FULL_PORTRAITS[idx % FULL_PORTRAITS.length];
+  }
+  function nextScene() {
+    if (isFull) { showFullScene(fullSceneIdx++, FULL_PORTRAITS.length); return; }
+    const path = isTrial
+      ? LESSON_PORTRAITS[Math.floor(Math.random() * LESSON_PORTRAITS.length)]
+      : (lesson.scene || (SCENES.length ? SCENES[Math.floor(Math.random() * SCENES.length)] : null));
+    if (!path) return;
+    sceneImg.onerror = () => { sceneImg.onerror = null; sceneImg.src = 'assets/izabela/izabela-lesson.png'; };
     sceneImg.src = path;
   }
   nextScene();

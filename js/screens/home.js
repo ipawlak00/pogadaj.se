@@ -26,8 +26,9 @@ export function renderHome(mount) {
   const usedSec = store.get().progress.fullSecondsUsed || 0;
   const totalSec = FULL_MONTH_MINUTES * 60;
   const leftSec = Math.max(0, totalSec - usedSec);
+  // floor, nie round — inaczej 14:59:30 wyświetlało się jako „14 h 60 min"
   const leftH = Math.floor(leftSec / 3600);
-  const leftM = Math.round((leftSec % 3600) / 60);
+  const leftM = Math.floor((leftSec % 3600) / 60);
   const usedPct = Math.min(100, Math.round((usedSec / totalSec) * 100));
 
   const name = (store.get().user?.name || '').trim();
