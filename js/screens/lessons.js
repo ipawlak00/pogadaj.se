@@ -4,7 +4,7 @@ import { auth } from '../services/auth.js';
 import { speech } from '../services/speech.js';
 import { TRIAL_MINUTES } from '../data/lessons.js';
 import { greetingHi, pushLine, minutesWord } from '../data/phrases.js';
-import { openFeedback, feedbackCorner } from '../ui.js';
+import { openFeedback, feedbackCorner, accountButton } from '../ui.js';
 
 // Trzy pasma poziomów — wpływają na temat i trudność lekcji próbnej
 const LEVEL_BANDS = [
@@ -64,10 +64,9 @@ export function renderLessons(mount) {
     const bt = bubbleText(left);
     const spoken = `${bt.hi} ${bt.body}`;
 
-    const u = store.get().user;
     const topRight = el('div.lessons-fs__tools', {}, [
-      // kto jest zalogowany — żeby konta nigdy się nie myliły
-      u ? el('span.pill.account-pill', { title: u.email || '', text: u.name || u.email || '' }) : null,
+      // kto jest zalogowany (klik = profil) — żeby konta nigdy się nie myliły
+      accountButton(),
       level ? el('button.btn.btn--ghost', { onclick: () => drawPicker(), title: 'Zmień poziom' }, [`Poziom: ${level} · zmień`]) : null,
       el('button.btn.btn--ghost', { onclick: () => { auth.signOut(); location.hash = '#/'; location.reload(); } }, ['Wyloguj']),
     ]);
@@ -164,12 +163,11 @@ export function renderLessons(mount) {
       );
     }
 
-    const u = store.get().user;
     screen.replaceChildren(
       el('header.lessons-fs__top', {}, [
         el('div.logo', { html: 'pogadaj<span class="dot">.</span><span class="se">se</span>' }),
         el('div.lessons-fs__tools', {}, [
-          u ? el('span.pill.account-pill', { title: u.email || '', text: u.name || u.email || '' }) : null,
+          accountButton(),
           el('button.btn.btn--ghost', { onclick: () => { auth.signOut(); location.hash = '#/'; location.reload(); } }, ['Wyloguj']),
         ]),
       ]),

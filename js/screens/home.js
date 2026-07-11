@@ -1,4 +1,4 @@
-import { el, navigate, openFeedback, feedbackCorner } from '../ui.js';
+import { el, navigate, openFeedback, feedbackCorner, accountButton } from '../ui.js';
 import { store } from '../state.js';
 import { auth } from '../services/auth.js';
 import { speech } from '../services/speech.js';
@@ -63,12 +63,11 @@ export function renderHome(mount) {
     }, ['Zacznij nową lekcję']),
   ]);
 
-  const u = store.get().user;
   screen.replaceChildren(
     el('header.lessons-fs__top', {}, [
       el('div.logo', { html: 'pogadaj<span class="dot">.</span><span class="se">se</span>' }),
       el('div.lessons-fs__tools', {}, [
-        u ? el('span.pill.account-pill', { title: u.email || '', text: u.name || u.email || '' }) : null,
+        accountButton(),
         el('button.btn.btn--ghost', { onclick: () => { auth.signOut(); location.hash = '#/'; location.reload(); } }, ['Wyloguj']),
       ]),
     ]),

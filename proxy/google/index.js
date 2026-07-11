@@ -91,6 +91,13 @@ async function fsPutUser(u) {
   if (!r.ok) throw new Error('Firestore PUT ' + r.status + ': ' + (await r.text()).slice(0, 200));
 }
 
+async function fsDeleteUser(email) {
+  const [token, project] = await Promise.all([gcpToken(), gcpProject()]);
+  const url = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/users/${userDocId(email)}`;
+  const r = await fetch(url, { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } });
+  if (!r.ok && r.status !== 404) throw new Error('Firestore DELETE ' + r.status + ': ' + (await r.text()).slice(0, 200));
+}
+
 // ---- hasła i tokeny sesji ----
 const hashPassword = (password, salt) =>
   crypto.scryptSync(password, salt, 64).toString('hex');
@@ -178,6 +185,34 @@ async function handleAuth(path, body, res) {
     return res.status(200).json({ ok: true, id: u.id, name: u.name, email: u.email, token: makeToken(email), profile });
   }
 
+  // Zmiana emaila: konto przenosi się pod nowy adres (dokument = hash emaila),
+  // stary dokument znika, klient dostaje świeży token na nowy adres.
+  if (path === '/auth/setemail') {
+    const newEmail = String(body.newEmail || '').trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(newEmail)) return res.status(400).json({ error: 'Podaj poprawny nowy adres email.' });
+    if (!verifyToken(body.token, email)) return res.status(401).json({ error: 'Sesja wygasła. Zaloguj się ponownie.' });
+    const u = await fsGetUser(email);
+    if (!u) return res.status(404).json({ error: 'Nie ma takiego konta.' });
+    if (newEmail !== email && await fsGetUser(newEmail)) return res.status(409).json({ error: 'Konto z tym adresem już istnieje.' });
+    await fsPutUser({ ...u, email: newEmail });
+    if (newEmail !== email) await fsDeleteUser(email);
+    return res.status(200).json({ ok: true, email: newEmail, token: makeToken(newEmail) });
+  }
+
+  // Zmiana hasła: wymaga obecnego hasła, nowe przechodzi te same reguły
+  if (path === '/auth/setpassword') {
+    if (!verifyToken(body.token, email)) return res.status(401).json({ error: 'Sesja wygasła. Zaloguj się ponownie.' });
+    const u = await fsGetUser(email);
+    if (!u || hashPassword(String(body.password || ''), u.salt) !== u.hash) {
+      return res.status(401).json({ error: 'Obecne hasło się nie zgadza.' });
+    }
+    const pp = passwordProblem(String(body.newPassword || ''));
+    if (pp) return res.status(400).json({ error: pp });
+    const salt = crypto.randomBytes(16).toString('hex');
+    await fsPutUser({ ...u, salt, hash: hashPassword(String(body.newPassword), salt) });
+    return res.status(200).json({ ok: true });
+  }
+
   // Profil fonetyczny — Izabela zapamiętuje problemy z wymową na koncie
   if (path === '/profile/save') {
     if (!verifyToken(body.token, email)) return res.status(401).json({ error: 'Sesja wygasła. Zaloguj się ponownie.' });
@@ -221,7 +256,8 @@ exports.geminiProxy = async (req, res) => {
   }
 
   // Konta użytkowników
-  if (path === '/auth/register' || path === '/auth/login' || path === '/auth/setname' || path === '/profile/save') {
+  if (path === '/auth/register' || path === '/auth/login' || path === '/auth/setname'
+      || path === '/auth/setemail' || path === '/auth/setpassword' || path === '/profile/save') {
     try {
       const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
       return await handleAuth(path, body, res);

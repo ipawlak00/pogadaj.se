@@ -3,6 +3,8 @@
 // =============================================================
 
 import { CONFIG } from './config.js';
+import { store } from './state.js';
+import { auth, passwordProblem } from './services/auth.js';
 import { setGeminiKey, hasGeminiKey } from './services/ai.js';
 import { setGoogleTTSKey, hasGoogleTTS } from './services/speech.js';
 
@@ -75,6 +77,70 @@ export function openFeedback(page) {
 
   document.body.append(overlay);
   setTimeout(() => area.focus(), 50);
+}
+
+// ---------- Profil użytkownika ----------
+// Przycisk z imieniem (taki sam jak sąsiednie) otwiera okno profilu:
+// zmiana imienia, adresu email i hasła.
+export function accountButton() {
+  const u = store.get().user;
+  if (!u) return el('span');
+  return el('button.btn.btn--ghost', { title: 'Twój profil', onclick: openProfile },
+    [u.name || u.email || 'Profil']);
+}
+
+export function openProfile() {
+  const u = store.get().user || {};
+  const nameIn = el('input', { type: 'text', value: u.name || '', placeholder: 'Twoje imię' });
+  const emailIn = el('input', { type: 'email', value: u.email || '', placeholder: 'twój@email.com' });
+  const curPass = el('input', { type: 'password', placeholder: 'Obecne hasło', autocomplete: 'current-password' });
+  const newPass = el('input', { type: 'password', placeholder: 'Nowe hasło', autocomplete: 'new-password' });
+  const saveBtn = el('button.btn.btn--primary.btn--block', { onclick: save }, ['Zapisz zmiany']);
+
+  const overlay = el('div.level-overlay', {
+    onclick: (e) => { if (e.target === overlay) overlay.remove(); },
+  }, [
+    el('div.level-box.profile-box', {}, [
+      el('button.level-close', { onclick: () => overlay.remove(), 'aria-label': 'Zamknij' }, ['X']),
+      el('h2.display', { style: 'margin:0 0 4px;color:#14314f', text: 'Twój profil' }),
+      el('p', { style: 'margin:0 0 14px;color:#46688c', text: 'Zmień, co potrzebujesz, i zapisz.' }),
+      el('div.field', {}, [ el('label', { text: 'Imię' }), nameIn ]),
+      el('div.field', {}, [ el('label', { text: 'Email' }), emailIn ]),
+      el('div', { style: 'border-top:1px solid #dce9f5;margin:4px 0 14px' }),
+      el('p', { style: 'margin:0 0 10px;color:#46688c;font-size:.85rem', text: 'Zmiana hasła (pomiń, jeśli zostaje stare)' }),
+      el('div.field', {}, [ el('label', { text: 'Obecne hasło' }), curPass ]),
+      el('div.field', {}, [ el('label', { text: 'Nowe hasło' }), newPass ]),
+      saveBtn,
+    ]),
+  ]);
+
+  async function save() {
+    const newName = nameIn.value.trim();
+    const newEmail = emailIn.value.trim().toLowerCase();
+    saveBtn.disabled = true; saveBtn.textContent = 'Zapisuję…';
+    try {
+      // kolejność: imię → hasło → email (zmiana emaila wymienia token sesji)
+      if (newName && newName !== (u.name || '')) await auth.setName(newName);
+      if (newPass.value) {
+        if (!curPass.value) throw new Error('Podaj obecne hasło, żeby ustawić nowe.');
+        const pp = passwordProblem(newPass.value);
+        if (pp) throw new Error(pp);
+        await auth.setPassword(curPass.value, newPass.value);
+      }
+      if (newEmail && newEmail !== (u.email || '')) {
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(newEmail)) throw new Error('Podaj poprawny adres email.');
+        await auth.setEmail(newEmail);
+      }
+      overlay.remove();
+      toast('Profil zapisany.');
+      window.dispatchEvent(new HashChangeEvent('hashchange'));   // odśwież imię na przycisku
+    } catch (e) {
+      saveBtn.disabled = false; saveBtn.textContent = 'Zapisz zmiany';
+      toast(e.message || 'Nie udało się zapisać profilu.', 'error');
+    }
+  }
+
+  document.body.append(overlay);
 }
 
 export function toast(message, type = '') {

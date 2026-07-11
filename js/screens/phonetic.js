@@ -307,8 +307,7 @@ export function renderPhonetic(mount) {
             onclick: () => speech.speak(izaLine, { lang: 'pl-PL' }) }),
         ]),
         el('div.iza-card__main', { style: 'gap:10px;display:flex;flex-direction:column;justify-content:center' }, [
-          el('h2.display', { style: 'margin:0;color:#14314f', text: hello }),
-          el('p', { style: 'margin:0;color:#2a4a70', text: 'Znam już Twoją wymowę od podszewki.' }),
+          // to, co mówi Izabela, jest w dymku — tu tylko konkrety bez powtórek
           chalList.length
             ? el('div', {}, [
                 el('div.passport-bubble__label', { text: 'Popracujemy nad:' }),

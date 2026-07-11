@@ -1059,6 +1059,17 @@ body.on-lessons .cosmos { display: none; }
 .history-item__meta { font-size: .78rem; color: #5b7f9e; }
 .history-item__sum { margin: 6px 0 0; font-size: .88rem; color: #2c4a68; }
 
+/* Okno profilu użytkownika — jasne pola na jasnym okienku */
+.profile-box { text-align: left; }
+.profile-box .field { margin-bottom: 12px; }
+.profile-box .field label { color: #46688c; }
+.profile-box .field input {
+  background: #f2f8fd; color: #14314f;
+  border: 1px solid #cfe6f8; border-radius: 10px;
+}
+.profile-box .field input:focus { border-color: #1d9fd8; }
+.profile-box .field input::placeholder { color: #8aa5bf; }
+
 /* Rożek „zostaw opinię Izabeli!" + okienko opinii */
 .feedback-corner {
   position: fixed; right: 14px; bottom: 14px; z-index: 90;

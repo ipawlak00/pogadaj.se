@@ -69,6 +69,23 @@ export const auth = {
     return d;
   },
 
+  // Zmiana adresu email — serwer przenosi konto i wydaje nowy token sesji
+  async setEmail(newEmail) {
+    const u = store.get().user || {};
+    if (!u.token || !u.email) throw new Error('Zaloguj się ponownie.');
+    const d = await call('/auth/setemail', { email: u.email, token: u.token, newEmail });
+    rememberAccount(d.email);
+    store.patchKey('user', { ...store.get().user, email: d.email, token: d.token });
+    return d;
+  },
+
+  // Zmiana hasła — wymaga podania obecnego
+  async setPassword(password, newPassword) {
+    const u = store.get().user || {};
+    if (!u.token || !u.email) throw new Error('Zaloguj się ponownie.');
+    await call('/auth/setpassword', { email: u.email, token: u.token, password, newPassword });
+  },
+
   // Zapis profilu fonetycznego (problemy z wymową) na koncie w Firestore.
   // Bez surowych sampli — do bazy idzie esencja: challenges/issues/oceny.
   async saveProfile(profile) {
