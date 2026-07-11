@@ -73,6 +73,15 @@ function stubAnalyze(text) {
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+// Kompaktowy profil fonetyczny do promptów — bez surowych sampli,
+// za to z konkretnymi problemami, które Izabela ma pamiętać i łapać.
+function profileForPrompt() {
+  const p = store.get().phonetic.profile;
+  if (!p) return 'brak (test fonetyczny jeszcze przed nami)';
+  const issues = (p.issues || []).map((i) => `${i.word}${i.issue ? ': ' + i.issue : ''}`).filter(Boolean);
+  return JSON.stringify({ challenges: p.challenges || [], strengths: p.strengths || [], problemy: issues });
+}
+
 // Poziom ucznia → ile polskiego. Początkujący prowadzeni PO POLSKU.
 const BEGINNER_LEVELS = ['A1', 'A2'];
 export function currentLevel() { return store.get().onboarding.level || 'A2'; }
@@ -82,7 +91,6 @@ export function isBeginner() { return BEGINNER_LEVELS.includes(currentLevel()); 
 function lessonSystem() {
   const lvl = currentLevel();
   const beg = isBeginner();
-  const profile = store.get().phonetic.profile;
   return `${IZABELA.systemPrompt}
 
 TRYB LEKCJI — prowadzisz interaktywną, DŁUGĄ lekcję mówienia (cel ~45 minut):
@@ -100,7 +108,7 @@ TRYB LEKCJI — prowadzisz interaktywną, DŁUGĄ lekcję mówienia (cel ~45 min
 Zwracaj WYŁĄCZNIE JSON:
 {"say":"...", "lang":"pl"|"en", "suggestions":["..."], "correction":{"spoken":"..."}|null, "mistake":{"bad":"...","good":"...","note":"...","tag":"grammar|vocab|pronunciation"}|null, "done":false}
 Ustaw "done":true dopiero, gdy lekcja naprawdę dobiega końca (po wielu ćwiczeniach).
-Profil fonetyczny ucznia: ${JSON.stringify(profile)}.`;
+Profil fonetyczny ucznia (PAMIĘTAJ o tych problemach i łap je podczas rozmowy): ${profileForPrompt()}.`;
 }
 
 const stubProvider = {
@@ -178,7 +186,11 @@ function buildProfileFrom(results) {
   const strengths = Object.entries(focusScores).filter(([, s]) => s >= 85).map(([k]) => k);
   const all = results.map((r) => (typeof r.score === 'number' ? r.score : (r.ok ? 85 : 45))).filter((x) => x != null);
   const overall = all.length ? avg(all) : null;
-  return { strengths, challenges, focusScores, overall, samples: results, createdAt: Date.now() };
+  // Konkretne problemy z wymową (słowo + co było nie tak) — Izabela ma je PAMIĘTAĆ
+  const issues = results
+    .filter((r) => r && !r.ok && !r.skipped && (r.issue || r.tip))
+    .map((r) => ({ word: r.word || '', focus: r.focus || '', issue: r.issue || '', tip: r.tip || '', heard: r.heard || '' }));
+  return { strengths, challenges, focusScores, overall, issues, samples: results, createdAt: Date.now() };
 }
 
 // ---- Klucz Gemini: localStorage (na urządzeniu) lub CONFIG ----
@@ -197,13 +209,12 @@ export function hasGeminiKey() { return geminiConfigured() || !!geminiKey(); }
 const geminiProvider = {
   async _call(userText, { json = true } = {}) {
     const url = CONFIG.GEMINI.proxyUrl || genContentUrl(CONFIG.GEMINI.model, geminiKey());
-    const profile = store.get().phonetic.profile;
     const lvl = currentLevel();
     const beg = isBeginner();
     const langRule = beg
       ? 'Uczeń jest POCZĄTKUJĄCY — prowadź rozmowę GŁÓWNIE PO POLSKU, łagodnie zachęcając do prostych angielskich słów/zdań. Tłumacz wszystko po polsku.'
       : 'Prowadź rozmowę po angielsku na poziomie ucznia; korekty i wyjaśnienia po polsku.';
-    const sys = `${IZABELA.systemPrompt}\n\nKONTEKST: Poziom CEFR: ${lvl}. ${langRule} ${userLine()} Profil fonetyczny ucznia: ${JSON.stringify(profile)}.`;
+    const sys = `${IZABELA.systemPrompt}\n\nKONTEKST: Poziom CEFR: ${lvl}. ${langRule} ${userLine()} Profil fonetyczny ucznia: ${profileForPrompt()}.`;
     const body = {
       system_instruction: { parts: [{ text: sys }] },
       contents: [{ role: 'user', parts: [{ text: userText }] }],

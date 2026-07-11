@@ -23,7 +23,7 @@ const VOCATIVES = (name) => {
 };
 
 const OPENERS = [
-  'z rana jak śmietana', 'nie ma spania', 'ciśniemy', 'lecimy z tematem',
+  'nie ma spania', 'ciśniemy', 'lecimy z tematem',
   'jazda z tematem', 'cyk myk i działamy',
 ];
 

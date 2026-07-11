@@ -106,13 +106,19 @@ export function renderLessons(mount) {
         el('i.trial-clock__dot'),
       ]),
       el('div.trial-clock__label', { text: left > 0 ? `zostało ok. ${left} min` : 'pełne lekcje już wkrótce' }),
-      // Testowy reset licznika (do usunięcia przed startem produkcyjnym)
+      // Testowe skróty (do usunięcia przed startem produkcyjnym)
       el('button.trial-reset', {
         onclick: () => {
           store.patchKey('progress', { trialSecondsUsed: 0, trialHistory: [], trialChat: [] });
           draw();
         },
       }, ['wyzeruj czas (testy)']),
+      el('button.trial-reset', {
+        onclick: () => {
+          store.patchKey('progress', { fullUnlocked: true });
+          navigate('#/home');
+        },
+      }, ['przeskocz na pełną wersję (testy)']),
     ]);
 
     screen.replaceChildren(

@@ -67,6 +67,7 @@ async function fsGetUser(email) {
     email: f.email?.stringValue || '',
     salt: f.salt?.stringValue || '',
     hash: f.hash?.stringValue || '',
+    profile: f.profile?.stringValue || '',   // profil fonetyczny (JSON)
   };
 }
 
@@ -79,6 +80,7 @@ async function fsPutUser(u) {
     email: { stringValue: u.email },
     salt: { stringValue: u.salt },
     hash: { stringValue: u.hash },
+    profile: { stringValue: u.profile || '' },
     createdAt: { stringValue: new Date().toISOString() },
   } };
   const r = await fetch(url, {
@@ -171,7 +173,19 @@ async function handleAuth(path, body, res) {
     if (!u || hashPassword(password, u.salt) !== u.hash) {
       return res.status(401).json({ error: 'Zły email albo hasło.' });
     }
-    return res.status(200).json({ ok: true, id: u.id, name: u.name, email: u.email, token: makeToken(email) });
+    let profile = null;
+    try { profile = u.profile ? JSON.parse(u.profile) : null; } catch {}
+    return res.status(200).json({ ok: true, id: u.id, name: u.name, email: u.email, token: makeToken(email), profile });
+  }
+
+  // Profil fonetyczny — Izabela zapamiętuje problemy z wymową na koncie
+  if (path === '/profile/save') {
+    if (!verifyToken(body.token, email)) return res.status(401).json({ error: 'Sesja wygasła. Zaloguj się ponownie.' });
+    const u = await fsGetUser(email);
+    if (!u) return res.status(404).json({ error: 'Nie ma takiego konta.' });
+    const profile = JSON.stringify(body.profile || {}).slice(0, 20000);
+    await fsPutUser({ ...u, profile });
+    return res.status(200).json({ ok: true });
   }
 
   return res.status(404).json({ error: 'unknown auth path' });
@@ -207,7 +221,7 @@ exports.geminiProxy = async (req, res) => {
   }
 
   // Konta użytkowników
-  if (path === '/auth/register' || path === '/auth/login' || path === '/auth/setname') {
+  if (path === '/auth/register' || path === '/auth/login' || path === '/auth/setname' || path === '/profile/save') {
     try {
       const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
       return await handleAuth(path, body, res);

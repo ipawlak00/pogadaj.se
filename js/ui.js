@@ -32,12 +32,12 @@ export function clear(node) { while (node.firstChild) node.removeChild(node.firs
 // Opinie lecą na serwer (kolekcja feedback, adresat: izabela@izabelacode.pl).
 export function feedbackCorner(page) {
   return el('button.feedback-corner', { onclick: () => openFeedback(page), title: 'Podziel się wrażeniami' },
-    ['zostaw opinię Izabeli!']);
+    ['zostaw opinię Izabeli']);
 }
 
 export function openFeedback(page) {
   const area = el('textarea.feedback-text', {
-    placeholder: 'Napisz, co myślisz o aplikacji i lekcji. Coś nie działało? Masz pomysł, co poprawić albo naprawić? Pisz śmiało, czytam wszystko!',
+    placeholder: 'Napisz, co myślisz o aplikacji i lekcji. Coś nie działało? Masz pomysł, co poprawić albo naprawić? Pisz śmiało, czytam wszystko.',
     maxlength: '4000',
   });
   const sendBtn = el('button.btn.btn--primary.btn--block', { onclick: send }, ['Wyślij do Izabeli']);
@@ -47,7 +47,7 @@ export function openFeedback(page) {
     el('div.level-box.feedback-box', {}, [
       el('button.level-close', { onclick: () => overlay.remove(), 'aria-label': 'Zamknij' }, ['X']),
       el('h2.display', { style: 'margin:0 0 4px;color:#14314f', text: 'Zostaw opinię Izabeli' }),
-      el('p', { style: 'margin:0 0 12px;color:#46688c', text: 'Każda uwaga trafia prosto do autorki. Dzięki!' }),
+      el('p', { style: 'margin:0 0 12px;color:#46688c', text: 'Każda uwaga trafia prosto do autorki. Dzięki.' }),
       area,
       sendBtn,
     ]),
@@ -66,7 +66,7 @@ export function openFeedback(page) {
       });
       if (!res.ok) throw new Error('send failed');
       overlay.remove();
-      toast('Dzięki! Opinia poleciała do Izabeli.');
+      toast('Dzięki, opinia poleciała do Izabeli.');
     } catch (e) {
       sendBtn.disabled = false; sendBtn.textContent = 'Wyślij do Izabeli';
       toast('Nie udało się wysłać. Spróbuj za chwilę.', 'error');

@@ -64,7 +64,18 @@ export const auth = {
     if (prev && prev !== d.email) store.reset();
     rememberAccount(d.email);
     store.setUser({ id: d.id || '', name: d.name, email: d.email, token: d.token, provider: 'pogadaj' });
+    // Profil wymowy z bazy — Izabela pamięta problemy ucznia także po zmianie urządzenia
+    if (d.profile) { try { store.setPhoneticProfile(d.profile); } catch {} }
     return d;
+  },
+
+  // Zapis profilu fonetycznego (problemy z wymową) na koncie w Firestore.
+  // Bez surowych sampli — do bazy idzie esencja: challenges/issues/oceny.
+  async saveProfile(profile) {
+    const u = store.get().user || {};
+    if (!u.token || !u.email || !profile) return;
+    const { samples, ...slim } = profile;
+    await call('/profile/save', { email: u.email, token: u.token, profile: slim });
   },
 
   // Tryb gościa (dev / podgląd bez konta)

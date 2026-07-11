@@ -2,6 +2,7 @@ import { el, topbar, toast, navigate, feedbackCorner } from '../ui.js';
 import { store } from '../state.js';
 import { speech } from '../services/speech.js';
 import { ai } from '../services/ai.js';
+import { auth } from '../services/auth.js';
 import { PHONETIC_WORDS } from '../data/phonetic-words.js';
 
 export function renderPhonetic(mount) {
@@ -50,7 +51,10 @@ export function renderPhonetic(mount) {
     const izaSide = el('div.iza-card__stage', {}, [
       el('img', { src: 'assets/scenes/scene-05.jpg', alt: 'Izabela',
         onerror: function () { this.onerror = null; this.src = 'assets/izabela/izabela-lesson.png'; } }),
-      el('div.iza-card__bubble', { id: 'iza-bubble', text: izaLine }),
+      // klik w dymek = Izabela powtarza to, co właśnie mówi
+      el('div.iza-card__bubble', { id: 'iza-bubble', text: izaLine,
+        title: 'Kliknij, a powtórzę', style: 'cursor:pointer',
+        onclick: () => speech.speak(izaLine, { lang: 'pl-PL' }) }),
     ]);
     screen.replaceChildren(
       el('div.iza-card.fade-in', {}, [
@@ -64,7 +68,7 @@ export function renderPhonetic(mount) {
           el('div.phonetic-hint', { text: w.hint }),
           el('div.spacer-sm'),
           micArea(),
-          el('div.faint', { style: 'font-size:.85rem', text: `${idx + 1}/${words.length} słówek` }),
+          el('div.phon-count', { text: `${idx + 1}/${words.length} słówek` }),
           resultArea(),
           el('div.row', { style: 'justify-content:center;gap:10px;margin-top:6px' }, [
             el('button.btn.btn--sq', { onclick: skip }, ['Pomiń słowo']),
@@ -99,7 +103,7 @@ export function renderPhonetic(mount) {
     const recording = phase === 'recording';
     return el('div.center.stack', { style: 'gap:8px' }, [
       el(`button.mic-btn${recording ? '.recording' : ''}`, { onclick: onMic, 'aria-label': 'Nagraj' }, [recording ? 'Stop' : 'Mów']),
-      el('div.faint', { id: 'phon-status', text: recording ? 'Mów teraz… (dotknij, by zakończyć)' : 'Dotknij i powiedz słowo' }),
+      el('div.faint', { id: 'phon-status', text: recording ? 'Mów teraz. Dotknij, by zakończyć.' : '' }),
     ]);
   }
 
@@ -113,7 +117,6 @@ export function renderPhonetic(mount) {
       (!good && r.issue) ? el('div.pron-issue', { text: '' + r.issue }) : null,
       r.tip ? el('div', { style: 'margin-top:8px', text: (good ? '' : '') + (good ? (r.praise || 'Brzmi świetnie!') : r.tip) }) : null,
       el('div.row', { style: 'justify-content:center;gap:10px;margin-top:14px' }, [
-        el('button.btn.btn--ghost', { onclick: () => { phase = 'idle'; draw(); } }, ['Jeszcze raz']),
         el('button.btn.btn--primary', { onclick: next }, ['Dalej']),
       ]),
     ]);
@@ -135,12 +138,9 @@ export function renderPhonetic(mount) {
   // ---------- nagrywanie + analiza ----------
   function onMic() {
     if (phase === 'recording') return stopRecording();
-    if (phase === 'idle') return startRecording();
+    // po wyniku też można nagrać jeszcze raz — mikrofon zastępuje przycisk „Jeszcze raz"
+    if (phase === 'idle' || phase === 'result') return startRecording();
   }
-
-  // Krótkie zajawki mówione od razu po nagraniu — uczeń wie, że coś się dzieje.
-  // (Cache'ują się po pierwszym użyciu, więc grają natychmiast.)
-  const FILLERS = ['Mhm, sekundka...', 'Okej, przesłuchuję...', 'Już słucham, momencik...', 'Dobra, lecę z odsłuchem...'];
 
   async function startRecording() {
     if (audioMode) {
@@ -156,15 +156,16 @@ export function renderPhonetic(mount) {
   async function stopRecording() {
     if (phase !== 'recording' || !rec) return;
     clearTimeout(recTimer);
+    // Żadnych mówionych zajawek („sekundka") — spinner wystarczy,
+    // Izabela odzywa się dopiero z gotową odpowiedzią i nie przerywa sama sobie.
     phase = 'analyzing'; draw();
-    izaSay(pick(FILLERS));   // natychmiastowa reakcja głosem (i w dymku)
     rec.stop();
     const audio = await rec.done; rec = null;
     const w = words[idx];
     let res = await ai.analyzePronunciation({ target: w, base64: audio.base64, mimeType: audio.mimeType });
     if (!res) {
       // Gemini nie ocenił (np. format audio) — łagodnie, nie blokujemy
-      res = { ok: true, score: null, heard: '', issue: null, tip: 'Nie udało mi się dokładnie odsłuchać nagrania — ale lecimy dalej!', focus: w.focus, soft: true };
+      res = { ok: true, score: null, heard: '', issue: null, tip: 'Nie udało mi się dokładnie odsłuchać nagrania, ale lecimy dalej!', focus: w.focus, soft: true };
       toast('Nie udało się przeanalizować nagrania (spróbuj ponownie lub pomiń).', 'error');
     }
     if (!best || (res.score ?? 0) >= (best.score ?? 0)) best = res;
@@ -196,7 +197,7 @@ export function renderPhonetic(mount) {
   function skip() { best = { ok: false, score: 0, focus: words[idx].focus, skipped: true }; next(); }
 
   function next() {
-    if (best) results.push(best);
+    if (best) { best.word = words[idx].word; results.push(best); }
     best = null; phase = 'idle'; idx++;
     if (idx >= words.length) return finish();
     draw();
@@ -210,14 +211,18 @@ export function renderPhonetic(mount) {
     ]));
     const profile = await ai.buildProfile({ results });
     store.setPhoneticProfile(profile);
+    // Zapis profilu do bazy (Firestore) — Izabela pamięta problemy z wymową
+    // między urządzeniami i sesjami, nie tylko w localStorage.
+    auth.saveProfile(profile).catch(() => {});
 
     // Przykładowe słowo dla każdego dźwięku (do "popracujemy nad...")
     const example = {};
     words.forEach((w) => { if (!example[w.focus]) example[w.focus] = w.word; });
     const chalList = (profile.challenges || []).slice(0, 4);
-    const chalSpoken = chalList.map((c) => example[c] ? `${c} — jak w „${example[c]}"` : c);
+    const chalSpoken = chalList.map((c) => example[c] ? `${c}, jak w „${example[c]}"` : c);
 
     const hello = pick([
+      'Mam Cię!',
       'No i cyk, mam Cię rozgryzioną!',
       'Misja zakończona, paszport wbity!',
       'Cyk myk i po sprawie!',
@@ -226,15 +231,17 @@ export function renderPhonetic(mount) {
       'No to pozamiatane, znam Twój akcent!',
     ]);
     const challengeLine = chalList.length
-      ? `Na celowniku mamy: ${chalSpoken.join(', ')}. Będę Cię na tym łapać podczas gadania — z miłością, rzecz jasna.`
+      ? `Na celowniku mamy: ${chalSpoken.join(', ')}. Będę Cię na tym łapać podczas gadania, z miłością rzecz jasna.`
       : 'I szczerze? Nie mam się do czego przyczepić. Aż podejrzane...';
     // Bez procentów — zero stresu, tylko konkret nad czym popracujemy
-    const spokenAll = `${hello} Znam już Twoją wymowę od podszewki. ${challengeLine} Dobra, dawaj — pogadamy w końcu!`;
+    const spokenAll = `${hello} Znam już Twoją wymowę od podszewki. ${challengeLine} Dobra, dawaj, pogadamy w końcu!`;
 
     // Izabela na zdjęciu + dymek od jej ust z tym, co właśnie mówi
     screen.replaceChildren(el('div.passport-scene.fade-in', {}, [
       el('div.passport-iza-wrap', {}, [el('img.passport-iza', { src: 'assets/scenes/scene-09.jpg', alt: 'Izabela' })]),
-      el('div.passport-bubble', {}, [
+      // klik w dymek = powtórka całej kwestii
+      el('div.passport-bubble', { title: 'Kliknij, a powtórzę', style: 'cursor:pointer',
+        onclick: (e) => { if (e.target.closest('button')) return; speech.speak(spokenAll, { lang: 'pl-PL' }); } }, [
         el('div.passport-bubble__title', { text: hello }),
         el('p', { style: 'margin:10px 0 0', text: 'Znam już Twoją wymowę od podszewki.' }),
         chalList.length

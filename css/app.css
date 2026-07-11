@@ -17,7 +17,7 @@
   font-weight: 600;
   font-size: 1rem;
   border: 1px solid transparent;
-  border-radius: var(--radius-pill);
+  border-radius: 10px;
   padding: 12px 22px;
   cursor: pointer;
   transition: transform .12s ease, box-shadow .2s ease, background .2s ease;
@@ -28,7 +28,7 @@
 .btn:hover { transform: translateY(-1px); }
 .btn:active { transform: translateY(0); }
 .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-.btn--primary { background: linear-gradient(135deg, #4f86c6, #74aee4); box-shadow: var(--glow-accent); color: #06223f; }
+.btn--primary { background: linear-gradient(135deg, #4f86c6, #74aee4); box-shadow: var(--glow-accent); color: #06223f; border: 2px solid #ffffff; }
 .btn--ghost { background: transparent; border-color: var(--surface-border); }
 .btn--pink { background: linear-gradient(135deg, var(--pink), var(--violet)); box-shadow: var(--glow-pink); }
 .btn--lg { padding: 16px 32px; font-size: 1.1rem; }
@@ -274,7 +274,7 @@ body.in-lesson .msg--user {
   box-shadow: 0 16px 44px rgba(70, 130, 190, .2);
   color: #14314f;
 }
-.iza-card__stage { position: relative; min-height: 460px; overflow: hidden; }
+.iza-card__stage { position: relative; min-height: 560px; overflow: hidden; }
 /* scale(1.09) przycina brzegi grafiki — znaczek AI z rogu znika */
 .iza-card__stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; display: block; transform: scale(1.09); }
 .iza-card__bubble {
@@ -290,7 +290,7 @@ body.in-lesson .msg--user {
   background: rgba(255,255,255,.96);
   border-left: 2px solid #a5ddf3; border-top: 2px solid #a5ddf3;
 }
-.iza-card__main { padding: 22px 24px; display: flex; flex-direction: column; gap: 6px; }
+.iza-card__main { padding: 22px 24px; display: flex; flex-direction: column; gap: 6px; min-height: 560px; }
 @media (max-width: 760px) {
   .iza-card { grid-template-columns: 1fr; }
   .iza-card__stage { min-height: 230px; }
@@ -372,6 +372,7 @@ body.in-lesson .msg--user {
 .phonetic-ipa { color: var(--accent-bright); font-size: 1.4rem; letter-spacing: .05em; }
 .phonetic-pl { color: var(--text-dim); font-size: 1.15rem; margin-top: -6px; }
 .phonetic-hint { color: var(--text-dim); font-size: .95rem; }
+.phon-count { font-weight: 700; color: #16305a; font-size: .95rem; }
 
 /* Przyciski "kwadratowe": jaśniejszy środek, ciemniejsza (granatowa) ramka */
 .btn--sq {
@@ -384,7 +385,7 @@ body.in-lesson .msg--user {
 
 /* Mikrofon — rozciągnięty przycisk (nie kółko), biały napis */
 .mic-btn {
-  width: min(340px, 90%); height: 60px; border-radius: 14px;
+  width: min(340px, 90%); height: 60px; border-radius: 10px;
   border: none; cursor: pointer;
   font-family: var(--font-display); font-size: 1.15rem; font-weight: 700;
   background: linear-gradient(135deg, var(--accent), var(--violet));
@@ -407,8 +408,8 @@ body:not([data-route="welcome"]) .mic-btn {
 .score-bar { height: 12px; border-radius: 999px; background: var(--bg-700); overflow: hidden; }
 .score-bar > i { display: block; height: 100%; border-radius: 999px; transition: width .5s ease; }
 .pron-result { border-top: 1px solid var(--surface-border); padding-top: 14px; }
-.pron-issue { margin-top: 8px; display: inline-block; padding: 4px 12px; border-radius: 999px;
-  background: rgba(255,107,129,.15); color: var(--error); font-size: .85rem; }
+.pron-issue { margin-top: 8px; display: inline-block; padding: 4px 12px; border-radius: 8px;
+  background: #fff0f2; color: #b3231f; border: 2px solid #d23c37; font-size: .85rem; font-weight: 600; }
 
 /* Finał paszportu: Izabela + dymek od jej ust (biel + błękit) */
 .passport-scene {
@@ -827,12 +828,11 @@ body.on-lessons .cosmos { display: none; }
   font-size: .85rem; padding: 8px 14px; backdrop-filter: none;
 }
 .lessons-fs__tools .btn:hover { box-shadow: 0 6px 16px rgba(6,25,55,.4); }
-.account-pill { background: rgba(255,255,255,.92); color: #16305a; border-color: #aee0f5; font-weight: 600; }
-.lessons-fs__tools .btn { font-size: .82rem; padding: 8px 14px; background: rgba(10,14,24,.6); backdrop-filter: blur(6px); }
+.account-pill { background: radial-gradient(ellipse at center, #ffffff 25%, #e3eef9 70%, #c4d8ea 100%); color: #16305a; border: 2px solid #16305a; border-radius: 10px; font-weight: 600; }
 
 /* Dymek od ust Izabeli — luźne powitanie zamiast sztywnego nagłówka */
 .lessons-fs__bubble {
-  position: absolute; left: 57%; top: 7%; z-index: 3;
+  position: absolute; left: 57%; top: 86px; z-index: 3;
   width: min(36%, 430px); padding: 14px 18px;
   background: rgba(255,255,255,.96); color: #14314f;
   border: 2px solid #a5ddf3; border-radius: 18px;
@@ -959,8 +959,8 @@ body.on-lessons .cosmos { display: none; }
   transform: translate(-50%, -50%); border-radius: 50%; background: #16305a;
 }
 .trial-clock__label {
-  background: rgba(255,255,255,.92); color: #24486e;
-  border: 2px solid #aee0f5; border-radius: 999px;
+  background: rgba(255,255,255,.95); color: #16305a;
+  border: 2px solid #16305a; border-radius: 10px;
   padding: 4px 14px; font-size: .85rem; font-weight: 600;
   box-shadow: 0 6px 16px rgba(6,25,55,.35);
 }
@@ -1058,8 +1058,9 @@ body.on-lessons .cosmos { display: none; }
 /* Rożek „zostaw opinię Izabeli!" + okienko opinii */
 .feedback-corner {
   position: fixed; right: 14px; bottom: 14px; z-index: 90;
-  background: rgba(255,255,255,.95); color: #16305a;
-  border: 2px solid #16305a; border-radius: 12px 12px 2px 12px;
+  background: radial-gradient(ellipse at center, #ffffff 25%, #e3eef9 70%, #c4d8ea 100%);
+  color: #16305a;
+  border: 2px solid #16305a; border-radius: 10px;
   padding: 7px 12px; font-size: .8rem; font-weight: 600; cursor: pointer;
   box-shadow: 0 8px 20px rgba(6,25,55,.35);
 }
