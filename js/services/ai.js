@@ -12,19 +12,27 @@ import { IZABELA } from '../data/izabela.js';
 import { store } from '../state.js';
 import { toast } from '../ui.js';
 
-// Pokaż PRAWDZIWY błąd połączenia z Gemini (raz), żeby dało się go zdiagnozować.
+// Loguj błąd AI do konsoli (diagnostyka dla dewelopera). Techniczny toast
+// pokazujemy WYŁĄCZNIE w trybie deweloperskim z własnym kluczem — użytkownik
+// na produkcji (proxy) NIGDY nie widzi komunikatów o kluczu/AI.
 let aiErrorShown = false;
 function reportAiError(e) {
   console.warn('[Gemini]', e);
+  if (geminiConfigured()) return;            // produkcja (proxy) → cicho, tylko konsola
   if (aiErrorShown) return;
   aiErrorShown = true;
-  const msg = String(e && (e.message || e));
-  let hint = '';
-  if (/\b403\b|PERMISSION|API_KEY|referer|referrer|blocked/i.test(msg)) hint = ' — klucz nieprawidłowy lub ma ograniczenia (HTTP referrer / API niewłączone).';
-  else if (/\b429\b|quota|RESOURCE_EXHAUSTED/i.test(msg)) hint = ' — przekroczony darmowy limit Gemini. Odczekaj ~minutę (limit/min) lub do jutra (limit dzienny), albo włącz rozliczenia.';
-  else if (/\b404\b|not found|NOT_FOUND/i.test(msg)) hint = ' — model niedostępny na tym kluczu.';
-  else if (/\b400\b/i.test(msg)) hint = ' — błędne zapytanie/klucz.';
-  toast('Gemini: ' + msg + hint, 'error');
+  toast('Gemini (dev): ' + String(e && (e.message || e)), 'error');
+}
+
+// Wypowiedź „w charakterze", gdy AI chwilowo nie odpowie — NIGDY techniczna,
+// nigdy o kluczu/AI. Izabela po prostu prosi o powtórzenie i płynie dalej.
+function graceLine() {
+  return pick([
+    'Ojej, zgubiłam na chwilę wątek. Rzuć jeszcze raz to ostatnie zdanie, dobra?',
+    'Chwila, chwila, coś mi umknęło. Powiedz to jeszcze raz, złapię się.',
+    'Uuu, odpłynęłam na moment. Powtórz proszę, już jestem z Tobą.',
+    'Sekundka, pogubiłam się odrobinę. Powiedz to jeszcze raz, a lecimy dalej.',
+  ]);
 }
 
 // Kim jest uczeń — imię i (heurystycznie z imienia) płeć.
@@ -240,7 +248,7 @@ const geminiProvider = {
       };
     } catch (e) {
       reportAiError(e);
-      return { reply: 'Ups, chwilowo nie mogę połączyć się z moim mózgiem AI. Sprawdź klucz API i spróbuj ponownie.', correction: null, mistake: null, lang: 'pl', suggestions: [] };
+      return { reply: graceLine(), correction: null, mistake: null, lang: 'pl', suggestions: [] };
     }
   },
   async hint({ task, text }) {
@@ -298,7 +306,7 @@ Zwróć JSON:
       };
     } catch (e) {
       reportAiError(e);
-      return { say: 'Ups, chwilowo nie mogę połączyć się z AI. Sprawdź klucz i spróbuj jeszcze raz.', lang: 'pl', suggestions: [], done: false };
+      return { say: graceLine(), lang: 'pl', suggestions: [], done: false };
     }
   },
 
