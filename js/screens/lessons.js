@@ -3,7 +3,7 @@ import { store } from '../state.js';
 import { auth } from '../services/auth.js';
 import { speech } from '../services/speech.js';
 import { TRIAL_MINUTES } from '../data/lessons.js';
-import { greetingHi, pushLine, minutesWord } from '../data/phrases.js';
+import { greetingHi, minutesWord } from '../data/phrases.js';
 import { openFeedback, feedbackCorner, accountButton } from '../ui.js';
 
 // Trzy pasma poziomów — wpływają na temat i trudność lekcji próbnej
@@ -43,10 +43,11 @@ export function renderLessons(mount) {
       const closer = pick(['Wpadaj śmiało.', 'No to jak, wchodzisz?', 'Ja tu zawsze gotowa do gadania.', 'Klikaj i lecimy dalej.', 'Na spokojnie, bez spiny.', 'Czekam!']);
       return { hi, body: `${opener} Mamy jeszcze około ${left} ${minutesWord(left)} razem do przegadania. ${closer}` };
     }
-    // Pierwsze wejście — powitanie składane z klocków, za każdym razem inne
+    // Pierwsze wejście — powitanie składane z klocków, za każdym razem inne.
+    // Bez doklejania kolejnego powiedzonka na końcu (greetingHi może już mieć jedno).
     return {
       hi: greetingHi(name),
-      body: `Żebyśmy mogli się poznać i pogadać na luzie, masz u mnie ${TRIAL_MINUTES} ${minutesWord(TRIAL_MINUTES)} lekcji próbnej. Wpadaj kiedy chcesz, możesz zużywać ten czas po kawałku. ${pushLine()}`,
+      body: `Żebyśmy mogli się poznać i pogadać na luzie, masz u mnie ${TRIAL_MINUTES} ${minutesWord(TRIAL_MINUTES)} lekcji próbnej. Wpadaj kiedy chcesz, możesz zużywać ten czas po kawałku.`,
     };
   }
 

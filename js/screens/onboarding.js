@@ -21,7 +21,7 @@ const LEVELS = [
 
 // Kwestie Izabeli (mówione i w dymku) — kolejność: imię → cel → poziom
 const BUBBLES = [
-  'No i jak wrażenia po statku? A właśnie, zapomniałabym. Jak masz na imię? Wpisz albo po prostu powiedz.',
+  'No hej, dobrze Cię tu mieć! Zanim ruszymy w kosmos, powiedz mi, jak masz na imię? Możesz wpisać albo po prostu powiedzieć.',
   'Do czego potrzebujesz angielskiego? Dzięki temu dobiorę Ci tematy rozmów.',
   'Jak oceniasz swój poziom? Tylko bez stresu, i tak sprawdzę w praktyce.',
 ];

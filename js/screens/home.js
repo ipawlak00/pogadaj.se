@@ -5,6 +5,15 @@ import { speech } from '../services/speech.js';
 import { FULL_MONTH_MINUTES, HOME_SCENES } from '../data/lessons.js';
 import { minutesWord } from '../data/phrases.js';
 
+// Poziomy do zmiany z pełnej wersji (te same co w onboardingu)
+const HOME_LEVELS = [
+  { id: 'A1', title: 'A1, Początkujący', desc: 'Dopiero zaczynam, pojedyncze słowa.' },
+  { id: 'A2', title: 'A2, Podstawowy',   desc: 'Proste zdania, codzienne sytuacje.' },
+  { id: 'B1', title: 'B1, Średni',       desc: 'Daję radę w rozmowie, robię błędy.' },
+  { id: 'B2', title: 'B2, Wyżej średni', desc: 'Mówię swobodnie, chcę szlifu.' },
+  { id: 'C1', title: 'C1, Zaawansowany', desc: 'Płynnie, poleruję detale.' },
+];
+
 // PEŁNA WERSJA — tło (Izabela z kotami) zmienia się przy KAŻDYM wejściu.
 // Przyciski i dymek są ustawiane per-scena tak, by nie zasłaniać twarzy ani kotów.
 export function renderHome(mount) {
@@ -95,11 +104,13 @@ export function renderHome(mount) {
     el('p', { style: 'margin:4px 0 0', text: bodyText }),
   ]);
 
+  const level = store.get().onboarding.level;
   screen.replaceChildren(
     el('header.lessons-fs__top', {}, [
       el('div.logo', { html: 'pogadaj<span class="dot">.</span><span class="se">se</span>' }),
       el('div.lessons-fs__tools', {}, [
         accountButton(),
+        level ? el('button.btn.btn--ghost', { onclick: openLevelPicker, title: 'Zmień poziom' }, [`Poziom: ${level} · zmień`]) : null,
         el('button.btn.btn--ghost', { onclick: () => { auth.signOut(); location.hash = '#/'; location.reload(); } }, ['Wyloguj']),
       ]),
     ]),
@@ -110,4 +121,27 @@ export function renderHome(mount) {
   );
 
   speech.speak(spoken, { lang: 'pl-PL' });
+
+  // Zmiana poziomu z pełnej wersji (te same poziomy co w onboardingu)
+  function openLevelPicker() {
+    const close = () => { overlay.remove(); document.removeEventListener('keydown', onEsc); };
+    const onEsc = (e) => { if (e.key === 'Escape') close(); };
+    const overlay = el('div.level-overlay', { onclick: (e) => { if (e.target === overlay) close(); } }, [
+      el('div.level-box', {}, [
+        el('button.level-close', { onclick: close, 'aria-label': 'Zamknij' }, ['X']),
+        el('h2.display', { style: 'margin:0 0 4px;color:#14314f', text: 'Na jakim poziomie jest Twój angielski?' }),
+        el('p', { style: 'margin:0 0 16px;color:#46688c', text: 'Dopasuję do niego nasze rozmowy. Zawsze możesz to zmienić.' }),
+        el('div.level-options', {}, HOME_LEVELS.map((b) =>
+          el('button.level-opt', {
+            onclick: () => { store.patchKey('onboarding', { level: b.id }); close(); navigate('#/home'); },
+          }, [
+            el('span.level-opt__title', { text: b.title }),
+            el('span.level-opt__desc', { text: b.desc }),
+          ])
+        )),
+      ]),
+    ]);
+    document.addEventListener('keydown', onEsc);
+    document.body.append(overlay);
+  }
 }

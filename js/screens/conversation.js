@@ -169,13 +169,19 @@ export function renderConversation(mount, lessonId) {
       }, [phrase]),
     );
   }
-  // Wyciąga z wypowiedzi Izabeli AKTUALNĄ frazę do powtórzenia:
-  // ostatni ANGIELSKI cytat (wspólna detekcja języka z silnikiem mowy).
+  // Wyciąga z wypowiedzi Izabeli ANGIELSKĄ frazę do powtórzenia.
+  // Cudzysłowy PO słowie „znaczy/czyli/oznacza" to POLSKIE tłumaczenie —
+  // pomijamy je, żeby do powtórzenia nie trafił polski zwrot (np. „Bardzo to polecam").
   const quotedPhrase = (s) => {
+    const str = String(s || '');
+    const transMarker = str.search(/\b(znaczy|czyli|oznacza|tłumacz|po polsku)/i);
     const rx = /[„"]([^”“"„]{2,60})[”“"]/g;
     const found = [];
     let m;
-    while ((m = rx.exec(String(s || '')))) found.push(m[1].trim());
+    while ((m = rx.exec(str))) {
+      if (transMarker >= 0 && m.index > transMarker) continue;   // to już tłumaczenie
+      found.push(m[1].trim());
+    }
     const eng = found.filter(isEnglishText);
     return eng.length ? eng[eng.length - 1] : null;
   };

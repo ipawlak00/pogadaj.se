@@ -31,11 +31,12 @@ const PUSHES = ['Jazda z tematem!', 'Ciśniemy!', 'Nie ma spania!', 'Lecimy z te
 
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
-// Krótkie powitanie do dymka na ekranie lekcji, np. „Siema, mordeczko! Lecimy z tematem!"
+// Krótkie powitanie do dymka na ekranie lekcji. Zwykle naturalne, bez sloganu;
+// tylko czasem dokleja jedno powiedzonko (nigdy dwa, nigdy w kółko to samo).
 export function greetingHi(name) {
-  // często BEZ zwrotu do ucznia — ciągłe „mordeczko/imię" brzmi sztucznie
-  const voc = Math.random() < 0.55 ? `, ${pick(VOCATIVES(name))}` : '';
-  return `${pick(HI)}${voc}! ${cap(pick(OPENERS))}!`;
+  const voc = Math.random() < 0.4 ? `, ${pick(VOCATIVES(name))}` : '';
+  const opener = Math.random() < 0.3 ? ` ${cap(pick(OPENERS))}!` : '';
+  return `${pick(HI)}${voc}!${opener}`;
 }
 
 // Zachęta na koniec dymka, np. „Dawaj dawaj!"

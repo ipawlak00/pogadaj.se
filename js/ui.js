@@ -42,7 +42,7 @@ export function openFeedback(page) {
     placeholder: 'Napisz, co myślisz o aplikacji i lekcji. Coś nie działało? Masz pomysł, co poprawić albo naprawić? Pisz śmiało, czytam wszystko.',
     maxlength: '4000',
   });
-  const sendBtn = el('button.btn.btn--primary.btn--block', { onclick: send }, ['Wyślij do Izabeli']);
+  const sendBtn = el('button.btn.btn--sq.btn--block', { onclick: send }, ['Wyślij do Izabeli']);
   const overlay = el('div.level-overlay', {
     onclick: (e) => { if (e.target === overlay) overlay.remove(); },
   }, [
