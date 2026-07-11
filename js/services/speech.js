@@ -511,6 +511,8 @@ function forSpeech(text) {
     .replace(/[—–]/g, ',')                     // myślnik = pauza, nie „minus"
     .replace(/…|\.{3,}/g, ',')                  // wielokropek = pauza, nie „yyy"
     .replace(/\*/g, '')                        // gwiazdki markdown — nie czytamy
+    .replace(/''+|’’+|`+/g, ' ')               // podwójne apostrofy/backticki — lektor czytał bełkot
+    .replace(/[„“"]\s*[”“"]/g, ' ')            // pusty cudzysłów („") — nic do przeczytania
     .replace(/\s-\s/g, ', ')
     .replace(/\s{2,}/g, ' ')
     .trim();

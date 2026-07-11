@@ -1,7 +1,7 @@
 import { el, topbar, toast, navigate, feedbackCorner } from '../ui.js';
 import { store } from '../state.js';
 import { speech, isEnglishText } from '../services/speech.js';
-import { ai } from '../services/ai.js';
+import { ai, isBeginner } from '../services/ai.js';
 import { getLesson, getTrialLesson, getFullLesson, SCENES, TRIAL_MINUTES, FULL_MONTH_MINUTES, LESSON_PORTRAITS, FULL_PORTRAITS } from '../data/lessons.js';
 import { lessonHello } from '../data/phrases.js';
 
@@ -278,6 +278,26 @@ export function renderConversation(mount, lessonId) {
 
     // Świeży start: Izabela odzywa się OD RAZU (składane powitanie),
     // a w tle leci zapytanie do AI — zero głuchej ciszy po wejściu.
+    // Pełna wersja: to KOLEJNA lekcja ze znajomym uczniem — Izabela nawiązuje
+    // do poprzednich rozmów (podsumowania z historii), nie zaczyna od zera,
+    // a na wyższych poziomach wita się i zagaduje po angielsku.
+    if (isFull) {
+      const beg = isBeginner();
+      const pickOne = (a) => a[Math.floor(Math.random() * a.length)];
+      const past = (store.get().progress.history || [])
+        .filter((h) => h.summary)
+        .slice(-4)
+        .map((h) => '- ' + h.summary)
+        .join('\n');
+      const hello = beg
+        ? pickOne([`No hej${name ? ', ' + name : ''}, dobrze Cię znowu widzieć!`, 'O, jesteś! No to gadamy.', 'Siema, wpadaj, rozgość się!'])
+        : pickOne([`Hey${name ? ' ' + name : ''}, good to see you again!`, 'Hello hello, welcome back!', `Hi${name ? ' ' + name : ''}! Ready to chat?`]);
+      introGate = new Promise((res) => { speakLine(hello, { lang: beg ? 'pl' : 'en', onEnd: res }); setTimeout(res, 7000); });
+      history.push({ role: 'user', text: `To jest KOLEJNA lekcja z uczniem, którego już dobrze znasz — jesteście starymi znajomymi. NIE zaczynaj nauki od zera, NIE ucz ponownie powitań typu "Hello" ani przedstawiania się (to dawno za Wami).${past ? `\nPodsumowania Waszych poprzednich lekcji (nawiązuj do nich naturalnie):\n${past}` : ''}
+Już się przywitałaś słowami "${hello}" — NIE witaj się ponownie. Teraz: jednym zdaniem nawiąż do tego, co ostatnio ćwiczyliście albo do samego ucznia, i ZAPYTAJ, o czym chce dziś pogadać — możesz przy tym zaproponować temat, który jest naturalnym krokiem DALEJ względem poprzednich lekcji. ${beg ? 'Prowadź po polsku, angielskie frazy w cudzysłowie.' : 'Prowadź rozmowę po angielsku, jak z dobrym znajomym.'}` });
+      await aiTurn();
+      return;
+    }
     const hello = lessonHello(name);
     introGate = new Promise((res) => { speakLine(hello, { lang: 'pl', onEnd: res }); setTimeout(res, 7000); });
     history.push({ role: 'user', text: `Rozpocznij lekcję mówienia na temat: "${topic}". WAŻNE: już się przywitałaś słowami "${hello}" — NIE witaj się ponownie. Od razu, bez wstępów, naucz pierwszej prostej frazy (po angielsku w cudzysłowie + znaczenie po polsku + poproś o powtórzenie).` });
