@@ -1041,18 +1041,13 @@ body.on-lessons .cosmos { display: none; }
   background-repeat: no-repeat, no-repeat;
   font-family: var(--font-body);
 }
-.history-panel {
-  position: absolute; right: 0; top: 0; bottom: 0; width: min(92vw, 380px);
-  background: rgba(255,255,255,.96); border-left: 3px solid #16305a;
-  padding: 74px 18px 18px; overflow-y: auto; z-index: 5;
-  transform: translateX(105%); transition: transform .35s ease;
-  box-shadow: -14px 0 34px rgba(6,25,55,.35);
-}
-.history-panel.show { transform: translateX(0); }
-.history-list { display: flex; flex-direction: column; gap: 10px; }
+/* Okienka lekcji rozrzucone po całym ekranie (bez białego panelu) */
+.history-cards { position: absolute; inset: 70px 0 0; z-index: 4; }
 .history-item {
+  position: absolute; width: min(86vw, 320px);
   background: radial-gradient(ellipse at center, #ffffff 30%, #eaf3fb 75%, #d9e8f4 100%);
   border: 2px solid #16305a; border-radius: 10px; padding: 10px 12px;
+  box-shadow: 0 10px 26px rgba(6,25,55,.4);
 }
 .history-item__head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
 .history-item__kind { font-family: var(--font-display); font-weight: 700; color: #16305a; }
@@ -1082,4 +1077,10 @@ body.on-lessons .cosmos { display: none; }
 @media (max-width: 760px), (orientation: portrait) {
   .home-board { left: 50%; top: 26%; width: 88%; }
   .home-history-btn { right: 50%; transform: translateX(50%); top: auto; bottom: 20%; }
+  /* na telefonie okienka historii układają się w kolumnę (rozrzut by się nakładał) */
+  .history-cards {
+    position: static; display: flex; flex-direction: column; gap: 10px;
+    padding: 82px 14px 70px; overflow-y: auto; max-height: 100vh;
+  }
+  .history-item { position: static !important; width: 100%; }
 }

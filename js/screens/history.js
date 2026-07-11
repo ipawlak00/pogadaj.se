@@ -46,27 +46,40 @@ export function renderHistory(mount) {
   ];
   const spoken = entries.length < 2 ? pick(fewJokes) : pick(manyLines);
 
-  const panel = el('div.history-panel.show', {}, [
-    el('h2.display', { style: 'margin:0 0 12px;color:#14314f', text: 'Twoje lekcje' }),
+  // Bez białego panelu: same okienka, rozrzucone po całym ekranie.
+  // Kolejne lekcje zapełniają ekran wg stałych miejsc (deterministycznie).
+  const SLOTS = [
+    { l: 62, t: 8 },  { l: 34, t: 4 },  { l: 68, t: 34 }, { l: 38, t: 30 },
+    { l: 64, t: 62 }, { l: 36, t: 58 }, { l: 6,  t: 14 }, { l: 8,  t: 44 },
+    { l: 6,  t: 72 }, { l: 34, t: 82 }, { l: 62, t: 86 }, { l: 20, t: 60 },
+  ];
+  const cards = el('div.history-cards', {},
     entries.length
-      ? el('div.history-list', {}, entries.map((e) => el('div.history-item', {}, [
-          el('div.history-item__head', {}, [
-            el('span.history-item__kind', { text: e.kind === 'trial' ? 'Lekcja próbna' : 'Lekcja' }),
-            el('span.history-item__meta', { text: `${fmtDate(e.startedAt)} · ${fmtDur(e.seconds)}` }),
-          ]),
-          el('p.history-item__sum', { text: e.summary || 'Podsumowanie pojawi się po rozmowie.' }),
-        ])))
-      : el('p', { style: 'color:#46688c', text: spoken }),
-  ]);
+      ? entries.map((e, i) => {
+          const s = SLOTS[i % SLOTS.length];
+          const shift = (Math.floor(i / SLOTS.length) * 4) % 12;   // kolejne „warstwy" lekko przesunięte
+          return el('div.history-item', { style: `left:${s.l + shift / 2}%; top:${Math.min(84, s.t + shift)}%` }, [
+            el('div.history-item__head', {}, [
+              el('span.history-item__kind', { text: e.kind === 'trial' ? 'Lekcja próbna' : 'Lekcja' }),
+              el('span.history-item__meta', { text: `${fmtDate(e.startedAt)} · ${fmtDur(e.seconds)}` }),
+            ]),
+            el('p.history-item__sum', { text: e.summary || 'Podsumowanie pojawi się po rozmowie.' }),
+          ]);
+        })
+      : [el('div.history-item', { style: 'left:58%; top:14%' }, [
+          el('div.history-item__head', {}, [ el('span.history-item__kind', { text: 'Twoje lekcje' }) ]),
+          el('p.history-item__sum', { text: spoken }),
+        ])],
+  );
 
   screen.replaceChildren(
     el('header.lessons-fs__top', {}, [
       el('div.logo', { html: 'pogadaj<span class="dot">.</span><span class="se">se</span>' }),
       el('div.lessons-fs__tools', {}, [
-        el('button.btn.btn--ghost', { onclick: () => navigate('#/home') }, ['Wróć']),
+        el('button.btn.btn--sq', { onclick: () => navigate('#/home') }, ['Wróć']),
       ]),
     ]),
-    panel,
+    cards,
     feedbackCorner('historia lekcji'),
   );
 
