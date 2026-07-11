@@ -1041,14 +1041,19 @@ body.on-lessons .cosmos { display: none; }
   background-repeat: no-repeat, no-repeat;
   font-family: var(--font-body);
 }
-/* Okienka lekcji rozrzucone po całym ekranie (bez białego panelu) */
+/* Okienka lekcji rozrzucone po całym ekranie (bez białego panelu).
+   Zwinięte = sam tytuł z datą; klik rozwija podsumowanie. */
 .history-cards { position: absolute; inset: 70px 0 0; z-index: 4; }
 .history-item {
-  position: absolute; width: min(86vw, 320px);
+  position: absolute; width: max-content; max-width: min(86vw, 320px);
   background: radial-gradient(ellipse at center, #ffffff 30%, #eaf3fb 75%, #d9e8f4 100%);
-  border: 2px solid #16305a; border-radius: 10px; padding: 10px 12px;
+  border: 2px solid #16305a; border-radius: 10px; padding: 7px 12px;
   box-shadow: 0 10px 26px rgba(6,25,55,.4);
+  cursor: pointer;
 }
+.history-item .history-item__sum { display: none; }
+.history-item.open { width: min(86vw, 320px); padding: 10px 12px; z-index: 6; }
+.history-item.open .history-item__sum { display: block; }
 .history-item__head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
 .history-item__kind { font-family: var(--font-display); font-weight: 700; color: #16305a; }
 .history-item__meta { font-size: .78rem; color: #5b7f9e; }

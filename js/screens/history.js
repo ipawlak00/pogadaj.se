@@ -58,15 +58,21 @@ export function renderHistory(mount) {
       ? entries.map((e, i) => {
           const s = SLOTS[i % SLOTS.length];
           const shift = (Math.floor(i / SLOTS.length) * 4) % 12;   // kolejne „warstwy" lekko przesunięte
-          return el('div.history-item', { style: `left:${s.l + shift / 2}%; top:${Math.min(84, s.t + shift)}%` }, [
+          // Zwinięte okienko = sam tytuł z datą; klik rozwija podsumowanie
+          const card = el('div.history-item', {
+            style: `left:${s.l + shift / 2}%; top:${Math.min(84, s.t + shift)}%`,
+            title: 'Kliknij, aby rozwinąć',
+            onclick: () => card.classList.toggle('open'),
+          }, [
             el('div.history-item__head', {}, [
               el('span.history-item__kind', { text: e.kind === 'trial' ? 'Lekcja próbna' : 'Lekcja' }),
               el('span.history-item__meta', { text: `${fmtDate(e.startedAt)} · ${fmtDur(e.seconds)}` }),
             ]),
             el('p.history-item__sum', { text: e.summary || 'Podsumowanie pojawi się po rozmowie.' }),
           ]);
+          return card;
         })
-      : [el('div.history-item', { style: 'left:58%; top:14%' }, [
+      : [el('div.history-item.open', { style: 'left:58%; top:14%' }, [
           el('div.history-item__head', {}, [ el('span.history-item__kind', { text: 'Twoje lekcje' }) ]),
           el('p.history-item__sum', { text: spoken }),
         ])],
