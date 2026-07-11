@@ -59,11 +59,9 @@ export function renderWelcome(mount) {
     try {
       if (mode === 'login') {
         await auth.login({ email: e, password: pass.value });
-        toast('Miło Cię widzieć!');
         navigate('#/');                 // router pokieruje wg etapu
       } else {
         await auth.register({ email: e, password: pass.value });
-        toast('Konto założone!');
         navigate('#/intro');            // FILM zaraz po utworzeniu konta
       }
     } catch (err) {

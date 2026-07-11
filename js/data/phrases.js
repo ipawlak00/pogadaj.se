@@ -41,17 +41,20 @@ export function greetingHi(name) {
 // Zachęta na koniec dymka, np. „Dawaj dawaj!"
 export function pushLine() { return pick(PUSHES); }
 
-// Powitanie na wejściu w lekcję (mówione od razu, zanim AI się dogra)
+// Powitanie na wejściu w lekcję (mówione od razu, zanim AI się dogra).
+// Powiedzonko (PUSH) doklejamy tylko czasem — żeby nie brzmieć jak zdarta płyta.
 export function lessonHello(name) {
-  const voc = Math.random() < 0.5 ? `, ${pick(VOCATIVES(name))}` : '';
+  const voc = Math.random() < 0.45 ? `, ${pick(VOCATIVES(name))}` : '';
   const mid = pick([
-    'Rozgrzewam silniki... dobra, działa',
     'Kawa jest, mikrofon jest',
     'Czekałam na Ciebie',
     'Mikrofon gotowy, ja gotowa',
-    'Nie ma spania',
+    'No i jesteśmy',
+    'Dobrze Cię widzieć',
+    'Siadaj wygodnie',
   ]);
-  return `${pick(HI)}${voc}! ${mid}. ${pick(PUSHES)}`;
+  const push = Math.random() < 0.35 ? ` ${pick(PUSHES)}` : '';
+  return `${pick(HI)}${voc}! ${mid}.${push}`;
 }
 
 // Poprawna polska odmiana: 1 minuta, 2-4 minuty, 5-21 minut, 22-24 minuty...

@@ -18,7 +18,6 @@ export function renderLessons(mount) {
   document.body.classList.add('on-lessons');
   window.addEventListener('hashchange', () => {
     document.body.classList.remove('on-lessons');
-    speech.stopSpeaking();
   }, { once: true });
 
   const screen = el('div.lessons-fs');

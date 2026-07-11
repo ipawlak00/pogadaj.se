@@ -5,6 +5,7 @@
 import { CONFIG, isDev } from './config.js';
 import { clear } from './ui.js';
 import { store } from './state.js';
+import { speech } from './services/speech.js';
 
 import { renderWelcome } from './screens/welcome.js';
 import { renderOnboarding } from './screens/onboarding.js';
@@ -75,6 +76,10 @@ function routeKey(hash, st) {
 }
 
 function render() {
+  // Wyciszamy mowę POPRZEDNIEGO ekranu tutaj, zanim nowy ekran zacznie mówić.
+  // (Dawniej robiły to ekrany w swoim cleanupie hashchange, ale ten odpalał się
+  // PO renderze nowego ekranu i ucinał jego pierwszą kwestię — stąd cisza.)
+  speech.stopSpeaking();
   clear(appEl);
   window.scrollTo(0, 0);
   document.body.dataset.route = routeKey(location.hash || '#/', store.get());

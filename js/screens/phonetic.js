@@ -231,19 +231,26 @@ export function renderPhonetic(mount) {
       'No to pozamiatane, znam Twój akcent!',
     ]);
     const challengeLine = chalList.length
-      ? `Na celowniku mamy: ${chalSpoken.join(', ')}. Będę Cię na tym łapać podczas gadania, z miłością rzecz jasna.`
-      : 'I szczerze? Nie mam się do czego przyczepić. Aż podejrzane...';
-    // Wypowiedź jest DŁUŻSZA i bogatsza niż tekst na ekranie — Izabela opowiada,
-    // ekran pokazuje esencję. Bez procentów — zero stresu, tylko konkrety.
-    const spokenAll = `${hello} Znam już Twoją wymowę od podszewki i wiem dokładnie, ` +
-      `nad czym będziemy razem pracować. ${challengeLine} ` +
-      'A zanim ruszymy dalej, mam do Ciebie jeszcze jedno pytanie. ' +
-      'Powiedz mi albo napisz, co Tobie osobiście sprawia największą trudność w mówieniu po angielsku. ' +
-      'Może czasy, może brakuje Ci słówek, a może po prostu stres, że powiesz coś źle? ' +
-      'Zapamiętam to i będziemy nad tym pracować razem, krok po kroku.';
+      ? `Na celowniku mamy: ${chalSpoken.join(', ')}. Będę Cię na tym łapać podczas gadania, oczywiście z miłością.`
+      : 'I szczerze? Nie mam się do czego przyczepić, ładna robota.';
+    // Wypowiedź jest podzielona na części — dymek zmienia się w trakcie mówienia,
+    // pokazując aktualnie wypowiadaną kwestię. Bez procentów, zero stresu.
+    const parts = [
+      `${hello} Znam już Twoją wymowę od podszewki i wiem, nad czym możemy razem popracować.`,
+      challengeLine,
+      'A zanim ruszymy dalej, mam do Ciebie jedno pytanie.',
+      'Powiedz mi albo napisz, co Tobie sprawia największą trudność w mówieniu po angielsku. Może czasy, może brakuje Ci słówek, a może stres, że powiesz coś źle?',
+      'Zapamiętam to i będziemy nad tym pracować razem, spokojnie, krok po kroku.',
+    ];
+    izaLine = parts[0];
 
-    // ---- sekcja „co sprawia Ci trudność" — można POWIEDZIEĆ albo NAPISAĆ ----
-    izaLine = spokenAll;
+    function setBubble(t) { const b = document.getElementById('iza-bubble'); if (b) b.textContent = t; }
+    // Mówi po kolei, a dymek pokazuje aktualną kwestię (zmienia się w trakcie)
+    function speakParts(list, i) {
+      if (i >= list.length) return;
+      izaLine = list[i]; setBubble(list[i]);
+      speech.speak(list[i], { lang: 'pl-PL', onEnd: (e) => { if (!e?.cancelled) speakParts(list, i + 1); } });
+    }
     const diffArea = el('textarea.feedback-text', {
       style: 'min-height:84px',
       placeholder: 'Np. czasy przeszłe, rozumienie ze słuchu, stres przy mówieniu…',
@@ -287,8 +294,8 @@ export function renderPhonetic(mount) {
       if (saved) {
         izaSay(pick([
           'Zanotowane. Będę o tym pamiętać przy każdej naszej rozmowie. No to gadamy!',
-          'Dzięki, że mi to mówisz. Właśnie to zapisałam i wezmę pod lupę. Lecimy!',
-          'Rozumiem Cię doskonale. Mam to zapisane, popracujemy nad tym razem. Jazda z tematem!',
+          'Dzięki, że mi to mówisz. Właśnie to zapisałam i wezmę pod lupę.',
+          'Rozumiem Cię doskonale. Mam to zapisane, popracujemy nad tym razem.',
         ]));
         setTimeout(() => navigate('#/lessons'), 2600);
       } else {
@@ -302,9 +309,9 @@ export function renderPhonetic(mount) {
         el('div.iza-card__stage', {}, [
           el('img', { src: 'assets/scenes/scene-09.jpg', alt: 'Izabela',
             onerror: function () { this.onerror = null; this.src = 'assets/izabela/izabela-lesson.png'; } }),
-          el('div.iza-card__bubble', { id: 'iza-bubble', text: hello + ' Znam już Twoją wymowę od podszewki.',
+          el('div.iza-card__bubble', { id: 'iza-bubble', text: parts[0],
             title: 'Kliknij, a powtórzę', style: 'cursor:pointer',
-            onclick: () => speech.speak(izaLine, { lang: 'pl-PL' }) }),
+            onclick: () => speakParts(parts, 0) }),
         ]),
         el('div.iza-card__main', { style: 'gap:10px;display:flex;flex-direction:column;justify-content:center' }, [
           // to, co mówi Izabela, jest w dymku — tu tylko konkrety bez powtórek
@@ -313,7 +320,7 @@ export function renderPhonetic(mount) {
                 el('div.passport-bubble__label', { text: 'Popracujemy nad:' }),
                 el('div.passport-chips', {}, chalSpoken.map((c) => el('span.passport-chip', { text: c }))),
               ])
-            : el('p', { style: 'margin:0;color:#2a4a70', text: 'Nie mam się do czego przyczepić. Aż podejrzane...' }),
+            : el('p', { style: 'margin:0;color:#2a4a70', text: 'Nie mam się do czego przyczepić, ładna robota.' }),
           el('div', { style: 'border-top:1px solid #dce9f5;margin:6px 0' }),
           el('p', { style: 'margin:0;color:#14314f;font-weight:700', text: 'A co Tobie sprawia największą trudność w mówieniu po angielsku?' }),
           el('p', { style: 'margin:0;color:#46688c;font-size:.9rem', text: 'Powiedz mi to albo napisz. Zapamiętam i będziemy nad tym pracować.' }),
@@ -326,6 +333,6 @@ export function renderPhonetic(mount) {
         ]),
       ]),
     );
-    speech.speak(spokenAll, { lang: 'pl-PL' });
+    speakParts(parts, 0);
   }
 }

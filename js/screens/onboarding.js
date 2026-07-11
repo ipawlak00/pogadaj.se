@@ -50,12 +50,15 @@ function fallbackReaction(name) {
 export function renderOnboarding(mount) {
   if (!store.get().user?.token && !store.get().user) { navigate('#/'); return; }
 
-  let step = (store.get().user?.name || '').trim() ? 1 : 0;   // imię już znane → od celu
-  const data = { name: (store.get().user?.name || '').trim(), goal: null, level: null };
+  // Po filmie ZAWSZE zaczynamy od przedstawienia się i imienia (nawet jeśli imię
+  // jest już znane — wtedy podpowiadamy je w polu). Wcześniej pomijało ten krok.
+  let step = 0;
+  const knownName = (store.get().user?.name || '').trim();
+  const data = { name: knownName, goal: null, level: null };
 
   const screen = el('div.fade-in');
   mount.append(topbar(), screen);
-  window.addEventListener('hashchange', () => speech.stopSpeaking(), { once: true });
+  // mowę wygasza router (app.js) przy zmianie ekranu
 
   let spokenStep = -1;
   function speakStep(extra) {
@@ -113,7 +116,7 @@ export function renderOnboarding(mount) {
 
     // ---------- krok 0: imię (wpisz albo POWIEDZ) ----------
     if (step === 0) {
-      const nameInput = el('input', { type: 'text', placeholder: 'np. Kasia', maxlength: '30', autocomplete: 'given-name' });
+      const nameInput = el('input', { type: 'text', value: knownName, placeholder: 'np. Kasia', maxlength: '30', autocomplete: 'given-name' });
       const goNext = () => {
         const v = nameInput.value.trim();
         if (!v) { toast('Zdradź imię — chcę wiedzieć, jak się do Ciebie zwracać', 'error'); return; }

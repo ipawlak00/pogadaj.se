@@ -70,7 +70,7 @@ export function renderConversation(mount, lessonId) {
   // Wyjście z lekcji = natychmiastowa cisza (Izabela nie gada w tle)
   window.addEventListener('hashchange', () => {
     document.body.classList.remove('in-lesson');
-    speech.stopSpeaking();
+    // mowę wygasza już router (app.js) — tu tylko sprzątamy stan lekcji
     if (meter) clearInterval(meter);
     if ((isTrial || isFull) && !trialEnded) updateHistoryOnExit();
     try { recHandle?.stop(); recorder?.stop(); } catch (e) { /* ignore */ }
