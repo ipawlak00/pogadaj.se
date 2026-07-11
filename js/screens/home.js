@@ -1,12 +1,12 @@
-import { el, navigate, openFeedback, feedbackCorner, accountButton } from '../ui.js';
+import { el, navigate, feedbackCorner, accountButton } from '../ui.js';
 import { store } from '../state.js';
 import { auth } from '../services/auth.js';
 import { speech } from '../services/speech.js';
 import { FULL_MONTH_MINUTES, HOME_SCENES } from '../data/lessons.js';
 import { minutesWord } from '../data/phrases.js';
 
-// PEŁNA WERSJA — tła przewijają się płynnie (Izabela z kotami itd.),
-// na wierzchu panel z dostępnym czasem w tym miesiącu (domyślnie 15 h).
+// PEŁNA WERSJA — tło (Izabela z kotami) zmienia się przy KAŻDYM wejściu.
+// Przyciski i dymek są ustawiane per-scena tak, by nie zasłaniać twarzy ani kotów.
 export function renderHome(mount) {
   document.body.classList.add('on-lessons');
   window.addEventListener('hashchange', () => {
@@ -34,7 +34,14 @@ export function renderHome(mount) {
   const name = (store.get().user?.name || '').trim();
   const hasFullSession = (store.get().progress.fullHistory || []).length > 1;
 
-  // Tablica z czasem (nakładka na tablicę ze sceny)
+  // Wybór sceny: rotujemy przy każdym wejściu (indeks trzymany w store),
+  // więc obraz zmienia się za każdym razem, gdy wchodzisz na ekran.
+  const rot = (store.get().progress.homeSceneIdx || 0) % HOME_SCENES.length;
+  store.patchKey('progress', { homeSceneIdx: (rot + 1) % HOME_SCENES.length });
+  const layout = HOME_SCENES[rot];
+  screen.style.backgroundImage = `url('${layout.src}')`;
+
+  // Tablica z czasem (kompaktowa, w lewym górnym rogu — bezpieczna strefa)
   const board = el('div.home-board', {}, [
     el('div.home-board__title', { text: 'Twój czas w tym miesiącu' }),
     el('div.home-board__time', { text: `${leftH} h ${leftM} min` }),
@@ -43,19 +50,14 @@ export function renderHome(mount) {
     el('div.home-board__pct', { text: `wykorzystane: ${usedPct}%` }),
   ]);
 
-  // Historia lekcji — przycisk na prawo od Izabeli
-  const historyBtn = el('button.btn.btn--sq.home-history-btn', {
-    onclick: () => navigate('#/history'),
-  }, ['Sprawdź historię swoich lekcji']);
-
-  // Pod Izabelą: kontynuacja (jeśli jest niedokończona sesja) + nowa lekcja
-  const actions = el('div.home-actions', {}, [
+  // Historia + akcje w JEDNEJ kolumnie, ustawianej per-scena
+  const controls = el('div.home-controls', { style: layout.controls }, [
+    el('button.btn.btn--sq', { onclick: () => navigate('#/history') }, ['Sprawdź historię swoich lekcji']),
     hasFullSession ? el('button.btn.btn--sq', {
       onclick: () => { speech.unlockAudio(); navigate('#/lesson/full'); },
     }, ['Kontynuuj lekcję']) : null,
     el('button.btn.btn--primary', {
       onclick: () => {
-        // nowa lekcja = nowa sesja: czyścimy pamięć rozmowy i identyfikator
         store.patchKey('progress', { fullHistory: [], fullChat: [], currentFullId: null });
         speech.unlockAudio();
         navigate('#/lesson/full');
@@ -63,32 +65,24 @@ export function renderHome(mount) {
     }, ['Zacznij nową lekcję']),
   ]);
 
-  // Przewijane tła: dwie warstwy przenikają się co kilkanaście sekund.
-  // Brakujący plik (np. scene-17 przed wgraniem) jest po prostu pomijany.
-  const bgA = el('div.home-bg');
-  const bgB = el('div.home-bg');
-  let bgCur = bgA, bgNext = bgB, bgIdx = 0;
-  function showBg(k, attemptsLeft) {
-    if (attemptsLeft <= 0) return;
-    const src = HOME_SCENES[k % HOME_SCENES.length];
-    const im = new Image();
-    im.onload = () => {
-      bgNext.style.backgroundImage = `url('${src}')`;
-      bgNext.classList.add('show');
-      bgCur.classList.remove('show');
-      [bgCur, bgNext] = [bgNext, bgCur];
-      bgIdx = k + 1;
-    };
-    im.onerror = () => showBg(k + 1, attemptsLeft - 1);
-    im.src = src;
-  }
-  showBg(0, HOME_SCENES.length);
-  const bgTimer = setInterval(() => showBg(bgIdx, HOME_SCENES.length), 14000);
-  window.addEventListener('hashchange', () => clearInterval(bgTimer), { once: true });
+  // Dymek z tym, co mówi Izabela (klik = powtórka) — w bezpiecznej strefie sceny
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
+  const hi = pick([
+    `Witaj w pełnej wersji${name ? ', ' + name : ''}!`,
+    'No i jesteśmy u siebie!',
+    'Rozgość się, to nasz statek!',
+  ]);
+  const spoken = `${hi} Masz jeszcze ${leftH} godzin i ${leftM} ${minutesWord(leftM)} rozmów w tym miesiącu. Klikaj i gadamy!`;
+  const bubble = el('div.scene-bubble', {
+    style: layout.bubble, title: 'Kliknij, a powtórzę',
+    onclick: () => speech.speak(spoken, { lang: 'pl-PL' }),
+  }, [
+    el('div.scene-bubble__who', { text: 'Izabela' }),
+    el('div.scene-bubble__hi', { text: hi }),
+    el('p', { style: 'margin:4px 0 0', text: `Masz jeszcze ${leftH} h ${leftM} min rozmów w tym miesiącu. Klikaj i gadamy!` }),
+  ]);
 
   screen.replaceChildren(
-    bgA,
-    bgB,
     el('header.lessons-fs__top', {}, [
       el('div.logo', { html: 'pogadaj<span class="dot">.</span><span class="se">se</span>' }),
       el('div.lessons-fs__tools', {}, [
@@ -97,16 +91,10 @@ export function renderHome(mount) {
       ]),
     ]),
     board,
-    historyBtn,
-    actions,
+    bubble,
+    controls,
     feedbackCorner('pełna wersja'),
   );
 
-  const pick = (a) => a[Math.floor(Math.random() * a.length)];
-  const hi = pick([
-    `Witaj w pełnej wersji${name ? ', ' + name : ''}!`,
-    'No i jesteśmy u siebie!',
-    'Rozgość się, to nasz statek!',
-  ]);
-  speech.speak(`${hi} Masz jeszcze ${leftH} godzin i ${leftM} ${minutesWord(leftM)} rozmów w tym miesiącu. Klikaj i gadamy!`, { lang: 'pl-PL' });
+  speech.speak(spoken, { lang: 'pl-PL' });
 }

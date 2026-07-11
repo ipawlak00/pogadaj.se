@@ -232,14 +232,20 @@ export const getLessonsForLevel = (lvl) => LESSON_SETS[setForLevel(lvl)];
 // Portretowe kadry Izabeli do widoku lekcji (blisko, od pasa w górę)
 export const LESSON_PORTRAITS = ['assets/scenes/scene-05.jpg', 'assets/scenes/scene-09.jpg', 'assets/scenes/scene-10.jpg'];
 
-// Ekran główny pełnej wersji: tła przewijają się (Izabela z kotami itd.).
-// scene-17 (rysowanie przy konsoli) i scene-18 (kanapa z laptopem i kotami)
-// włączą się same, gdy pliki trafią do assets/scenes — do tego czasu są pomijane.
+// Ekran główny pełnej wersji: tło zmienia się przy KAŻDYM wejściu (nie w czasie).
+// Każda scena ma własne pozycje przycisków i dymka, tak dobrane, żeby NIGDY
+// nie zasłaniać twarzy Izabeli ani kotów (różne kadry = różne bezpieczne miejsca).
 export const HOME_SCENES = [
-  'assets/scenes/scene-15.jpg',   // warsztat z kotami (Peja śpi, Kocin na kablach)
-  'assets/scenes/scene-16.jpg',   // Izabela z kotem na kolanach, czyta tablet
-  'assets/scenes/scene-17.jpg',   // rysowanie rysikiem przy konsoli (do wgrania)
-  'assets/scenes/scene-18.jpg',   // kanapa z laptopem i dwoma kotami (do wgrania)
+  { // warsztat: Izabela na środku, Peja śpi w lewym dole, Kocin na kablach z prawej
+    src: 'assets/scenes/scene-15.jpg',
+    controls: 'left:50%; bottom:4%; transform:translateX(-50%); align-items:center',
+    bubble: 'left:2%; top:40%',
+  },
+  { // relaks: Izabela z prawej, kot na kolanach na środku, Kocin na półce w prawym górnym rogu
+    src: 'assets/scenes/scene-16.jpg',
+    controls: 'left:2%; bottom:6%; align-items:flex-start',
+    bubble: 'left:2%; top:38%',
+  },
 ];
 
 // Pełna wersja: miesięczny budżet rozmów (w minutach)
