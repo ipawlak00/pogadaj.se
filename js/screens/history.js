@@ -79,6 +79,7 @@ export function renderHistory(mount) {
         el('button.btn.btn--sq', { onclick: () => navigate('#/home') }, ['Wróć']),
       ]),
     ]),
+    el('img.scene-photo', { src: 'assets/scenes/scene-17.jpg', alt: 'Izabela', style: 'object-position:50% 24%' }),
     bubble,
     cards,
     feedbackCorner('historia lekcji'),

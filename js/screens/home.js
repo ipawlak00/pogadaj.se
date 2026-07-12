@@ -133,6 +133,8 @@ export function renderHome(mount) {
         el('button.btn.btn--ghost', { onclick: () => { auth.signOut(); location.hash = '#/'; location.reload(); } }, ['Wyloguj']),
       ]),
     ]),
+    // widoczne tylko na telefonie (układ kartowy): zdjęcie sceny nad treścią
+    el('img.scene-photo', { src: layout.src, alt: 'Izabela', style: `object-position:${layout.focus || 'center 30%'}` }),
     board,
     bubble,
     controls,

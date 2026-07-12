@@ -123,6 +123,7 @@ export function renderLessons(mount) {
         el('div.logo', { html: 'pogadaj<span class="dot">.</span><span class="se">se</span>' }),
         topRight,
       ]),
+      el('img.scene-photo', { src: 'assets/scenes/scene-03.jpg', alt: 'Izabela', style: 'object-position:50% 26%' }),
       bubble,
       el('div.trial-wrap', {}, [tile, clock]),
       feedbackCorner('ekran lekcji próbnej'),
