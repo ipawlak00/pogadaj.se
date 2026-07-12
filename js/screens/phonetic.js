@@ -297,6 +297,8 @@ export function renderPhonetic(mount) {
     }
 
     function go() {
+      // Trial schowany — po teście od razu na statek (pełna wersja, 15 h).
+      store.patchKey('progress', { fullUnlocked: true });
       const saved = saveDifficulty();
       if (saved) {
         izaSay(pick([
@@ -304,9 +306,9 @@ export function renderPhonetic(mount) {
           'Dzięki, że mi to mówisz. Właśnie to zapisałam i wezmę pod lupę.',
           'Rozumiem Cię doskonale. Mam to zapisane, popracujemy nad tym razem.',
         ]));
-        setTimeout(() => navigate('#/lessons'), 2600);
+        setTimeout(() => navigate('#/home'), 2600);
       } else {
-        navigate('#/lessons');
+        navigate('#/home');
       }
     }
 

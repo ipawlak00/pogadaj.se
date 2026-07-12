@@ -68,8 +68,12 @@ async function fsGetUser(email) {
     salt: f.salt?.stringValue || '',
     hash: f.hash?.stringValue || '',
     profile: f.profile?.stringValue || '',   // profil fonetyczny (JSON)
+    state: f.state?.stringValue || '',       // postępy ucznia (poziom, historia, czas) — JSON
   };
 }
+
+// mapStringValue helper — Firestore wymaga pełnych obiektów pól przy PATCH,
+// więc zachowujemy dotychczasowe wartości (state/profile) gdy ich nie zmieniamy.
 
 async function fsPutUser(u) {
   const [token, project] = await Promise.all([gcpToken(), gcpProject()]);
@@ -81,6 +85,7 @@ async function fsPutUser(u) {
     salt: { stringValue: u.salt },
     hash: { stringValue: u.hash },
     profile: { stringValue: u.profile || '' },
+    state: { stringValue: u.state || '' },
     createdAt: { stringValue: new Date().toISOString() },
   } };
   const r = await fetch(url, {
@@ -208,9 +213,10 @@ async function handleAuth(path, body, res) {
     if (!u || hashPassword(password, u.salt) !== u.hash) {
       return res.status(401).json({ error: 'Zły email albo hasło.' });
     }
-    let profile = null;
+    let profile = null, state = null;
     try { profile = u.profile ? JSON.parse(u.profile) : null; } catch {}
-    return res.status(200).json({ ok: true, id: u.id, name: u.name, email: u.email, token: makeToken(email), profile });
+    try { state = u.state ? JSON.parse(u.state) : null; } catch {}
+    return res.status(200).json({ ok: true, id: u.id, name: u.name, email: u.email, token: makeToken(email), profile, state });
   }
 
   // Zmiana emaila: konto przenosi się pod nowy adres (dokument = hash emaila),
@@ -251,6 +257,16 @@ async function handleAuth(path, body, res) {
     return res.status(200).json({ ok: true });
   }
 
+  // Postępy ucznia (poziom, historia lekcji, wykorzystany czas) — zapis na koncie
+  if (path === '/state/save') {
+    if (!verifyToken(body.token, email)) return res.status(401).json({ error: 'Sesja wygasła. Zaloguj się ponownie.' });
+    const u = await fsGetUser(email);
+    if (!u) return res.status(404).json({ error: 'Nie ma takiego konta.' });
+    const state = JSON.stringify(body.state || {}).slice(0, 200000);
+    await fsPutUser({ ...u, state });
+    return res.status(200).json({ ok: true });
+  }
+
   return res.status(404).json({ error: 'unknown auth path' });
 }
 
@@ -288,7 +304,8 @@ exports.geminiProxy = async (req, res) => {
 
   // Konta użytkowników
   if (path === '/auth/register' || path === '/auth/login' || path === '/auth/setname'
-      || path === '/auth/setemail' || path === '/auth/setpassword' || path === '/profile/save') {
+      || path === '/auth/setemail' || path === '/auth/setpassword'
+      || path === '/profile/save' || path === '/state/save') {
     try {
       const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
       return await handleAuth(path, body, res);

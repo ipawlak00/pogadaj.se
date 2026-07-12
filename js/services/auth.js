@@ -36,6 +36,35 @@ const LAST_KEY = 'pogadajse.lastAccount';
 const lastAccount = () => { try { return localStorage.getItem(LAST_KEY) || ''; } catch { return ''; } };
 const rememberAccount = (email) => { try { localStorage.setItem(LAST_KEY, email); } catch {} };
 
+// ---- Trwałość postępów w bazie (poziom, historia, czas) per konto ----
+let suppressSync = false;      // wstrzymaj zapis podczas przywracania stanu z bazy
+let syncTimer = null;
+
+// Wycinek stanu do bazy — bez surowych czatów (duże) i sampli fonetycznych.
+function stateBlob() {
+  const s = store.get();
+  const { fullChat, trialChat, ...progress } = s.progress || {};
+  const phon = s.phonetic || {};
+  let profile = phon.profile || null;
+  if (profile) { const { samples, ...slim } = profile; profile = slim; }
+  return { onboarding: s.onboarding, phonetic: { completed: !!phon.completed, profile }, progress };
+}
+
+async function saveStateNow() {
+  const u = store.get().user || {};
+  if (!u.token || !u.email) return;
+  await call('/state/save', { email: u.email, token: u.token, state: stateBlob() });
+}
+
+function restoreState(state) {
+  if (!state) return;
+  try {
+    if (state.onboarding) store.patchKey('onboarding', state.onboarding);
+    if (state.phonetic) store.patchKey('phonetic', state.phonetic);
+    if (state.progress) store.patchKey('progress', state.progress);
+  } catch (e) { /* ignore */ }
+}
+
 export const auth = {
   // Nowe konto: email + hasło (imię Izabela pozna po filmie).
   // Świeże konto = CZYSTY start (zero odziedziczonych postępów z urządzenia).
@@ -60,12 +89,15 @@ export const auth = {
   // używane na tym urządzeniu czyści lokalne postępy poprzedniego.
   async login({ email, password }) {
     const d = await call('/auth/login', { email, password });
-    const prev = store.get().user?.email || lastAccount();
-    if (prev && prev !== d.email) store.reset();
+    // Logowanie ZAWSZE czyści lokalne postępy — źródłem prawdy jest konto w bazie,
+    // żeby konta i historie nigdy się nie mieszały między użytkownikami/urządzeniami.
+    suppressSync = true;
+    store.reset();
     rememberAccount(d.email);
     store.setUser({ id: d.id || '', name: d.name, email: d.email, token: d.token, provider: 'pogadaj' });
-    // Profil wymowy z bazy — Izabela pamięta problemy ucznia także po zmianie urządzenia
+    restoreState(d.state);                       // poziom, historia, czas, onboarding z bazy
     if (d.profile) { try { store.setPhoneticProfile(d.profile); } catch {} }
+    suppressSync = false;
     return d;
   },
 
@@ -93,6 +125,18 @@ export const auth = {
     if (!u.token || !u.email || !profile) return;
     const { samples, ...slim } = profile;
     await call('/profile/save', { email: u.email, token: u.token, profile: slim });
+  },
+
+  // Uruchamia auto-zapis postępów do bazy (poziom, historia, czas) — wywołać raz
+  // na starcie apki. Zapisuje z debouncem po każdej zmianie, gdy user zalogowany.
+  startStateSync() {
+    store.subscribe(() => {
+      if (suppressSync) return;
+      const u = store.get().user;
+      if (!u || !u.token || u.provider !== 'pogadaj') return;
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(() => saveStateNow().catch(() => {}), 1500);
+    });
   },
 
   // Tryb gościa (dev / podgląd bez konta)

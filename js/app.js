@@ -6,6 +6,7 @@ import { CONFIG, isDev } from './config.js';
 import { clear } from './ui.js';
 import { store } from './state.js';
 import { speech } from './services/speech.js';
+import { auth } from './services/auth.js';
 
 import { renderWelcome } from './screens/welcome.js';
 import { renderOnboarding } from './screens/onboarding.js';
@@ -36,12 +37,12 @@ function resolve() {
       if (!st.user) return redirect('#/');
       if (!st.onboarding.completed) return redirect('#/onboarding');
       return renderPhonetic(appEl);
-    case '#/lessons': return guarded(st, () => renderLessons(appEl));
+    // Lekcja próbna schowana na czas testów ze znajomymi (wróci z subskrypcją).
+    // Każdy wchodzi od razu na statek (pełna wersja, 15 h).
+    case '#/lessons': return redirect('#/home');
     case '#/home':
-      if (!st.progress.fullUnlocked) return redirect('#/');
       return guarded(st, () => renderHome(appEl));
     case '#/history':
-      if (!st.progress.fullUnlocked) return redirect('#/');
       return guarded(st, () => renderHistory(appEl));
     case '#/':
     default:
@@ -50,7 +51,8 @@ function resolve() {
       if (!st.progress.introSeen) return redirect('#/intro');
       if (!st.onboarding.completed) return redirect('#/onboarding');
       if (!st.phonetic.completed) return redirect('#/phonetic');
-      return st.progress.fullUnlocked ? renderHome(appEl) : renderLessons(appEl);
+      // Trial schowany — wszyscy lądują na statku (pełna wersja).
+      return renderHome(appEl);
   }
 }
 
@@ -89,6 +91,9 @@ function render() {
 window.addEventListener('hashchange', render);
 window.addEventListener('DOMContentLoaded', render);
 render();
+
+// Auto-zapis postępów (poziom, historia, czas) do bazy per konto.
+auth.startStateSync();
 
 // PWA: na czas aktywnego developmentu CACHE WYŁĄCZONY.
 // Wyrejestrowujemy ewentualny stary service worker i czyścimy cache,
