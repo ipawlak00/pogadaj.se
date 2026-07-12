@@ -141,6 +141,12 @@ export function isEnglishText(s) {
 }
 const looksEnglish = isEnglishText;
 
+// Dzieli tekst na zdania (bez lookbehind — zgodne wszędzie).
+export function splitSentences(t) {
+  return (String(t || '').match(/[^.!?]+[.!?]*/g) || [String(t || '')])
+    .map((s) => s.trim()).filter(Boolean);
+}
+
 function splitByQuotes(text, primary) {
   const QUOTE = /["„“”»«]/;
   const out = [];
@@ -451,6 +457,19 @@ export const speech = {
     if (hasGeminiTTS()) return speakGemini(clean, opts);
     if (hasEleven()) return speakEleven(clean, opts);
     return speakWeb(clean, opts);
+  },
+
+  // Mówi kolejno zdania z listy, wołając onPart(tekst, i) PRZED każdym —
+  // dzięki temu dymek pokazuje krótkie kwestie po kolei, zamiast jednej wielkiej.
+  // onDone odpala się dopiero po ostatnim (nie po przerwaniu nową wypowiedzią).
+  speakSequence(parts, { lang = 'pl-PL', onPart, onDone } = {}) {
+    const list = (parts || []).map((s) => String(s).trim()).filter(Boolean);
+    const run = (i) => {
+      if (i >= list.length) { onDone?.(); return; }
+      onPart?.(list[i], i);
+      this.speak(list[i], { lang, onEnd: (e) => { if (!e || !e.cancelled) run(i + 1); } });
+    };
+    run(0);
   },
 
   // Odblokuj dźwięk na telefonie (wywołaj na geście wejścia w lekcję)

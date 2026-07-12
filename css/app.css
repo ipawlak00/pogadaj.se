@@ -283,6 +283,8 @@ body.in-lesson .msg--user {
   border: 2px solid #a5ddf3; border-radius: 14px;
   padding: 10px 14px; font-size: .92rem; line-height: 1.4; text-align: center;
   box-shadow: 0 10px 28px rgba(20,70,120,.3);
+  /* nigdy nie zakrywa całego kadru — krótkie kwestie i tak się mieszczą */
+  max-height: 44%; overflow-y: auto;
 }
 .iza-card__bubble::before {
   content: ''; position: absolute; top: -11px; left: 50%;
@@ -291,9 +293,16 @@ body.in-lesson .msg--user {
   border-left: 2px solid #a5ddf3; border-top: 2px solid #a5ddf3;
 }
 .iza-card__main { padding: 22px 24px; display: flex; flex-direction: column; gap: 6px; min-height: 560px; }
-@media (max-width: 760px) {
+/* Telefon i tablet (także w pionie): karta układa się w pionie — obraz na
+   górze, treść pod spodem. Dzięki temu nic się nie ściska ani nie nachodzi. */
+@media (max-width: 960px), (orientation: portrait) {
   .iza-card { grid-template-columns: 1fr; }
-  .iza-card__stage { min-height: 230px; }
+  .iza-card__stage { min-height: 300px; }
+  .iza-card__main { min-height: auto; }
+}
+@media (max-width: 520px) {
+  .iza-card__stage { min-height: 240px; }
+  .iza-card__bubble { font-size: .86rem; padding: 8px 11px; }
 }
 
 /* jasna treść wewnątrz karty (wybory, pasek, pola, wyniki testu) */
@@ -1040,6 +1049,10 @@ body.on-lessons .cosmos { display: none; }
   background: radial-gradient(ellipse at center, #ffffff 30%, #eef6fd 78%, #dcebf8 100%);
   border: 2px solid #16305a; border-radius: 12px; padding: 10px 14px; color: #14314f;
   box-shadow: 0 12px 30px rgba(6,25,55,.42);
+  max-height: 42vh; overflow-y: auto;   /* krótkie kwestie i tak się mieszczą */
+}
+@media (max-width: 760px), (orientation: portrait) {
+  .scene-bubble { max-width: 92%; max-height: 30vh; }
 }
 .scene-bubble__who { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: #5b7f9e; margin-bottom: 2px; }
 .scene-bubble__hi { font-family: var(--font-display); font-weight: 700; color: #14314f; }
@@ -1121,8 +1134,12 @@ body.on-lessons .cosmos { display: none; }
     align-items: stretch !important; width: 92%; max-width: 92%;
   }
   .scene-bubble {
-    left: 50% !important; top: auto !important; bottom: 22% !important;
+    left: 50% !important; right: auto !important; top: auto !important; bottom: 22% !important;
     transform: translateX(-50%) !important; max-width: 92%; width: 92%;
+  }
+  /* Na home dymek pod tablicą z czasem (tablica ~9-30%), żeby nic nie nachodziło */
+  .home-fs .scene-bubble {
+    top: 33% !important; bottom: auto !important; max-height: 34vh;
   }
   /* okienka historii układają się w przewijaną kolumnę (rozrzut by się nakładał) */
   .history-cards {

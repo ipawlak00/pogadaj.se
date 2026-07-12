@@ -1,7 +1,7 @@
 import { el, navigate, feedbackCorner, accountButton } from '../ui.js';
 import { store } from '../state.js';
 import { auth } from '../services/auth.js';
-import { speech } from '../services/speech.js';
+import { speech, splitSentences } from '../services/speech.js';
 import { FULL_MONTH_MINUTES, HOME_SCENES } from '../data/lessons.js';
 import { minutesWord, hoursWord } from '../data/phrases.js';
 
@@ -104,15 +104,24 @@ export function renderHome(mount) {
     bodyText = `Masz jeszcze ${timeShort} rozmów w tym miesiącu. Klikaj i gadamy!`;
     bodySpoken = `Masz jeszcze ${timeSpoken} rozmów w tym miesiącu. Klikaj i gadamy!`;
   }
-  const spoken = `${hi} ${bodySpoken}`;
+  // Zamiast jednego wielkiego dymka — krótkie zdania, które przeskakują
+  // w miarę mówienia (dymek nie zakrywa sceny).
+  const sentences = splitSentences(bodySpoken);
+  const bodyP = el('p', { style: 'margin:4px 0 0', text: sentences[0] || bodyText });
   const bubble = el('div.scene-bubble', {
     style: layout.bubble, title: 'Kliknij, a powtórzę',
-    onclick: () => speech.speak(spoken, { lang: 'pl-PL' }),
+    onclick: () => playWelcome(),
   }, [
     el('div.scene-bubble__who', { text: 'Izabela' }),
     el('div.scene-bubble__hi', { text: hi }),
-    el('p', { style: 'margin:4px 0 0', text: bodyText }),
+    bodyP,
   ]);
+  function playWelcome() {
+    speech.speakSequence([hi, ...sentences], {
+      lang: 'pl-PL',
+      onPart: (t, i) => { if (i > 0) bodyP.textContent = sentences[i - 1]; },
+    });
+  }
 
   const level = store.get().onboarding.level;
   screen.replaceChildren(
@@ -130,7 +139,7 @@ export function renderHome(mount) {
     feedbackCorner('pełna wersja'),
   );
 
-  speech.speak(spoken, { lang: 'pl-PL' });
+  playWelcome();
 
   // Zmiana poziomu z pełnej wersji (te same poziomy co w onboardingu)
   function openLevelPicker() {

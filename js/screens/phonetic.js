@@ -1,6 +1,6 @@
 import { el, topbar, toast, navigate, feedbackCorner } from '../ui.js';
 import { store } from '../state.js';
-import { speech } from '../services/speech.js';
+import { speech, splitSentences } from '../services/speech.js';
 import { ai } from '../services/ai.js';
 import { auth } from '../services/auth.js';
 import { PHONETIC_WORDS } from '../data/phonetic-words.js';
@@ -85,9 +85,16 @@ export function renderPhonetic(mount) {
       lastSpoken = idx;
       if (!introSpoken) {
         introSpoken = true;
-        izaLine = INTRO;
-        const bb = document.getElementById('iza-bubble'); if (bb) bb.textContent = INTRO;
-        speech.speak(INTRO, { lang: 'pl-PL', onEnd: (e) => { if (!e?.cancelled) speakWord(); } });
+        // INTRO rozbite na krótkie zdania — dymek pokazuje je po kolei
+        // (nie zakrywa całego kadru), a po nim czytamy pierwsze słowo.
+        const intro = splitSentences(INTRO);
+        izaLine = intro[0];
+        const bb0 = document.getElementById('iza-bubble'); if (bb0) bb0.textContent = intro[0];
+        speech.speakSequence(intro, {
+          lang: 'pl-PL',
+          onPart: (t) => { izaLine = t; const b = document.getElementById('iza-bubble'); if (b) b.textContent = t; },
+          onDone: () => speakWord(),
+        });
       }
       else speakWord();
     }
