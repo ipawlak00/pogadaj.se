@@ -245,7 +245,7 @@ export const HOME_SCENES = [
   { // relaks: Izabela z prawej, kot na kolanach na środku, Kocin na półce w prawym górnym rogu
     src: 'assets/scenes/scene-16.jpg',
     focus: '68% 26%',
-    controls: 'left:2%; bottom:6%; align-items:flex-start',
+    controls: 'left:2%; bottom:6%; align-items:center',
     bubble: 'left:2%; top:38%',
   },
 ];

@@ -1191,7 +1191,9 @@ body.on-lessons .cosmos { display: none; }
     max-height: none !important; margin: 10px 14px !important;
   }
   .home-board { display: flex !important; justify-content: center; }
-  .home-controls { display: flex; flex-direction: column; gap: 10px; }
+  /* przyciski home na pełną szerokość karty (wyśrodkowane, nie do lewej) */
+  .home-controls { display: flex !important; flex-direction: column; gap: 10px; align-items: stretch !important; }
+  .home-controls > .btn { width: 100%; justify-content: center; }
   .history-cards { display: flex; flex-direction: column; gap: 10px; }
   .history-item { position: static !important; width: 100% !important; max-width: 100% !important; }
   .trial-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }

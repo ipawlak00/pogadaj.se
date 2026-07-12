@@ -199,7 +199,7 @@ export function renderConversation(mount, lessonId) {
   nextScene();
 
   mount.append(
-    topbar(el('button.btn.btn--ghost', { onclick: () => navigate(isFull ? '#/home' : '#/lessons') }, ['Wróć'])),
+    topbar(el('button.btn.btn--sq', { onclick: () => navigate(isFull ? '#/home' : '#/lessons') }, ['Wróć'])),
     el('div.lesson-chat-card.fade-in', {}, [
       stage,
       el('div.lc-main', {}, [

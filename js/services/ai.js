@@ -330,11 +330,13 @@ Zwróć JSON:
     } catch (e) { return null; }
   },
 
-  // Krótkie streszczenie rozmowy (do historii lekcji)
+  // Krótkie, OSOBISTE wspomnienie lekcji (do historii) — oczami Izabeli,
+  // zwrócone do ucznia na „Ty", a nie sztywne „uczeń rozmawiał z Izabelą".
   async summarizeLesson(chatText) {
     try {
-      const sys = 'Streszczasz rozmowę z lekcji angielskiego. Zwracasz wyłącznie JSON.';
-      const contents = [{ role: 'user', parts: [{ text: `Streść PO POLSKU w 1-2 zdaniach, o czym była ta rozmowa ucznia z Izabelą i czego uczeń się uczył. Bez ozdobników. Rozmowa:
+      const sys = 'Jesteś Izabelą i zapisujesz krótkie, ciepłe wspomnienie lekcji. Zwracasz wyłącznie JSON.';
+      const contents = [{ role: 'user', parts: [{ text: `Napisz PO POLSKU krótkie (1-2 zdania) wspomnienie tej lekcji z perspektywy Izabeli, zwracając się do ucznia na „Ty" (np. „Gadaliśmy o Twoim weekendzie i ćwiczyłaś zamawianie kawy po angielsku."). Ciepło i osobiście. NIE pisz bezosobowo („uczeń rozmawiał", „uczennica uczyła się"). ${userLine()}
+Rozmowa:
 ${String(chatText).slice(0, 4000)}
 Zwróć JSON: {"summary":"..."}` }] }];
       const r = await this._callContents(contents, sys, CONFIG.GEMINI.fastModel);
