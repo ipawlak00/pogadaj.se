@@ -1,7 +1,7 @@
 import { el, topbar, toast, navigate, feedbackCorner } from '../ui.js';
 import { store } from '../state.js';
 import { speech, isEnglishText } from '../services/speech.js';
-import { ai, isBeginner } from '../services/ai.js';
+import { ai, isBeginner, isAdvanced } from '../services/ai.js';
 import { getLesson, getTrialLesson, getFullLesson, SCENES, TRIAL_MINUTES, FULL_MONTH_MINUTES, LESSON_PORTRAITS } from '../data/lessons.js';
 import { lessonHello } from '../data/phrases.js';
 
@@ -279,19 +279,19 @@ export function renderConversation(mount, lessonId) {
     // do poprzednich rozmów (podsumowania z historii), nie zaczyna od zera,
     // a na wyższych poziomach wita się i zagaduje po angielsku.
     if (isFull) {
-      const beg = isBeginner();
+      const adv = isAdvanced();   // tylko C1/C2 witają się po angielsku
       const pickOne = (a) => a[Math.floor(Math.random() * a.length)];
       const past = (store.get().progress.history || [])
         .filter((h) => h.summary)
         .slice(-4)
         .map((h) => '- ' + h.summary)
         .join('\n');
-      const hello = beg
-        ? pickOne([`No hej${name ? ', ' + name : ''}, dobrze Cię znowu widzieć!`, 'O, jesteś! No to gadamy.', 'Siema, wpadaj, rozgość się!'])
-        : pickOne([`Hey${name ? ' ' + name : ''}, good to see you again!`, 'Hello hello, welcome back!', `Hi${name ? ' ' + name : ''}! Ready to chat?`]);
-      introGate = new Promise((res) => { speakLine(hello, { lang: beg ? 'pl' : 'en', onEnd: res }); setTimeout(res, 7000); });
+      const hello = adv
+        ? pickOne([`Hey${name ? ' ' + name : ''}, good to see you again!`, 'Hello hello, welcome back!', `Hi${name ? ' ' + name : ''}! Ready to chat?`])
+        : pickOne([`No hej${name ? ', ' + name : ''}, dobrze Cię znowu widzieć!`, 'O, jesteś! No to gadamy.', 'Siema, wpadaj, rozgość się!']);
+      introGate = new Promise((res) => { speakLine(hello, { lang: adv ? 'en' : 'pl', onEnd: res }); setTimeout(res, 7000); });
       history.push({ role: 'user', text: `To jest KOLEJNA lekcja z uczniem, którego już dobrze znasz — jesteście starymi znajomymi. NIE zaczynaj nauki od zera, NIE ucz ponownie powitań typu "Hello" ani przedstawiania się (to dawno za Wami).${past ? `\nPodsumowania Waszych poprzednich lekcji (nawiązuj do nich naturalnie):\n${past}` : ''}
-Już się przywitałaś słowami "${hello}" — NIE witaj się ponownie. Teraz: jednym zdaniem nawiąż do tego, co ostatnio ćwiczyliście albo do samego ucznia, i ZAPYTAJ, o czym chce dziś pogadać — możesz przy tym zaproponować temat, który jest naturalnym krokiem DALEJ względem poprzednich lekcji. ${beg ? 'Prowadź po polsku, angielskie frazy w cudzysłowie.' : 'Prowadź rozmowę po angielsku, jak z dobrym znajomym.'}` });
+Już się przywitałaś słowami "${hello}" — NIE witaj się ponownie. Teraz: jednym zdaniem nawiąż do tego, co ostatnio ćwiczyliście albo do samego ucznia, i ZAPYTAJ, o czym chce dziś pogadać — możesz przy tym zaproponować temat, który jest naturalnym krokiem DALEJ względem poprzednich lekcji. ${adv ? 'Prowadź rozmowę po angielsku, jak z dobrym znajomym.' : 'TĘ pierwszą wypowiedź powiedz PO POLSKU (ustaw "lang":"pl"), żeby uczeń wszystko zrozumiał; angielskie frazy w cudzysłowie. Kolejne wypowiedzi prowadź wg poziomu ucznia.'}` });
       await aiTurn();
       return;
     }
@@ -313,7 +313,13 @@ Już się przywitałaś słowami "${hello}" — NIE witaj się ponownie. Teraz: 
     if (!store.get().progress.oriented) store.patchKey('progress', { oriented: true });
     if (r.mistake) setMood('oops');
     speakLine(r.say, { lang: r.lang, onEnd: () => setMood('neutral') });
-    setTarget(quotedPhrase(r.say) || (r.suggestions || [])[0] || null);
+    // „Powtórz:" pokazujemy TYLKO, gdy Izabela faktycznie prosi o powtórzenie
+    // konkretnej frazy (pole repeat), a nie w swobodnej rozmowie.
+    // Zapas: jeśli AI nie ustawiło repeat, ale w wypowiedzi jest wyraźna prośba
+    // o powtórzenie + angielski cytat — pokaż ten cytat.
+    const askRepeat = /powtórz|powtorz|repeat|spróbuj (to )?(powiedzieć|wymówić)|wymów|say it|powiedz za mną/i.test(r.say || '');
+    const target = r.repeat || (askRepeat ? quotedPhrase(r.say) : null);
+    setTarget(target);
     persistLesson();
     if (r.done) {
       store.markLessonDone(lesson.id);

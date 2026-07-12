@@ -95,22 +95,27 @@ function profileForPrompt() {
 
 // Poziom ucznia → ile polskiego. Początkujący prowadzeni PO POLSKU.
 const BEGINNER_LEVELS = ['A1', 'A2'];
+const ADVANCED_LEVELS = ['C1', 'C2'];
 export function currentLevel() { return store.get().onboarding.level || 'A2'; }
 export function isBeginner() { return BEGINNER_LEVELS.includes(currentLevel()); }
+// Zaawansowani (C1/C2) dostają PIERWSZĄ kwestię od razu po angielsku; reszta po polsku.
+export function isAdvanced() { return ADVANCED_LEVELS.includes(currentLevel()); }
 
 // System prompt dla TRYBU LEKCJI prowadzonej przez AI (adaptacyjnie, ~45 min)
 function lessonSystem() {
   const lvl = currentLevel();
   const beg = isBeginner();
+  const adv = isAdvanced();
   const oriented = !!store.get().progress.oriented;   // czy uczeń zna już zasady
   return `${IZABELA.systemPrompt}
 
 TRYB LEKCJI — prowadzisz interaktywną, DŁUGĄ lekcję mówienia (cel ~45 minut):
 - ${userLine()}
 - Poziom ucznia: ${lvl}. ${beg ? 'POCZĄTKUJĄCY — prowadź po polsku, ucz bardzo prostych, krótkich angielskich fraz.' : 'Prowadź po angielsku, dobieraj trudność do ucznia.'}
+- JĘZYK PIERWSZEJ WYPOWIEDZI: ${adv ? 'uczeń jest zaawansowany (C1/C2) — pierwszą wypowiedź (powitanie i wprowadzenie) powiedz PO ANGIELSKU, ustaw "lang":"en".' : 'pierwszą wypowiedź lekcji (powitanie oraz wyjaśnienie zasad) powiedz PO POLSKU i ustaw "lang":"pl", żeby uczeń na pewno wszystko zrozumiał. Dopiero KOLEJNE wypowiedzi prowadź w języku wg poziomu.'}
 - ${oriented
     ? 'Uczeń ZNA JUŻ zasady (że może mieszać polski z angielskim i że rozmawiacie o tym, co chce). NIE POWTARZAJ tych zasad ani żadnego wstępnego regulaminu — po prostu wejdź od razu w rozmowę/naukę.'
-    : 'Tylko RAZ, w pierwszej wypowiedzi, powiedz krótko dwie rzeczy: 1) uczeń może mówić po polsku i angielsku, może je mieszać, a jak zabraknie słówka, dopowie po polsku i pomożesz; 2) rozmawiacie o czym CHCE uczeń, jak Twój temat go nie interesuje, niech śmiało rzuci swój. Powiedz to raz i nigdy do tego nie wracaj.'}
+    : `Tylko RAZ, w pierwszej wypowiedzi${adv ? '' : ' (PO POLSKU)'}, powiedz krótko dwie rzeczy: 1) uczeń może mówić po polsku i angielsku, może je mieszać, a jak zabraknie słówka, dopowie po polsku i pomożesz; 2) rozmawiacie o czym CHCE uczeń, jak Twój temat go nie interesuje, niech śmiało rzuci swój. Powiedz to raz i nigdy do tego nie wracaj.`}
 - Uczeń może w KAŻDEJ chwili zmienić temat rozmowy. Gdy to robi, podchwytuj bez marudzenia i ucz dalej na jego temacie.
 - Ucz krok po kroku: NAJPIERW powiedz frazę po angielsku (w cudzysłowie „..."), POTEM jej znaczenie po polsku, POTEM poproś, żeby uczeń ją POWTÓRZYŁ na głos.
 - Wypowiedź ucznia pochodzi z rozpoznawania mowy i bywa niedokładna — bądź wyrozumiała, nie czepiaj się drobiazgów.
@@ -119,8 +124,9 @@ TRYB LEKCJI — prowadzisz interaktywną, DŁUGĄ lekcję mówienia (cel ~45 min
 - WAŻNE: uczeń może mówić do Ciebie PO POLSKU lub PO ANGIELSKU i w każdej chwili zadać własne pytanie albo Ci przerwać. Gdy zadaje pytanie (np. „jak powiedzieć…?", „co znaczy…?", „dlaczego…?") — najpierw naturalnie i krótko ODPOWIEDZ na to pytanie, a dopiero potem płynnie wróć do nauki. Nigdy nie ignoruj pytania ucznia.
 - Jedna wypowiedź = 2-4 pełne zdania. Mów jak człowiek, płynnie i z życiem — nie rzucaj samych haseł ani skrótów myślowych.
 - "suggestions" to 2-4 krótkie angielskie frazy, które uczeń może teraz powiedzieć.
+- "repeat": ustaw na KONKRETNĄ angielską frazę TYLKO wtedy, gdy w tej wypowiedzi wprost prosisz ucznia, by ją POWTÓRZYŁ na głos (np. „powtórz za mną", „spróbuj to wymówić"). W swobodnej rozmowie, gdy zadajesz pytanie i czekasz na odpowiedź, ustaw "repeat":null. To pole steruje podpowiedzią „Powtórz:" na ekranie — ma się pojawiać wyłącznie przy prośbie o powtórzenie.
 Zwracaj WYŁĄCZNIE JSON:
-{"say":"...", "lang":"pl"|"en", "suggestions":["..."], "correction":{"spoken":"..."}|null, "mistake":{"bad":"...","good":"...","note":"...","tag":"grammar|vocab|pronunciation"}|null, "done":false}
+{"say":"...", "lang":"pl"|"en", "suggestions":["..."], "repeat":"fraza do powtórzenia"|null, "correction":{"spoken":"..."}|null, "mistake":{"bad":"...","good":"...","note":"...","tag":"grammar|vocab|pronunciation"}|null, "done":false}
 Ustaw "done":true dopiero, gdy lekcja naprawdę dobiega końca (po wielu ćwiczeniach).
 Profil fonetyczny ucznia (PAMIĘTAJ o tych problemach i łap je podczas rozmowy): ${profileForPrompt()}.`;
 }
@@ -305,6 +311,7 @@ Zwróć JSON:
       return {
         say: r.say || r.reply || '', lang: r.lang || (isBeginner() ? 'pl' : 'en'),
         suggestions: Array.isArray(r.suggestions) ? r.suggestions.slice(0, 4) : [],
+        repeat: typeof r.repeat === 'string' && r.repeat.trim() ? r.repeat.trim() : null,
         correction: r.correction || null, mistake: r.mistake || null, done: !!r.done,
       };
     } catch (e) {
