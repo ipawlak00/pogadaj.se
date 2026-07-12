@@ -48,14 +48,15 @@ export function renderHome(mount) {
   store.patchKey('progress', { homeSceneIdx: (rot + 1) % HOME_SCENES.length });
   const layout = HOME_SCENES[rot];
   screen.style.backgroundImage = `url('${layout.src}')`;
+  if (layout.focus) screen.style.backgroundPosition = layout.focus;
 
   // Tablica z czasem (kompaktowa, w lewym górnym rogu — bezpieczna strefa)
   const board = el('div.home-board', {}, [
-    el('div.home-board__title', { text: 'Twój czas w tym miesiącu' }),
-    el('div.home-board__time', { text: `${leftH} h ${leftM} min` }),
-    el('div.home-board__sub', { text: `z ${FULL_MONTH_MINUTES / 60} godzin` }),
-    el('div.home-board__bar', {}, [ el('i', { style: `width:${usedPct}%` }) ]),
-    el('div.home-board__pct', { text: `wykorzystane: ${usedPct}%` }),
+    el('div.time-board', {}, [
+      el('div.time-board__label', { text: 'Twój czas w tym miesiącu' }),
+      el('div.time-board__time', { text: `${leftH} h ${leftM} min` }),
+      el('div.time-board__bar', {}, [ el('i', { style: `width:${usedPct}%` }) ]),
+    ]),
   ]);
 
   // Historia + akcje w JEDNEJ kolumnie, ustawianej per-scena

@@ -96,15 +96,14 @@ export function renderLessons(mount) {
           el('span.trial-tile__num', { text: '0′' }),
           el('span.trial-tile__name', { text: 'Czas próbny wykorzystany' }),
         ]);
-    const deg = Math.round(frac * 360);
+    // Pasek postępu zamiast zegara — spójny z pełną wersją, bez procentów
+    const pct = Math.round(frac * 100);
     const clock = el('div.trial-clock', {}, [
-      el('div.trial-clock__face', {
-        style: `background: conic-gradient(#4f86c6 ${deg}deg, #eef6fd ${deg}deg)`,
-      }, [
-        el('i.trial-clock__hand', { style: `transform: rotate(${Math.round(frac * 360)}deg)` }),
-        el('i.trial-clock__dot'),
+      el('div.time-board', {}, [
+        el('div.time-board__label', { text: 'Czas próbny' }),
+        el('div.time-board__time', { text: left > 0 ? `zostało ok. ${left} min` : 'wykorzystany' }),
+        el('div.time-board__bar', {}, [ el('i', { style: `width:${pct}%` }) ]),
       ]),
-      el('div.trial-clock__label', { text: left > 0 ? `zostało ok. ${left} min` : 'pełne lekcje już wkrótce' }),
       // Testowe skróty (do usunięcia przed startem produkcyjnym)
       el('button.trial-reset', {
         onclick: () => {

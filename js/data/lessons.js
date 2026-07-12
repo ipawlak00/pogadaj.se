@@ -238,11 +238,13 @@ export const LESSON_PORTRAITS = ['assets/scenes/scene-05.jpg', 'assets/scenes/sc
 export const HOME_SCENES = [
   { // warsztat: Izabela na środku, Peja śpi w lewym dole, Kocin na kablach z prawej
     src: 'assets/scenes/scene-15.jpg',
+    focus: '50% 30%',                 // kadrowanie tła (żeby Izabela była widoczna na telefonie)
     controls: 'left:50%; bottom:4%; transform:translateX(-50%); align-items:center',
     bubble: 'left:2%; top:40%',
   },
   { // relaks: Izabela z prawej, kot na kolanach na środku, Kocin na półce w prawym górnym rogu
     src: 'assets/scenes/scene-16.jpg',
+    focus: '66% 34%',
     controls: 'left:2%; bottom:6%; align-items:flex-start',
     bubble: 'left:2%; top:38%',
   },
