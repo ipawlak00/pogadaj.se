@@ -24,6 +24,8 @@ const ALLOW_ORIGINS = [
   'https://ipawlak00.github.io',
   'https://pogadaj.se',
   'https://www.pogadaj.se',
+  'https://pogadaj.com.pl',
+  'https://www.pogadaj.com.pl',
   'http://localhost:8000',
   'http://127.0.0.1:8000',
 ];

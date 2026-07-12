@@ -66,13 +66,14 @@ function restoreState(state) {
 }
 
 export const auth = {
-  // Nowe konto: email + hasło (imię Izabela pozna po filmie).
-  // Świeże konto = CZYSTY start (zero odziedziczonych postępów z urządzenia).
-  async register({ email, password }) {
-    const d = await call('/auth/register', { name: '', email, password });
+  // Nowe konto: imię + email + hasło. Świeże konto = CZYSTY start.
+  async register({ name = '', email, password }) {
+    suppressSync = true;
+    const d = await call('/auth/register', { name, email, password });
     store.reset();
     rememberAccount(d.email);
-    store.setUser({ id: d.id || '', name: d.name || '', email: d.email, token: d.token, provider: 'pogadaj' });
+    store.setUser({ id: d.id || '', name: d.name || name || '', email: d.email, token: d.token, provider: 'pogadaj' });
+    suppressSync = false;
     return d;
   },
 

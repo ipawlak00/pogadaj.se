@@ -3,18 +3,23 @@ import { auth, passwordProblem } from '../services/auth.js';
 import { store } from '../state.js';
 
 // Ekran logowania / zakładania konta — JEDNA karta, dwa tryby.
-// Zakładanie konta wygląda tak samo jak logowanie (email + hasło),
-// tylko tworzy konto i prowadzi prosto do filmu z Izabelą.
+// Rejestracja: imię + email + hasło + powtórz hasło. Logowanie: email + hasło.
 export function renderWelcome(mount) {
   let mode = 'login';   // 'login' | 'signup'
 
+  const name = el('input', { type: 'text', placeholder: 'Twoje imię', autocomplete: 'given-name', maxlength: '40' });
   const email = el('input', { type: 'email', placeholder: 'twój@email.com', autocomplete: 'email' });
   const pass = el('input', { type: 'password', placeholder: 'Hasło', autocomplete: 'current-password' });
-  const passHint = el('p', { style: 'margin:-8px 0 12px;color:#8aa0c8;font-size:.78rem;display:none', text: 'Hasło: minimum 8 znaków, wielka litera i znak specjalny.' });
+  const pass2 = el('input', { type: 'password', placeholder: 'Powtórz hasło', autocomplete: 'new-password' });
+  const passHint = el('p', { style: 'margin:-6px 0 12px;color:#8aa0c8;font-size:.78rem;display:none', text: 'Hasło: minimum 8 znaków, wielka litera i znak specjalny.' });
+
+  const nameField = el('div.field', { style: 'display:none' }, [ el('label', { text: 'Imię' }), name ]);
+  const pass2Field = el('div.field', { style: 'display:none' }, [ el('label', { text: 'Powtórz hasło' }), pass2 ]);
+
   const mainBtn = el('button.btn.btn--primary.auth-submit', { onclick: submit }, ['Zaloguj się']);
   const switchBtn = el('button.btn.auth-create', { style: 'margin-top:14px', onclick: toggleMode }, ['Stwórz darmowe konto']);
 
-  pass.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+  [pass, pass2, email, name].forEach((inp) => inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); }));
 
   mount.append(
     el('div.auth-wrap.fade-in', {}, [
@@ -22,8 +27,10 @@ export function renderWelcome(mount) {
       el('div.auth-sub', { text: 'GADAJ I UCZ SIĘ ANGIELSKIEGO Z IZABELĄ!' }),
 
       el('div.auth-card', {}, [
+        nameField,
         el('div.field', {}, [ el('label', { text: 'Email' }), email ]),
         el('div.field', {}, [ el('label', { text: 'Hasło' }), pass ]),
+        pass2Field,
         passHint,
         mainBtn,
         switchBtn,
@@ -39,20 +46,25 @@ export function renderWelcome(mount) {
 
   function toggleMode() {
     mode = mode === 'login' ? 'signup' : 'login';
-    mainBtn.textContent = mode === 'login' ? 'Zaloguj się' : 'Załóż darmowe konto';
-    switchBtn.textContent = mode === 'login' ? 'Stwórz darmowe konto' : 'Mam już konto. Zaloguj się';
-    passHint.style.display = mode === 'signup' ? 'block' : 'none';
-    pass.autocomplete = mode === 'signup' ? 'new-password' : 'current-password';
-    email.focus();
+    const signup = mode === 'signup';
+    mainBtn.textContent = signup ? 'Załóż darmowe konto' : 'Zaloguj się';
+    switchBtn.textContent = signup ? 'Mam już konto. Zaloguj się' : 'Stwórz darmowe konto';
+    nameField.style.display = signup ? 'block' : 'none';
+    pass2Field.style.display = signup ? 'block' : 'none';
+    passHint.style.display = signup ? 'block' : 'none';
+    pass.autocomplete = signup ? 'new-password' : 'current-password';
+    (signup ? name : email).focus();
   }
 
   async function submit() {
     const e = email.value.trim();
+    if (mode === 'signup' && !name.value.trim()) { toast('Podaj swoje imię', 'error'); return; }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) { toast('Podaj poprawny adres email', 'error'); return; }
     if (!pass.value) { toast('Podaj hasło', 'error'); return; }
     if (mode === 'signup') {
       const pp = passwordProblem(pass.value);
       if (pp) { toast(pp, 'error'); return; }
+      if (pass.value !== pass2.value) { toast('Hasła nie są takie same', 'error'); return; }
     }
     const label = mainBtn.textContent;
     mainBtn.disabled = true; mainBtn.textContent = mode === 'login' ? 'Loguję…' : 'Zakładam konto…';
@@ -61,12 +73,27 @@ export function renderWelcome(mount) {
         await auth.login({ email: e, password: pass.value });
         navigate('#/');                 // router pokieruje wg etapu
       } else {
-        await auth.register({ email: e, password: pass.value });
+        await auth.register({ name: name.value.trim(), email: e, password: pass.value });
         navigate('#/intro');            // FILM zaraz po utworzeniu konta
       }
     } catch (err) {
+      console.error('[auth]', err);
       mainBtn.disabled = false; mainBtn.textContent = label;
-      toast(err.message || 'Coś poszło nie tak', 'error');
+      toast(friendlyError(err), 'error');
     }
   }
+}
+
+// Techniczne błędy zamieniamy na ludzkie komunikaty (spójne z resztą apki).
+function friendlyError(err) {
+  const m = String((err && err.message) || err || '');
+  if (/Failed to fetch|NetworkError|network|load failed/i.test(m)) {
+    return 'Brak połączenia z serwerem. Sprawdź internet i spróbuj za chwilę.';
+  }
+  if (/origin not allowed|forbidden|\b403\b/i.test(m)) {
+    return 'Coś blokuje połączenie z serwerem. Spróbuj ponownie za chwilę.';
+  }
+  // Komunikaty z serwera są już po polsku i przyjazne — pokazujemy je wprost.
+  if (m && !/\b\d{3}\b|http|fetch|json|undefined/i.test(m)) return m;
+  return 'Ojej, coś nie pykło. Spróbuj jeszcze raz za chwilę.';
 }
