@@ -99,26 +99,45 @@ if (typeof window !== 'undefined') {
 // Czy fragment w cudzysłowie faktycznie wygląda na angielski?
 // Izabela cytuje też POLSKIE słowa („witaj", „twoja mama") — te muszą zostać
 // przy polskim głosie. Liczymy trafienia w OBU językach i wygrywa większość.
+// Angielskie słowa-sygnały. Świadomie BEZ „a/i/to/an" — te są też polskie
+// i myliły detekcję (polskie cytaty czytane były po angielsku).
 const EN_WORDS = new Set(['hello', 'hi', 'hey', 'good', 'morning', 'evening', 'night', 'afternoon',
-  'thank', 'thanks', 'you', 'please', 'name', 'my', 'is', 'are', 'am', 'i', 'yes', 'no', 'not',
-  'what', 'how', 'where', 'when', 'why', 'who', 'nice', 'meet', 'the', 'a', 'an', 'it', 'me',
+  'thank', 'thanks', 'you', 'please', 'name', 'my', 'is', 'are', 'am', 'yes', 'not',
+  'what', 'how', 'where', 'when', 'why', 'who', 'nice', 'meet', 'the', 'it', 'me',
   'like', 'want', 'need', 'have', 'has', 'do', 'does', 'did', 'can', 'could', 'would', 'will',
   'help', 'sorry', 'bye', 'goodbye', 'see', 'later', 'day', 'coffee', 'tea', 'water', 'from',
   'been', 'was', 'were', 'this', 'that', 'your', 'his', 'her', 'we', 'they', 'he', 'she',
-  'up', 'to', 'go', 'went', 'come', 'and', 'or', 'but', 'very', 'much', 'so', 'too', 'for']);
+  'go', 'went', 'come', 'and', 'or', 'but', 'very', 'much', 'too', 'for', 'about', 'here',
+  // częste angielskie słowa treściowe (żeby łapać zdania uczące)
+  'get', 'got', 'make', 'made', 'take', 'took', 'tell', 'say', 'said', 'know', 'think',
+  'feel', 'look', 'looking', 'work', 'working', 'play', 'playing', 'eat', 'drink', 'live',
+  'love', 'speak', 'learn', 'learning', 'read', 'write', 'buy', 'sell', 'use', 'using',
+  'grow', 'give', 'put', 'find', 'found', 'call', 'ask', 'try', 'keep', 'let', 'lets',
+  'start', 'stop', 'open', 'close', 'turn', 'show', 'run', 'walk', 'talk', 'talking',
+  'recommend', 'friendly', 'user', 'tomatoes', 'today', 'tomorrow', 'because', 'really',
+  'just', 'also', 'maybe', 'okay', 'sounds', 'great', 'cool', 'fine', 'fun', 'people',
+  'time', 'thing', 'things', 'love', 'best', 'more', 'well', 'right', 'back', 'now']);
 const PL_WORDS = new Set(['witaj', 'witajcie', 'czesc', 'siema', 'dzien', 'dobry', 'dobra', 'dziekuje',
-  'prosze', 'przepraszam', 'tak', 'nie', 'jest', 'czy', 'sie', 'na', 'po', 'ja', 'ty', 'my', 'wy',
+  'prosze', 'przepraszam', 'tak', 'nie', 'jest', 'czy', 'sie', 'na', 'po', 'ja', 'ty', 'wy',
   'dobrze', 'ale', 'juz', 'moze', 'mama', 'tata', 'twoja', 'twoj', 'moja', 'moj', 'jak', 'masz',
-  'mam', 'imie', 'nazywam', 'znaczy', 'mowie', 'lubie', 'chce', 'jestem', 'jutro', 'dzis', 'wczoraj']);
+  'mam', 'imie', 'nazywam', 'znaczy', 'mowie', 'lubie', 'chce', 'jestem', 'jutro', 'dzis', 'wczoraj',
+  'to', 'bardzo', 'polecam', 'czyli', 'oznacza', 'powiedz', 'sprobuj', 'teraz', 'razem', 'wlasnie',
+  'gadamy', 'lecimy', 'cisniemy', 'spokojnie', 'super', 'brawo', 'ciekawe', 'fajnie', 'mordeczko']);
+// Typowe polskie końcówki (nawet bez ogonków) — łapią słowa spoza listy.
+const PL_SUFFIX = /(am|em|asz|esz|isz|ysz|amy|emy|imy|ymy|acie|ecie|aja|eja|uje|uja|owal|liśmy|lismy|lem|lam|nia|cja|sja|osc|osci|ego|emu|ami|ach)$/;
 export function isEnglishText(s) {
   if (/[ąćęłńóśźż]/i.test(s)) return false;               // polskie znaki → polski
   const words = (String(s).toLowerCase().match(/[a-z']+/g) || []);
   if (!words.length) return false;
   let en = 0, pl = 0;
-  for (const w of words) { if (PL_WORDS.has(w)) pl++; else if (EN_WORDS.has(w)) en++; }
-  if (pl > en) return false;                               // przewaga polskiego → polski
-  if (en > 0) return true;                                 // przewaga/obecność angielskiego → angielski
-  return pl === 0;                                         // nic nie rozpoznane → raczej angielski cytat
+  for (const w of words) {
+    if (PL_WORDS.has(w)) { pl++; continue; }
+    if (EN_WORDS.has(w)) { en++; continue; }
+    if (w.length >= 4 && PL_SUFFIX.test(w)) pl++;          // polska morfologia
+  }
+  if (pl > 0) return false;                               // JAKIKOLWIEK polski sygnał → polski
+  if (en >= 1) return true;                               // wyraźne angielskie słowo → angielski
+  return false;                                           // niepewne → czytaj głosem głównym (polskim)
 }
 const looksEnglish = isEnglishText;
 
@@ -213,7 +232,10 @@ async function speakGoogle(text, { lang = 'pl-PL', rate = 1, onEnd } = {}) {
     // Inaczej angielski lektor czytał polski tekst „bez ogonków".
     const hasPolish = /[ąćęłńóśźż]/i.test(text);
     const primary = hasPolish ? 'pl' : lang.slice(0, 2).toLowerCase();
-    const segments = primary === 'pl' ? splitByQuotes(text, 'pl') : [{ text, lang: primary }];
+    // W ścieżce bez podziału (jednolity język) też USUWAMY cudzysłowy —
+    // inaczej lektor czyta znak cudzysłowu i robi „dziwne dźwięki".
+    const stripQ = (t) => t.replace(/["„“”»«]/g, ' ').replace(/\s{2,}/g, ' ').trim();
+    const segments = primary === 'pl' ? splitByQuotes(text, 'pl') : [{ text: stripQ(text), lang: primary }];
     // Zsyntetyzuj wszystkie fragmenty z góry — jeśli KTÓRYKOLWIEK padnie, lecimy
     // na zapasowy głos (żeby uczeń zawsze coś usłyszał), a błąd pokazujemy raz.
     const urls = [];
