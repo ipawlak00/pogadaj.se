@@ -226,7 +226,8 @@ body.in-lesson .msg--user {
 
 @media (max-width: 860px) {
   .lesson-chat-card { grid-template-columns: 1fr; }
-  .lc-stage { min-height: 220px; }
+  /* na tablecie zdjęcie Izabeli DUŻE (rozszerzone), na telefonie niżej zmniejszamy */
+  .lc-stage { min-height: 42vh; }
   .lc-main { min-height: auto; }
   .lc-main .chat { max-height: 38vh; }
 }
@@ -1194,8 +1195,31 @@ body.on-lessons .cosmos { display: none; }
   .scene-bubble, .lessons-fs__bubble { box-shadow: 0 8px 22px rgba(6,25,55,.3); }
   .lessons-fs__bubble::before, .iza-card__bubble::before { display: none; }
 
+  /* Kolejność: zdjęcie → dymek (łącznik) → tablica czasu → przyciski */
+  .lessons-fs__top { order: 0; }
+  .scene-photo { order: 1; }
+  .scene-bubble, .lessons-fs__bubble { order: 2; }
+  .home-board, .trial-wrap, .history-cards { order: 3; }
+  .home-controls { order: 4; }
+
+  /* Dymek jako ŁĄCZNIK zdjęcia z treścią: wchodzi na dół zdjęcia,
+     ogonek celuje w górę w Izabelę; większy i czytelniejszy */
+  .scene-bubble, .lessons-fs__bubble {
+    margin-top: -18px !important; position: relative; z-index: 2;
+    font-size: 1rem !important; line-height: 1.5; padding: 13px 16px !important;
+    border-radius: 16px !important;
+  }
+  .scene-bubble__who { font-size: .74rem; }
+  .scene-bubble__hi { font-size: 1.06rem; }
+  .scene-bubble::after, .lessons-fs__bubble::after {
+    content: ''; position: absolute; top: -9px; left: 28px;
+    width: 16px; height: 16px; transform: rotate(45deg); background: #ffffff;
+  }
+  .scene-bubble::after { border-left: 2px solid #16305a; border-top: 2px solid #16305a; }
+  .lessons-fs__bubble::after { border-left: 2px solid #a5ddf3; border-top: 2px solid #a5ddf3; }
+
   /* Widok lekcji: większe, czytelniejsze dymki i więcej miejsca na czat */
-  .lc-stage { min-height: 190px !important; }
+  .lc-stage { min-height: 32vh !important; }
   .lc-main { padding: 12px 14px 16px; }
   .lc-main .chat { max-height: 44vh; padding-left: 6px; }
   body.in-lesson .msg--izabela, body.in-lesson .msg--user { font-size: .98rem; line-height: 1.5; padding: 10px 12px; }
