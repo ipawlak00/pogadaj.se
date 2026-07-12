@@ -1208,7 +1208,10 @@ body.on-lessons .cosmos { display: none; }
   /* Dymek jako ŁĄCZNIK zdjęcia z treścią: wchodzi na dół zdjęcia,
      ogonek celuje w górę w Izabelę; większy i czytelniejszy */
   .scene-bubble, .lessons-fs__bubble {
-    margin-top: -20px !important; position: relative; z-index: 2;
+    margin: -20px 12px 10px !important; position: relative; z-index: 2;
+    align-self: stretch !important;                       /* pełna szerokość karty */
+    width: auto !important; max-width: none !important; min-width: 0 !important;
+    box-sizing: border-box;
     font-size: 1.08rem !important; line-height: 1.5; padding: 16px 18px !important;
     border-radius: 16px !important; border-width: 2px;
     background: #ffffff !important;
