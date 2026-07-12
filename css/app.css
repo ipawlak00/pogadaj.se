@@ -1229,9 +1229,9 @@ body.on-lessons .cosmos { display: none; }
   .lessons-fs__bubble::after { border-left: 2px solid #a5ddf3; border-top: 2px solid #a5ddf3; }
 
   /* Widok lekcji: większe, czytelniejsze dymki i więcej miejsca na czat */
-  .lc-stage { min-height: 32vh !important; }
+  .lc-stage { min-height: 30vh !important; }
   .lc-main { padding: 12px 14px 16px; }
-  .lc-main .chat { max-height: 44vh; padding-left: 6px; }
+  .lc-main .chat { max-height: none !important; padding-left: 6px; }
   body.in-lesson .msg--izabela, body.in-lesson .msg--user { font-size: .98rem; line-height: 1.5; padding: 10px 12px; }
   .lesson-chat-card h2 { font-size: 1.05rem; }
   .mic-btn { font-size: 1rem; }

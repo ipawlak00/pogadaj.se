@@ -9,7 +9,6 @@ import { speech } from './services/speech.js';
 
 import { renderWelcome } from './screens/welcome.js';
 import { renderOnboarding } from './screens/onboarding.js';
-import { renderIntro } from './screens/intro.js';
 import { renderPhonetic } from './screens/phonetic.js';
 import { renderHome } from './screens/home.js';
 import { renderHistory } from './screens/history.js';
@@ -30,8 +29,8 @@ function resolve() {
   switch (hash) {
     case '#/onboarding': return renderOnboarding(appEl);
     case '#/intro':
-      if (!st.user) return redirect('#/');       // film dopiero PO założeniu konta
-      return renderIntro(appEl);
+      // Film wprowadzający USUNIĘTY z aplikacji — kierujemy dalej wg etapu.
+      return redirect(st.user ? '#/onboarding' : '#/');
     case '#/phonetic':
       if (!st.user) return redirect('#/');
       if (!st.onboarding.completed) return redirect('#/onboarding');
@@ -45,9 +44,8 @@ function resolve() {
       return guarded(st, () => renderHistory(appEl));
     case '#/':
     default:
-      // Kolejność: konto → film → cel/poziom → paszport → lekcje
+      // Kolejność: konto → cel/poziom → paszport → lekcje (bez filmu)
       if (!st.user) return renderWelcome(appEl);
-      if (!st.progress.introSeen) return redirect('#/intro');
       if (!st.onboarding.completed) return redirect('#/onboarding');
       if (!st.phonetic.completed) return redirect('#/phonetic');
       return st.progress.fullUnlocked ? renderHome(appEl) : renderLessons(appEl);

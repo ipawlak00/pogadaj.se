@@ -106,21 +106,19 @@ export function renderHome(mount) {
   }
   // Zamiast jednego wielkiego dymka — krótkie zdania, które przeskakują
   // w miarę mówienia (dymek nie zakrywa sceny).
+  // Dymek pokazuje CAŁĄ kwestię (nic nie ucinamy), a głos czyta ją zdanie
+  // po zdaniu (płynniej i szybciej startuje).
   const sentences = splitSentences(bodySpoken);
-  const bodyP = el('p', { style: 'margin:4px 0 0', text: sentences[0] || bodyText });
   const bubble = el('div.scene-bubble', {
     style: layout.bubble, title: 'Kliknij, a powtórzę',
     onclick: () => playWelcome(),
   }, [
     el('div.scene-bubble__who', { text: 'Izabela' }),
     el('div.scene-bubble__hi', { text: hi }),
-    bodyP,
+    el('p', { style: 'margin:4px 0 0', text: bodyText }),
   ]);
   function playWelcome() {
-    speech.speakSequence([hi, ...sentences], {
-      lang: 'pl-PL',
-      onPart: (t, i) => { if (i > 0) bodyP.textContent = sentences[i - 1]; },
-    });
+    speech.speakSequence([hi, ...sentences], { lang: 'pl-PL' });
   }
 
   const level = store.get().onboarding.level;

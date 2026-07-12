@@ -62,7 +62,8 @@ export function renderWelcome(mount) {
         navigate('#/');                 // router pokieruje wg etapu
       } else {
         await auth.register({ email: e, password: pass.value });
-        navigate('#/intro');            // FILM zaraz po utworzeniu konta
+        store.patchKey('progress', { introSeen: true });   // bez filmu — od razu onboarding
+        navigate('#/onboarding');
       }
     } catch (err) {
       mainBtn.disabled = false; mainBtn.textContent = label;
