@@ -85,11 +85,16 @@ export function renderPhonetic(mount) {
       lastSpoken = idx;
       if (!introSpoken) {
         introSpoken = true;
-        // Dymek pokazuje CAŁE INTRO (nic nie ucinamy), głos czyta je zdanie po
-        // zdaniu, a po nim czytamy pierwsze słowo.
-        izaLine = INTRO;
-        const bb0 = document.getElementById('iza-bubble'); if (bb0) bb0.textContent = INTRO;
-        speech.speakSequence(splitSentences(INTRO), { lang: 'pl-PL', onDone: () => speakWord() });
+        // Dymek zmienia się AUTOMATYCZNIE w rytm mowy — pokazuje aktualne
+        // zdanie, a po całości czytamy pierwsze słowo.
+        const intro = splitSentences(INTRO);
+        izaLine = intro[0];
+        const bb0 = document.getElementById('iza-bubble'); if (bb0) bb0.textContent = intro[0];
+        speech.speakSequence(intro, {
+          lang: 'pl-PL',
+          onPart: (t) => { izaLine = t; const b = document.getElementById('iza-bubble'); if (b) b.textContent = t; },
+          onDone: () => speakWord(),
+        });
       }
       else speakWord();
     }

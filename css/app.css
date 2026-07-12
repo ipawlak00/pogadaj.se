@@ -284,8 +284,8 @@ body.in-lesson .msg--user {
   border: 2px solid #a5ddf3; border-radius: 14px;
   padding: 10px 14px; font-size: .92rem; line-height: 1.4; text-align: center;
   box-shadow: 0 10px 28px rgba(20,70,120,.3);
-  /* nigdy nie zakrywa całego kadru — krótkie kwestie i tak się mieszczą */
-  max-height: 44%; overflow-y: auto;
+  /* dymek zmienia się automatycznie (jedno zdanie), więc bez ręcznego scrolla */
+  max-height: 44%; overflow: hidden;
 }
 .iza-card__bubble::before {
   content: ''; position: absolute; top: -11px; left: 50%;
@@ -1054,7 +1054,7 @@ body.on-lessons .cosmos { display: none; }
   background: radial-gradient(ellipse at center, #ffffff 30%, #eef6fd 78%, #dcebf8 100%);
   border: 2px solid #16305a; border-radius: 12px; padding: 10px 14px; color: #14314f;
   box-shadow: 0 12px 30px rgba(6,25,55,.42);
-  max-height: 42vh; overflow-y: auto;   /* krótkie kwestie i tak się mieszczą */
+  max-height: 42vh; overflow: hidden;   /* dymek zmienia się automatycznie, bez ręcznego scrolla */
 }
 @media (max-width: 760px), (orientation: portrait) {
   .scene-bubble { max-width: 92%; max-height: 30vh; }
