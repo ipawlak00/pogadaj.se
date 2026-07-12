@@ -80,7 +80,10 @@ export function renderHome(mount) {
   // Czas: w dymku skrót (15 h 0 min), a MÓWIONY pełnymi słowami (lektor czyta
   // „h" jako „hyy"), z poprawną odmianą godzin/minut.
   const timeShort = `${leftH} h ${leftM} min`;
-  const timeSpoken = `${leftH} ${hoursWord(leftH)} i ${leftM} ${minutesWord(leftM)}`;
+  // Mówione pełnymi słowami, ale bez zbędnego „0 minut"/„0 godzin".
+  const timeSpoken = leftH && leftM ? `${leftH} ${hoursWord(leftH)} i ${leftM} ${minutesWord(leftM)}`
+    : leftH ? `${leftH} ${hoursWord(leftH)}`
+    : `${leftM} ${minutesWord(leftM)}`;
 
   let hi, bodyText, bodySpoken;
   if (firstTime) {

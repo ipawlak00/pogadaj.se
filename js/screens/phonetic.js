@@ -232,16 +232,16 @@ export function renderPhonetic(mount) {
     ]);
     const challengeLine = chalList.length
       ? `Na celowniku mamy: ${chalSpoken.join(', ')}. Będę Cię na tym łapać podczas gadania, oczywiście z miłością.`
-      : 'I szczerze? Nie mam się do czego przyczepić, ładna robota.';
+      : '';
     // Wypowiedź jest podzielona na części — dymek zmienia się w trakcie mówienia,
-    // pokazując aktualnie wypowiadaną kwestię. Bez procentów, zero stresu.
+    // pokazując aktualnie wypowiadaną kwestię. Puste części pomijamy.
     const parts = [
       `${hello} Znam już Twoją wymowę od podszewki i wiem, nad czym możemy razem popracować.`,
       challengeLine,
       'A zanim ruszymy dalej, mam do Ciebie jedno pytanie.',
       'Powiedz mi albo napisz, co Tobie sprawia największą trudność w mówieniu po angielsku. Może czasy, może brakuje Ci słówek, a może stres, że powiesz coś źle?',
       'Zapamiętam to i będziemy nad tym pracować razem, spokojnie, krok po kroku.',
-    ];
+    ].filter(Boolean);
     izaLine = parts[0];
 
     function setBubble(t) { const b = document.getElementById('iza-bubble'); if (b) b.textContent = t; }
@@ -320,7 +320,7 @@ export function renderPhonetic(mount) {
                 el('div.passport-bubble__label', { text: 'Popracujemy nad:' }),
                 el('div.passport-chips', {}, chalSpoken.map((c) => el('span.passport-chip', { text: c }))),
               ])
-            : el('p', { style: 'margin:0;color:#2a4a70', text: 'Nie mam się do czego przyczepić, ładna robota.' }),
+            : null,
           el('div', { style: 'border-top:1px solid #dce9f5;margin:6px 0' }),
           el('p', { style: 'margin:0;color:#14314f;font-weight:700', text: 'A co Tobie sprawia największą trudność w mówieniu po angielsku?' }),
           el('p', { style: 'margin:0;color:#46688c;font-size:.9rem', text: 'Powiedz mi to albo napisz. Zapamiętam i będziemy nad tym pracować.' }),
