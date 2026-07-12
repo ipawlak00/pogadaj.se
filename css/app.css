@@ -1169,8 +1169,11 @@ body.on-lessons .cosmos { display: none; }
   .home-fs, .history-fs, .lessons-fs {
     display: flex !important; flex-direction: column !important;
     overflow-y: auto !important; -webkit-overflow-scrolling: touch;
-    background: #0b0f18 !important; padding-bottom: 74px;
+    /* JASNE tło pod zdjęciem — treść i dymek ładnie się wybijają */
+    background: #e7f0fa !important; padding-bottom: 74px;
   }
+  /* na jasnym tle przyciski górnego paska w ciemniejszej ramce (widoczne) */
+  .lessons-fs__top { background: #dbe8f5; }
   .home-fs::before, .history-fs::before, .lessons-fs::before { display: none !important; }
   .scene-photo { display: block; width: 100%; height: 42vh; min-height: 280px; object-fit: cover; flex: none; }
 
@@ -1205,12 +1208,14 @@ body.on-lessons .cosmos { display: none; }
   /* Dymek jako ŁĄCZNIK zdjęcia z treścią: wchodzi na dół zdjęcia,
      ogonek celuje w górę w Izabelę; większy i czytelniejszy */
   .scene-bubble, .lessons-fs__bubble {
-    margin-top: -18px !important; position: relative; z-index: 2;
-    font-size: 1rem !important; line-height: 1.5; padding: 13px 16px !important;
-    border-radius: 16px !important;
+    margin-top: -20px !important; position: relative; z-index: 2;
+    font-size: 1.08rem !important; line-height: 1.5; padding: 16px 18px !important;
+    border-radius: 16px !important; border-width: 2px;
+    background: #ffffff !important;
+    box-shadow: 0 12px 30px rgba(6,25,55,.28) !important;
   }
-  .scene-bubble__who { font-size: .74rem; }
-  .scene-bubble__hi { font-size: 1.06rem; }
+  .scene-bubble__who { font-size: .78rem; }
+  .scene-bubble__hi { font-size: 1.2rem; }
   .scene-bubble::after, .lessons-fs__bubble::after {
     content: ''; position: absolute; top: -9px; left: 28px;
     width: 16px; height: 16px; transform: rotate(45deg); background: #ffffff;
