@@ -541,7 +541,7 @@ Już się przywitałaś słowami "${hello}" — NIE witaj się ponownie. Teraz: 
     catch (e) { toast('Mikrofon: ' + (e.message || e), 'error'); resetMic(); return; }
     listening = true;
     micBtn.classList.add('recording'); micBtn.textContent = 'Słucham';
-    setMicLabel('Mów śmiało — sama skończę, gdy ucichniesz (możesz mieszać PL i EN)');
+    setMicLabel('');
   }
 
   async function finalizeRecording() {
@@ -562,7 +562,7 @@ Już się przywitałaś słowami "${hello}" — NIE witaj się ponownie. Teraz: 
 
   // --- Ścieżka zapasowa (bez Gemini): rozpoznawanie przeglądarki, jeden język ---
   function startBrowserListen() {
-    listening = true; micBtn.classList.add('recording'); micBtn.textContent = 'Słucham'; setMicLabel('Słucham… mów teraz');
+    listening = true; micBtn.classList.add('recording'); micBtn.textContent = 'Słucham'; setMicLabel('');
     let heard = '';
     recorder = speech.listen({
       lang: FALLBACK_REC_LANG,

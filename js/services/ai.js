@@ -334,8 +334,8 @@ Zwróć JSON:
   // zwrócone do ucznia na „Ty", a nie sztywne „uczeń rozmawiał z Izabelą".
   async summarizeLesson(chatText) {
     try {
-      const sys = 'Jesteś Izabelą i zapisujesz krótkie, ciepłe wspomnienie lekcji. Zwracasz wyłącznie JSON.';
-      const contents = [{ role: 'user', parts: [{ text: `Napisz PO POLSKU krótkie (1-2 zdania) wspomnienie tej lekcji z perspektywy Izabeli, zwracając się do ucznia na „Ty" (np. „Gadaliśmy o Twoim weekendzie i ćwiczyłaś zamawianie kawy po angielsku."). Ciepło i osobiście. NIE pisz bezosobowo („uczeń rozmawiał", „uczennica uczyła się"). ${userLine()}
+      const sys = 'Zapisujesz krótką, KONKRETNĄ notatkę o treści lekcji angielskiego. Zwracasz wyłącznie JSON.';
+      const contents = [{ role: 'user', parts: [{ text: `Napisz PO POLSKU krótko (1-2 zdania) SAME FAKTY: o czym była rozmowa i czego uczeń się uczył (temat, ćwiczone zwroty/słówka, gramatyka). Zwracaj się na „Ty" (np. „Rozmawialiśmy o planach na weekend; ćwiczyłaś zwroty do zamawiania jedzenia i czas Present Continuous."). NIE opisuj emocji ani nastroju Izabeli (żadnego „Izabela była podekscytowana"), nie pisz ozdobników — tylko konkret. ${userLine()}
 Rozmowa:
 ${String(chatText).slice(0, 4000)}
 Zwróć JSON: {"summary":"..."}` }] }];

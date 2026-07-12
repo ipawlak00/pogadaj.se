@@ -110,7 +110,7 @@ export function renderPhonetic(mount) {
     const recording = phase === 'recording';
     return el('div.center.stack', { style: 'gap:8px' }, [
       el(`button.mic-btn${recording ? '.recording' : ''}`, { onclick: onMic, 'aria-label': 'Nagraj' }, [recording ? 'Stop' : 'Mów']),
-      el('div.faint', { id: 'phon-status', text: recording ? 'Mów teraz. Dotknij, by zakończyć.' : '' }),
+      el('div.faint', { id: 'phon-status', text: '' }),
     ]);
   }
 
@@ -273,7 +273,7 @@ export function renderPhonetic(mount) {
         recD = await speech.recordAudio({ autoStop: true, silenceMs: 1500, maxMs: 20000 });
       } catch (e) { toast('Mikrofon: ' + (e.message || e), 'error'); return; }
       diffMicBtn.classList.add('recording'); diffMicBtn.textContent = 'Stop';
-      diffStatus.textContent = 'Słucham, mów śmiało. Sama skończę, gdy ucichniesz.';
+      diffStatus.textContent = '';
       const audio = await recD.done;   // koniec ręczny albo po ciszy
       recD = null;
       diffMicBtn.classList.remove('recording'); diffMicBtn.textContent = 'Powiedz';
