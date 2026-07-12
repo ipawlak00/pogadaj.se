@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pogadaj.se — podgląd telefon i tablet</title>
+<style>
+  :root { --bg:#0c1018; --panel:#141a26; --ink:#dfeaf6; --muted:#8aa0b8; --accent:#4f86c6; --border:#243247; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: radial-gradient(1200px 700px at 50% -10%, #1a2740 0%, var(--bg) 60%);
+    color: var(--ink); font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    display: flex; flex-direction: column; min-height: 100%;
+  }
+  header { padding: 16px 22px 8px; }
+  h1 { margin: 0; font-size: 1.25rem; letter-spacing: .01em; }
+  h1 .dot { color: var(--accent); }
+  p.sub { margin: 4px 0 0; color: var(--muted); font-size: .9rem; }
+
+  .toolbar {
+    display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+    padding: 12px 22px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: rgba(12,16,24,.9); backdrop-filter: blur(6px); z-index: 5;
+  }
+  .grp { display: flex; align-items: center; gap: 8px; }
+  .grp label { color: var(--muted); font-size: .82rem; }
+  select, button {
+    background: var(--panel); color: var(--ink); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 11px; font: inherit; font-size: .85rem; cursor: pointer;
+  }
+  button:hover, select:hover { border-color: var(--accent); }
+  input[type=range] { width: 130px; accent-color: var(--accent); }
+  .zoomval { color: var(--muted); font-size: .82rem; min-width: 42px; }
+
+  .stage-wrap { flex: 1; overflow: auto; padding: 26px; }
+  .stage { display: flex; gap: 44px; align-items: flex-start; justify-content: center;
+           transform-origin: top center; transition: transform .15s ease; min-width: max-content; margin: 0 auto; }
+
+  .device { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .device__label { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: .85rem; }
+  .device__label b { color: var(--ink); font-weight: 600; }
+  .device__label .size { font-variant-numeric: tabular-nums; }
+  .rotate { padding: 4px 9px; font-size: .78rem; }
+
+  /* Ramka urządzenia (bezel) */
+  .bezel { background: #0a0d14; border-radius: 42px; padding: 14px;
+           box-shadow: 0 30px 70px rgba(0,0,0,.55), inset 0 0 0 2px #263349; position: relative; }
+  .bezel.tablet { border-radius: 30px; padding: 18px; }
+  .bezel::before { /* głośnik / notch telefonu */
+    content: ""; position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    width: 46%; height: 22px; background: #0a0d14; border-radius: 0 0 16px 16px; z-index: 2;
+  }
+  .bezel.tablet::before { display: none; }
+  .screen { border-radius: 30px; overflow: hidden; background: #000; display: block; }
+  .bezel.tablet .screen { border-radius: 16px; }
+  iframe { border: 0; display: block; background: #0c1018; }
+
+  .hint { color: var(--muted); font-size: .8rem; padding: 4px 22px 18px; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>pogadaj<span class="dot">.</span>se — podgląd</h1>
+    <p class="sub">Tak wygląda żywa aplikacja na telefonie i tablecie. Wszystko klikalne, jak na prawdziwym urządzeniu.</p>
+  </header>
+
+  <div class="toolbar">
+    <div class="grp">
+      <label>Telefon</label>
+      <select id="phoneSel">
+        <option value="360x640">Mały (360×640)</option>
+        <option value="390x844" selected>iPhone (390×844)</option>
+        <option value="393x852">Pixel (393×852)</option>
+        <option value="430x932">Duży (430×932)</option>
+      </select>
+      <button class="rotate" data-rot="phone">⟳ obróć</button>
+    </div>
+    <div class="grp">
+      <label>Tablet</label>
+      <select id="tabSel">
+        <option value="768x1024">iPad mini (768×1024)</option>
+        <option value="820x1180" selected>iPad Air (820×1180)</option>
+        <option value="1024x1366">iPad Pro (1024×1366)</option>
+      </select>
+      <button class="rotate" data-rot="tab">⟳ obróć</button>
+    </div>
+    <div class="grp">
+      <label>Powiększenie</label>
+      <input type="range" id="zoom" min="30" max="100" value="55">
+      <span class="zoomval" id="zoomVal">55%</span>
+      <button id="fit">Dopasuj</button>
+    </div>
+    <div class="grp">
+      <button id="reload">↻ Przeładuj oba</button>
+    </div>
+  </div>
+
+  <div class="stage-wrap" id="stageWrap">
+    <div class="stage" id="stage">
+      <div class="device">
+        <div class="device__label"><b>Telefon</b> <span class="size" id="phoneSize"></span></div>
+        <div class="bezel phone"><div class="screen"><iframe id="phoneFrame" src="./index.html"></iframe></div></div>
+      </div>
+      <div class="device">
+        <div class="device__label"><b>Tablet</b> <span class="size" id="tabSize"></span></div>
+        <div class="bezel tablet"><div class="screen"><iframe id="tabFrame" src="./index.html"></iframe></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint">Wskazówka: podgląd ładuje tę samą aplikację co telefon. Jeśli chcesz wyczyścić stan (wylogować), użyj „Zacznij od nowa" na ekranie logowania w ramce.</div>
+
+<script>
+  const rot = { phone: false, tab: false };
+
+  function dims(sel, rotated) {
+    const [w, h] = sel.value.split('x').map(Number);
+    return rotated ? { w: h, h: w } : { w, h };
+  }
+  function apply(which) {
+    const sel = which === 'phone' ? phoneSel : tabSel;
+    const frame = which === 'phone' ? phoneFrame : tabFrame;
+    const sizeEl = which === 'phone' ? phoneSize : tabSize;
+    const { w, h } = dims(sel, rot[which]);
+    frame.style.width = w + 'px';
+    frame.style.height = h + 'px';
+    sizeEl.textContent = w + ' × ' + h + (rot[which] ? ' (poziomo)' : '');
+  }
+  function applyZoom(v) {
+    stage.style.transform = 'scale(' + (v / 100) + ')';
+    zoomVal.textContent = v + '%';
+  }
+  function fit() {
+    // Dobierz powiększenie tak, by oba urządzenia zmieściły się w szerokości/wysokości.
+    const gap = 44, pad = 52;
+    const p = dims(phoneSel, rot.phone), t = dims(tabSel, rot.tab);
+    const totalW = p.w + t.w + gap + 60;              // + bezle
+    const totalH = Math.max(p.h, t.h) + 90;
+    const availW = stageWrap.clientWidth - pad;
+    const availH = stageWrap.clientHeight - pad;
+    let z = Math.min(availW / totalW, availH / totalH) * 100;
+    z = Math.max(30, Math.min(100, Math.floor(z)));
+    zoom.value = z; applyZoom(z);
+  }
+
+  document.querySelectorAll('.rotate').forEach((b) =>
+    b.addEventListener('click', () => { const w = b.dataset.rot; rot[w] = !rot[w]; apply(w); fit(); }));
+  phoneSel.addEventListener('change', () => { apply('phone'); fit(); });
+  tabSel.addEventListener('change', () => { apply('tab'); fit(); });
+  zoom.addEventListener('input', () => applyZoom(+zoom.value));
+  fitBtn = document.getElementById('fit');
+  fitBtn.addEventListener('click', fit);
+  document.getElementById('reload').addEventListener('click', () => {
+    [phoneFrame, tabFrame].forEach((f) => { f.src = f.src; });
+  });
+  window.addEventListener('resize', fit);
+
+  apply('phone'); apply('tab'); applyZoom(+zoom.value);
+  window.addEventListener('load', fit);
+</script>
+</body>
+</html>
