@@ -53,8 +53,7 @@ export function renderHome(mount) {
   // Tablica z czasem (kompaktowa, w lewym górnym rogu — bezpieczna strefa)
   const board = el('div.home-board', {}, [
     el('div.time-board', {}, [
-      el('div.time-board__label', { text: 'Twój czas w tym miesiącu' }),
-      el('div.time-board__time', { text: `${leftH} h ${leftM} min` }),
+      el('div.time-board__time', { text: `Zostało ${leftH} h ${leftM} min` }),
       el('div.time-board__bar', {}, [ el('i', { style: `width:${usedPct}%` }) ]),
     ]),
   ]);

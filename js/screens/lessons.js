@@ -100,8 +100,7 @@ export function renderLessons(mount) {
     const pct = Math.round(frac * 100);
     const clock = el('div.trial-clock', {}, [
       el('div.time-board', {}, [
-        el('div.time-board__label', { text: 'Czas próbny' }),
-        el('div.time-board__time', { text: left > 0 ? `zostało ok. ${left} min` : 'wykorzystany' }),
+        el('div.time-board__time', { text: left > 0 ? `Zostało ${left} min` : 'Czas próbny wykorzystany' }),
         el('div.time-board__bar', {}, [ el('i', { style: `width:${pct}%` }) ]),
       ]),
       // Testowe skróty (do usunięcia przed startem produkcyjnym)

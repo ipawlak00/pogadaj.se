@@ -1128,7 +1128,7 @@ body.on-lessons .cosmos { display: none; }
 @media (max-width: 760px), (orientation: portrait) {
   /* Na telefonie kadr jest przycięty — układamy UI w bezpieczne pasy
      (góra/dół), nadpisując pozycje ustawiane inline w JS. */
-  .home-board { left: 50% !important; top: 9% !important; width: 90% !important; }
+  .home-board { left: 50% !important; top: 9% !important; transform: translateX(-50%) !important; display: flex; justify-content: center; width: auto !important; }
   .home-controls {
     left: 50% !important; right: auto !important; top: auto !important;
     bottom: 3% !important; transform: translateX(-50%) !important;
@@ -1138,9 +1138,10 @@ body.on-lessons .cosmos { display: none; }
     left: 50% !important; right: auto !important; top: auto !important; bottom: 22% !important;
     transform: translateX(-50%) !important; max-width: 92%; width: 92%;
   }
-  /* Na home dymek pod tablicą z czasem (tablica ~9-30%), żeby nic nie nachodziło */
+  /* Na home dymek na DOLE (nad przyciskami), żeby środek ekranu z twarzą
+     Izabeli został odsłonięty. Tablica u góry, przyciski pod dymkiem. */
   .home-fs .scene-bubble {
-    top: 33% !important; bottom: auto !important; max-height: 34vh;
+    top: auto !important; bottom: 19% !important; max-height: 28vh;
   }
   /* Historia: czysty pionowy układ — pasek, dymek, potem lista lekcji.
      Wszystko w normalnym przepływie (przewijane), nic się nie nakłada. */
