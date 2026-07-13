@@ -6,18 +6,6 @@ import { ai } from '../services/ai.js';
 import { FULL_MONTH_MINUTES, HOME_SCENES } from '../data/lessons.js';
 import { minutesWord, hoursWord } from '../data/phrases.js';
 
-// Ciekawostki (mózg, psychologia, kosmos, astrologia, magiczne kamienie) —
-// Izabela od czasu do czasu rzuca jedną na powitanie.
-const FUN_FACTS = [
-  'A wiesz, że Twój mózg zużywa jakieś dwadzieścia procent energii całego ciała? Taki mały, a tak żarłoczny.',
-  'Ciekawostka: opal, mój ulubiony kamień, potrafi mieć w sobie tęczę uwięzioną w środku. Magia czysta.',
-  'Wiedziałaś, że w kosmosie nie ma dźwięku? Cisza jak makiem zasiał, dosłownie.',
-  'Psychologiczny myk: uśmiech, nawet na siłę, potrafi realnie poprawić nastrój. Mózg daje się nabrać.',
-  'W jeden dzień na Wenus trwa dłużej niż jej rok. Kosmos lubi mieszać w głowie.',
-  'Ametyst podobno pomaga się wyciszyć, a ja i tak najbardziej wierzę w opal. Mój numer jeden.',
-  'Twój mózg nigdy się nie wyłącza, pracuje nawet jak śpisz. Nocna zmiana non stop.',
-];
-
 // Poziomy do zmiany z pełnej wersji (te same co w onboardingu)
 const HOME_LEVELS = [
   { id: 'A1', title: 'A1, Początkujący', desc: 'Dopiero zaczynam, pojedyncze słowa.' },
@@ -116,12 +104,6 @@ export function renderHome(mount) {
     ]);
     bodyText = `Masz jeszcze ${timeShort} rozmów w tym miesiącu. Klikaj i gadamy!`;
     bodySpoken = `Masz jeszcze ${timeSpoken} rozmów w tym miesiącu. Klikaj i gadamy!`;
-    // Co jakiś czas (nie za każdym razem) Izabela rzuca ciekawostkę
-    if (Math.random() < 0.4) {
-      const fact = pick(FUN_FACTS);
-      bodyText += ' ' + fact;
-      bodySpoken += ' ' + fact;
-    }
   }
   // Zamiast jednego wielkiego dymka — krótkie zdania, które przeskakują
   // w miarę mówienia (dymek nie zakrywa sceny).
@@ -148,9 +130,10 @@ export function renderHome(mount) {
   let jokeBusy = false;
   async function tellJoke() {
     if (jokeBusy) return; jokeBusy = true;
+    speech.stopSpeaking();            // ucisz powitanie, żeby nie nadpisało żartu
     speech.unlockAudio();
     const hiEl = bubble.querySelector('.scene-bubble__hi');
-    if (hiEl) hiEl.textContent = 'Suchar dnia!';
+    if (hiEl) hiEl.textContent = '';  // bez nagłówka „Suchar dnia!" — sama treść żartu
     bodyP.textContent = 'Zaraz coś wymyślę…';
     let joke = '';
     try { joke = await ai.tellJoke(); } catch (e) { /* fallback niżej */ }
