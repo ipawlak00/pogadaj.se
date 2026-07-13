@@ -6,6 +6,17 @@ import { ai } from '../services/ai.js';
 import { FULL_MONTH_MINUTES, HOME_SCENES } from '../data/lessons.js';
 import { minutesWord, hoursWord } from '../data/phrases.js';
 
+// Ciekawostki wplecione naturalnie (jak Izabela dzieli się myślą) — mózg,
+// psychologia, kosmos, astrologia, magiczne kamienie. Co jakiś czas, nie zawsze.
+const FUN_FACTS = [
+  'A tak w ogóle, wiesz co mi chodzi po głowie? Twój mózg zżera jakieś dwadzieścia procent energii całego ciała. Taki mały, a tak głodny.',
+  'Ej, zerkam na mój opal i myślę sobie, że ten kamień ma w środku uwięzioną całą tęczę. Zawsze mnie to rozczula.',
+  'Wiesz co jest szalone? W kosmosie w ogóle nie ma dźwięku. Totalna cisza dookoła nas.',
+  'Taki myk na dziś: uśmiech, nawet na siłę, naprawdę potrafi poprawić nastrój. Mózg daje się na to nabrać, serio.',
+  'Ostatnio czytałam, że dzień na Wenus trwa dłużej niż cały jej rok. Kosmos lubi mieszać w głowie.',
+  'Mój opal podobno dodaje odwagi, a ja i tak lubię go najbardziej za te kolory. Numer jeden w mojej kolekcji.',
+];
+
 // Poziomy do zmiany z pełnej wersji (te same co w onboardingu)
 const HOME_LEVELS = [
   { id: 'A1', title: 'A1, Początkujący', desc: 'Dopiero zaczynam, pojedyncze słowa.' },
@@ -104,6 +115,13 @@ export function renderHome(mount) {
     ]);
     bodyText = `Masz jeszcze ${timeShort} rozmów w tym miesiącu. Klikaj i gadamy!`;
     bodySpoken = `Masz jeszcze ${timeSpoken} rozmów w tym miesiącu. Klikaj i gadamy!`;
+  }
+  // Co jakiś czas (nie za każdym razem) Izabela wplata ciekawostkę — poza
+  // pierwszym wejściem, gdzie powitanie jest już długie.
+  if (!firstTime && Math.random() < 0.45) {
+    const fact = ' ' + pick(FUN_FACTS);
+    bodyText += fact;
+    bodySpoken += fact;
   }
   // Zamiast jednego wielkiego dymka — krótkie zdania, które przeskakują
   // w miarę mówienia (dymek nie zakrywa sceny).

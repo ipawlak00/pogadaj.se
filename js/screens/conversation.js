@@ -155,8 +155,8 @@ export function renderConversation(mount, lessonId) {
   const micLabel = el('div.faint', { id: 'mic-label', style: 'text-align:center;min-height:1.2em', text: '' });
   // Co uczeń ma teraz powiedzieć — klik odtwarza wzór jeszcze raz
   const targetEl = el('div.say-target', { id: 'say-target' });
-  const replayBtn = el('button.btn.btn--ghost', { onclick: () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); } }, ['Powtórz']);
-  const stopBtn = el('button.btn.btn--ghost', { onclick: () => { speech.stopSpeaking(); setSpeaking(false); } }, ['Przerwij']);
+  const replayBtn = el('button.btn.btn--sq', { onclick: () => { if (lastLine) speakLine(lastLine.text, { lang: lastLine.lang, slow: lastLine.slow }); } }, ['Powtórz']);
+  const stopBtn = el('button.btn.btn--sq', { onclick: () => { speech.stopSpeaking(); setSpeaking(false); } }, ['Przerwij']);
 
   function setTarget(phrase) {
     targetEl.replaceChildren();
