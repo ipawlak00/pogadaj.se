@@ -56,9 +56,9 @@ export const CONFIG = {
     ttsLangPL: 'pl-PL',         // głos Izabeli przy tłumaczeniu/korekcie po polsku
   },
 
-  // --- Reguły biznesowe -----------------------------------------
-  FREE_LESSONS: 3,              // 3 darmowe lekcje (haczyk)
-  PHONETIC_WORDS_COUNT: 20,     // ile słówek w Paszporcie Fonetycznym (15–50)
+  // --- Ustawienia -----------------------------------------------
+  FREE_LESSONS: 3,
+  PHONETIC_WORDS_COUNT: 20,     // liczba słówek w kroku wymowy (15–50)
 };
 
 // Czy Gemini jest dostępne (proxy dla wszystkich LUB klucz lokalny/użytkownika)

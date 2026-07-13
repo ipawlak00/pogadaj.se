@@ -1,5 +1,5 @@
 // =============================================================
-//  3 darmowe lekcje — wieloetapowe, dla początkujących
+//  Lekcje wieloetapowe (dla początkujących)
 // -------------------------------------------------------------
 //  Każda lekcja = sekwencja krótkich ćwiczeń MÓWIENIA (steps):
 //   - { type:'say', en, pl }                  → Izabela czyta EN, mówi znaczenie PL, uczeń powtarza

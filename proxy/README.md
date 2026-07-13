@@ -1,22 +1,9 @@
-# Proxy Gemini — głos i rozmowa dla WSZYSTKICH bez klucza
+# Proxy — konfiguracja serwera
 
-## O co tu chodzi (po ludzku)
+Program-pośrednik trzyma sekretny klucz po stronie serwera (nigdy w kodzie
+przeglądarki). Przeglądarka pyta proxy → proxy dokłada klucz i odpytuje usługę.
 
-Naturalny głos Izabeli i rozmowy to **Gemini od Google**. Gemini kosztuje i wymaga
-**sekretnego klucza**. Tego klucza **nie wolno wkleić do kodu aplikacji**, bo kod jest
-publiczny — GitHub i Google by go wykryli i **automatycznie unieważnili**, a ktoś mógłby
-wydrenować budżet.
-
-Rozwiązanie: mały program-pośrednik („proxy") stojący na serwerze. To on trzyma klucz.
-Przeglądarka użytkownika pyta proxy → proxy pyta Gemini (z kluczem) → odsyła głos.
-**Użytkownik nigdy nie widzi klucza, a głos działa od pierwszej sekundy.**
-
-> To dokładnie wzorzec „dashboardu": user widzi efekt, nie mając dostępu do danych bazowych.
-
-## Wersja docelowa: Google (wszystkie opłaty w jednym miejscu)
-
-Skoro aplikacja ma stać w środowisku Google, proxy też stawiamy w Google — wtedy
-hosting, funkcja-proxy i zużycie Gemini są w **jednym projekcie = jeden rachunek**.
+## Wariant: Google Cloud Functions
 
 Pliki: [`google/index.js`](./google/index.js), [`google/package.json`](./google/package.json).
 
