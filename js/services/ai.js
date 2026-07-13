@@ -102,18 +102,19 @@ function stubAnalyze(text) {
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-// Suchary awaryjne (gdy AI niedostępne) — grzeczne, bezpieczne też dla dzieci.
+// Suchary awaryjne (gdy AI niedostępne) — klasyczne, z sensowną puentą,
+// grzeczne i bezpieczne też dla dzieci.
 const JOKES = [
-  'Przychodzi baba do lekarza, a lekarz mówi: „Pani mnie okradła, ja tu jestem pacjent!"',
-  'Jak nazywa się ryba bez oka? Ryb.',
-  'Co robi bułka na dyskotece? Bua, bua, bua!',
-  'Dlaczego komputer poszedł do lekarza? Bo złapał wirusa.',
-  'Co mówi zero do ósemki? O, fajny pasek!',
-  'Idzie sobie liczba pi, idzie i idzie, i nie może dojść.',
-  'Co robi pizza u fryzjera? Grzywkę.',
-  'Dlaczego szkielet nie poszedł na imprezę? Bo nie miał z kim, sam kości.',
-  'Leży kot na wersalce. Wersalka nic, bo to mebel.',
-  'Co słychać u ślimaka? Nic, ślimaki są ciche.',
+  'Jak nazywa się pies bez nóg? Nieważne jak go zawołasz i tak nie przybiegnie.',
+  'Dlaczego szkielet nie poszedł na bal? Bo nie miał z kim, no i nie miał do tego serca.',
+  'Idzie sobie zero, widzi ósemkę i mówi: ej, fajny pasek!',
+  'Przychodzi baba do lekarza, a lekarza nie ma. No to baba sobie poszła.',
+  'Dlaczego komputer był zmęczony? Bo miał pełny dysk.',
+  'Dlaczego ryby żyją w wodzie? Bo koty nie umieją pływać.',
+  'Co robi krowa na trampolinie? Mleko w proszku.',
+  'Czemu żółw nie ma konta na Instagramie? Bo za wolno ładuje zdjęcia.',
+  'Jak matematyk wychodzi z lasu? Po pierwiastku.',
+  'Dlaczego pomidor się zaczerwienił? Bo zobaczył sałatę bez ubrania.',
 ];
 
 // Kompaktowy profil fonetyczny do promptów — bez surowych sampli,
@@ -371,7 +372,7 @@ Zwróć JSON:
   // Suchar na życzenie — w stylu Izabeli, dopasowany do wieku (dziecko → niewinny)
   async tellJoke() {
     try {
-      const contents = [{ role: 'user', parts: [{ text: `Opowiedz JEDEN krótki żart-suchar po polsku, w swoim stylu (totalny suchar, gra słów, „przychodzi baba do lekarza", dad-joke). ${userContext()} DOPASUJ do wieku: dla dziecka tylko niewinny i grzeczny. Max 2-3 krótkie zdania (będzie czytane na głos). Zwróć JSON: {"joke":"..."}` }] }];
+      const contents = [{ role: 'user', parts: [{ text: `Opowiedz JEDEN klasyczny żart-suchar po polsku (typu pytanie–odpowiedź albo „przychodzi baba do lekarza"). MUSI mieć SENS i wyraźną, zrozumiałą puentę — nie wymyślaj bełkotu ani gry słów, która nie działa. Ma być głupkowaty, ale logiczny (jak: „Jak nazywa się pies bez nóg? Nieważne jak go zawołasz i tak nie przybiegnie."). ${userContext()} DOPASUJ do wieku: dla dziecka tylko niewinny i grzeczny. Max 2-3 krótkie zdania (będzie czytane na głos). Zwróć JSON: {"joke":"..."}` }] }];
       const r = await this._callContents(contents, IZABELA.systemPrompt, CONFIG.GEMINI.fastModel);
       return (r.joke || '').trim() || pick(JOKES);
     } catch (e) { return pick(JOKES); }
