@@ -38,7 +38,7 @@ export function feedbackCorner(page) {
 }
 
 export function openFeedback(page) {
-  const st = JSON.parse(localStorage.getItem('pogadajse.state') || '{}');
+  const st = store.get();
   const area = el('textarea.feedback-text', {
     placeholder: 'Napisz, co myślisz o aplikacji i lekcji. Coś nie działało? Masz pomysł, co poprawić albo naprawić? Pisz śmiało, czytam wszystko.',
     maxlength: '4000',
