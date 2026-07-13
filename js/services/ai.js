@@ -372,7 +372,13 @@ Zwróć JSON:
   // Suchar na życzenie — w stylu Izabeli, dopasowany do wieku (dziecko → niewinny)
   async tellJoke() {
     try {
-      const contents = [{ role: 'user', parts: [{ text: `Opowiedz JEDEN klasyczny żart-suchar po polsku (typu pytanie–odpowiedź albo „przychodzi baba do lekarza"). MUSI mieć SENS i wyraźną, zrozumiałą puentę — nie wymyślaj bełkotu ani gry słów, która nie działa. Ma być głupkowaty, ale logiczny (jak: „Jak nazywa się pies bez nóg? Nieważne jak go zawołasz i tak nie przybiegnie."). ${userContext()} DOPASUJ do wieku: dla dziecka tylko niewinny i grzeczny. Max 2-3 krótkie zdania (będzie czytane na głos). Zwróć JSON: {"joke":"..."}` }] }];
+      const contents = [{ role: 'user', parts: [{ text: `Opowiedz JEDEN klasyczny żart-suchar po polsku (typu pytanie–odpowiedź albo „przychodzi baba do lekarza").
+WYMAGANIA:
+- MUSI być ZROZUMIAŁY OD RAZU DLA KAŻDEGO — bez żadnej wiedzy specjalistycznej. ZAKAZANE żarty o programowaniu, kodowaniu, matematyce, systemach liczbowych, fizyce, chemii, angielskim (żadnych gier słów po angielsku). Prosty suchar, który zrozumie nawet dziecko i babcia.
+- MUSI mieć wyraźną, logiczną puentę (jak: „Jak nazywa się pies bez nóg? Nieważne jak go zawołasz i tak nie przybiegnie." albo „Dlaczego pomidor się zaczerwienił? Bo zobaczył sałatę bez ubrania.").
+- Bez bełkotu, bez gry słów, która nie działa. Głupkowaty, ale logiczny.
+${userContext()} DOPASUJ do wieku: dla dziecka tylko niewinny i grzeczny.
+Max 2-3 krótkie zdania (będzie czytane na głos). Zwróć JSON: {"joke":"..."}` }] }];
       const r = await this._callContents(contents, IZABELA.systemPrompt, CONFIG.GEMINI.fastModel);
       return (r.joke || '').trim() || pick(JOKES);
     } catch (e) { return pick(JOKES); }
