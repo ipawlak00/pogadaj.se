@@ -51,13 +51,37 @@ async function gcpProject() {
   return cachedProject;
 }
 
+// Dokument konta = adres email (czytelny na liście w konsoli Firestore).
+// Kiedyś był to hash SHA-256; migracja (migrate-users.js) przenosi stare konta.
 function userDocId(email) {
-  return crypto.createHash('sha256').update(String(email).trim().toLowerCase()).digest('hex').slice(0, 32);
+  return String(email).trim().toLowerCase();
+}
+
+// Kolejny numer konta (000001, 000002…) — atomowy licznik w meta/counters.
+// Transform „increment" tworzy dokument i pole, gdy jeszcze nie istnieją.
+async function nextUserNumber() {
+  const [token, project] = await Promise.all([gcpToken(), gcpProject()]);
+  const url = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents:commit`;
+  const body = { writes: [{
+    transform: {
+      document: `projects/${project}/databases/(default)/documents/meta/counters`,
+      fieldTransforms: [{ fieldPath: 'userSeq', increment: { integerValue: '1' } }],
+    },
+  }] };
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error('Firestore counter ' + r.status + ': ' + (await r.text()).slice(0, 200));
+  const d = await r.json();
+  const n = Number(d.writeResults?.[0]?.transformResults?.[0]?.integerValue || 0);
+  return String(n).padStart(6, '0');
 }
 
 async function fsGetUser(email) {
   const [token, project] = await Promise.all([gcpToken(), gcpProject()]);
-  const url = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/users/${userDocId(email)}`;
+  const url = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/users/${encodeURIComponent(userDocId(email))}`;
   const r = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
   if (r.status === 404) return null;
   if (!r.ok) throw new Error('Firestore GET ' + r.status + ': ' + (await r.text()).slice(0, 200));
@@ -65,12 +89,14 @@ async function fsGetUser(email) {
   const f = d.fields || {};
   return {
     id: f.id?.stringValue || '',
+    number: f.number?.stringValue || '',     // kolejny numer konta (000001…)
     name: f.name?.stringValue || '',
     email: f.email?.stringValue || '',
     salt: f.salt?.stringValue || '',
     hash: f.hash?.stringValue || '',
     profile: f.profile?.stringValue || '',   // profil fonetyczny (JSON)
     state: f.state?.stringValue || '',       // postępy ucznia (poziom, historia, czas) — JSON
+    createdAt: f.createdAt?.stringValue || '',
   };
 }
 
@@ -79,16 +105,18 @@ async function fsGetUser(email) {
 
 async function fsPutUser(u) {
   const [token, project] = await Promise.all([gcpToken(), gcpProject()]);
-  const url = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/users/${userDocId(u.email)}`;
+  const url = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/users/${encodeURIComponent(userDocId(u.email))}`;
   const body = { fields: {
     id: { stringValue: u.id || '' },
+    number: { stringValue: u.number || '' },
     name: { stringValue: u.name },
     email: { stringValue: u.email },
     salt: { stringValue: u.salt },
     hash: { stringValue: u.hash },
     profile: { stringValue: u.profile || '' },
     state: { stringValue: u.state || '' },
-    createdAt: { stringValue: new Date().toISOString() },
+    // Zachowaj pierwotną datę utworzenia — nie nadpisuj przy każdym zapisie stanu.
+    createdAt: { stringValue: u.createdAt || new Date().toISOString() },
   } };
   const r = await fetch(url, {
     method: 'PATCH',
@@ -100,7 +128,7 @@ async function fsPutUser(u) {
 
 async function fsDeleteUser(email) {
   const [token, project] = await Promise.all([gcpToken(), gcpProject()]);
-  const url = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/users/${userDocId(email)}`;
+  const url = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/users/${encodeURIComponent(userDocId(email))}`;
   const r = await fetch(url, { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } });
   if (!r.ok && r.status !== 404) throw new Error('Firestore DELETE ' + r.status + ': ' + (await r.text()).slice(0, 200));
 }
@@ -213,8 +241,9 @@ async function handleAuth(path, body, res) {
     if (await fsGetUser(email)) return res.status(409).json({ error: 'Konto z tym adresem już istnieje. Zaloguj się.' });
     const salt = crypto.randomBytes(16).toString('hex');
     const id = crypto.randomUUID();                       // unikalne ID użytkownika
-    await fsPutUser({ id, name, email, salt, hash: hashPassword(password, salt) });
-    return res.status(200).json({ ok: true, id, name, email, token: makeToken(email) });
+    const number = await nextUserNumber();                // kolejny numer konta (000001…)
+    await fsPutUser({ id, number, name, email, salt, hash: hashPassword(password, salt) });
+    return res.status(200).json({ ok: true, id, number, name, email, token: makeToken(email) });
   }
 
   if (path === '/auth/setname') {
@@ -235,10 +264,10 @@ async function handleAuth(path, body, res) {
     let profile = null, state = null;
     try { profile = u.profile ? JSON.parse(u.profile) : null; } catch {}
     try { state = u.state ? JSON.parse(u.state) : null; } catch {}
-    return res.status(200).json({ ok: true, id: u.id, name: u.name, email: u.email, token: makeToken(email), profile, state });
+    return res.status(200).json({ ok: true, id: u.id, number: u.number, name: u.name, email: u.email, token: makeToken(email), profile, state });
   }
 
-  // Zmiana emaila: konto przenosi się pod nowy adres (dokument = hash emaila),
+  // Zmiana emaila: konto przenosi się pod nowy adres (dokument = adres email),
   // stary dokument znika, klient dostaje świeży token na nowy adres.
   if (path === '/auth/setemail') {
     const newEmail = String(body.newEmail || '').trim().toLowerCase();
