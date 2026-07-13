@@ -105,16 +105,16 @@ function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 // Suchary awaryjne (gdy AI niedostępne) — klasyczne, z sensowną puentą,
 // grzeczne i bezpieczne też dla dzieci.
 const JOKES = [
+  'Przychodzi baba do lekarza, a lekarza nie ma. No to sobie poszła.',
+  'Pani pyta: Jasiu, powiedz zdanie z „nie wiem". Jasiu: Nie wiem, proszę pani. Brawo, Jasiu!',
+  'Jasiu, dlaczego przyniosłeś do szkoły puste zeszyty? Bo pani kazała pisać z głowy.',
+  'Pani pyta Jasia: co robi krowa, kiedy zamknie oczy? Mleko w proszku.',
+  'Przychodzi baba do lekarza i mówi, że boli ją noga. A lekarz: to niech pani na nią nie patrzy.',
+  'Jasiu, gdybyś miał pięć złotych i poprosił brata o kolejne pięć, ile byś miał? Pięć. Jasiu, ty nie umiesz liczyć! A pani nie zna mojego brata.',
   'Jak nazywa się pies bez nóg? Nieważne jak go zawołasz i tak nie przybiegnie.',
-  'Dlaczego szkielet nie poszedł na bal? Bo nie miał z kim, no i nie miał do tego serca.',
-  'Idzie sobie zero, widzi ósemkę i mówi: ej, fajny pasek!',
-  'Przychodzi baba do lekarza, a lekarza nie ma. No to baba sobie poszła.',
-  'Dlaczego komputer był zmęczony? Bo miał pełny dysk.',
-  'Dlaczego ryby żyją w wodzie? Bo koty nie umieją pływać.',
-  'Co robi krowa na trampolinie? Mleko w proszku.',
-  'Czemu żółw nie ma konta na Instagramie? Bo za wolno ładuje zdjęcia.',
-  'Jak matematyk wychodzi z lasu? Po pierwiastku.',
   'Dlaczego pomidor się zaczerwienił? Bo zobaczył sałatę bez ubrania.',
+  'Przychodzi baba do lekarza, a lekarz mówi: pani znowu? Przecież mówiłem, że jest pani zdrowa. A baba: no właśnie przyszłam podziękować.',
+  'Pani pyta: Jasiu, gdzie leży Bałtyk? A Jasiu: nie wiem, ja nic nie ruszałem.',
 ];
 
 // Kompaktowy profil fonetyczny do promptów — bez surowych sampli,
@@ -372,11 +372,13 @@ Zwróć JSON:
   // Suchar na życzenie — w stylu Izabeli, dopasowany do wieku (dziecko → niewinny)
   async tellJoke() {
     try {
-      const contents = [{ role: 'user', parts: [{ text: `Opowiedz JEDEN klasyczny żart-suchar po polsku (typu pytanie–odpowiedź albo „przychodzi baba do lekarza").
+      const contents = [{ role: 'user', parts: [{ text: `Opowiedz JEDEN polski KLASYCZNY dowcip. Trzymaj się sprawdzonych formatów:
+- „Przychodzi baba do lekarza..." (np. „Przychodzi baba do lekarza, a lekarza nie ma. No to sobie poszła.")
+- Dowcipy o JASIU / szkolne (np. „Pani pyta: Jasiu, powiedz zdanie z 'nie wiem'. Jasiu: Nie wiem, proszę pani. — Brawo, Jasiu!")
+- Inne polskie klasyki z pytaniem i puentą.
 WYMAGANIA:
-- MUSI być ZROZUMIAŁY OD RAZU DLA KAŻDEGO — bez żadnej wiedzy specjalistycznej. ZAKAZANE żarty o programowaniu, kodowaniu, matematyce, systemach liczbowych, fizyce, chemii, angielskim (żadnych gier słów po angielsku). Prosty suchar, który zrozumie nawet dziecko i babcia.
-- MUSI mieć wyraźną, logiczną puentę (jak: „Jak nazywa się pies bez nóg? Nieważne jak go zawołasz i tak nie przybiegnie." albo „Dlaczego pomidor się zaczerwienił? Bo zobaczył sałatę bez ubrania.").
-- Bez bełkotu, bez gry słów, która nie działa. Głupkowaty, ale logiczny.
+- Ma być ZROZUMIAŁY OD RAZU DLA KAŻDEGO. ZAKAZANE żarty o programowaniu, informatyce, kodowaniu, matematyce, systemach liczbowych, fizyce (żadnych „OCT/DEC", żadnych gier słów po angielsku).
+- Wyraźna, logiczna puenta. Bez bełkotu.
 ${userContext()} DOPASUJ do wieku: dla dziecka tylko niewinny i grzeczny.
 Max 2-3 krótkie zdania (będzie czytane na głos). Zwróć JSON: {"joke":"..."}` }] }];
       const r = await this._callContents(contents, IZABELA.systemPrompt, CONFIG.GEMINI.fastModel);
