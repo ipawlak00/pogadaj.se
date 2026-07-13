@@ -548,23 +548,19 @@ body:not([data-route="welcome"]) .mic-btn {
 
 /* ---------- Toasty ---------- */
 .toasts { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 8px; }
-/* Toast w klimacie apki: ciemna karta jak na logowaniu, błękitna poświata */
+/* Toast wyglądem JAK PRZYCISKI aplikacji: ta sama ciemna karta (#1c1c26),
+   subtelna ramka, ten sam promień. Bez bocznej kreski. */
 .toast {
-  background: linear-gradient(180deg, #1c1f2b, #171923);
-  color: #eef2ff;
-  border: 1px solid rgba(120, 160, 220, 0.32);
-  border-left: 4px solid #5b9fe0;
-  padding: 13px 18px; border-radius: 14px;
-  font-weight: 600; font-size: .95rem;
+  background: #1c1c26; color: #eef2ff;
+  border: 1px solid rgba(255, 255, 255, .12);
+  padding: 14px 20px; border-radius: 12px;
+  font-weight: 600; font-size: .95rem; text-align: center;
   max-width: min(92vw, 560px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, .5), 0 0 24px rgba(91, 159, 224, .18);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .5);
   animation: toastIn .25s ease;
 }
-/* Błąd/uwaga — ten sam ciemny styl, tylko bursztynowy akcent (bez ostrej czerwieni) */
-.toast--error {
-  border-left-color: #f0b24a;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, .5), 0 0 24px rgba(240, 178, 74, .22);
-}
+/* Błąd/uwaga — ten sam przyciskowy styl, tylko cieplejszy obrys (bez czerwieni, bez kreski) */
+.toast--error { border-color: rgba(240, 178, 74, .6); }
 @keyframes toastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; } }
 
 /* ---------- Ekran logowania / powitania ---------- */
