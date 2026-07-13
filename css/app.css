@@ -557,9 +557,10 @@ body:not([data-route="welcome"]) .mic-btn {
   box-shadow: 0 12px 30px rgba(6, 25, 55, .35);
   animation: toastIn .25s ease;
 }
+/* Błąd/uwaga — spójny z resztą (biały, granatowa ramka), łagodny bursztynowy akcent */
 .toast--error {
-  border-color: #8f1d1d; border-left-color: #d23c37;
-  background: #fff5f5; color: #7a1330;
+  border-color: #16305a; border-left-color: #e8a13a;
+  background: #ffffff; color: #14314f;
 }
 @keyframes toastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; } }
 
