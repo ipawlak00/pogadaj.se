@@ -11,6 +11,7 @@ import { CONFIG, genContentUrl, geminiConfigured } from '../config.js';
 import { IZABELA } from '../data/izabela.js';
 import { store } from '../state.js';
 import { toast } from '../ui.js';
+import { FULL_MONTH_MINUTES } from '../data/lessons.js';
 
 // Loguj błąd AI do konsoli (diagnostyka dla dewelopera). Techniczny toast
 // pokazujemy WYŁĄCZNIE w trybie deweloperskim z własnym kluczem — użytkownik
@@ -47,6 +48,26 @@ function userLine() {
   return `Uczeń ma na imię ${name} (najpewniej ${female ? 'kobieta' : 'mężczyzna'}). Zwracaj się do ucznia po imieniu, buduj relację i używaj końcówek rodzaju ${female ? 'żeńskiego' : 'męskiego'} — NIGDY form z ukośnikiem („zrobiłeś/aś", „gotowy/a").`;
 }
 
+// PRAWDZIWE dane o uczniu i jego aktywności — Izabela ma być SPOSTRZEGAWCZA
+// i komentować to naturalnie (mało lekcji, mało czasu, wiek itd.).
+function userContext() {
+  const s = store.get();
+  const age = parseInt(s.onboarding.age, 10) || null;
+  const hist = s.progress.history || [];
+  const totalMin = Math.round(hist.reduce((a, h) => a + (h.seconds || 0), 0) / 60);
+  const usedSec = s.progress.fullSecondsUsed || 0;
+  const leftMin = Math.max(0, Math.round((FULL_MONTH_MINUTES * 60 - usedSec) / 60));
+  const ageNote = !age ? '' : age < 13
+    ? `Wiek: ${age} lat — to DZIECKO. Mów prościej i cieplej, żarty tylko niewinne i grzeczne, ZERO wulgaryzmów i treści dla dorosłych.`
+    : age < 18
+    ? `Wiek: ${age} lat — nastolatek. Luźno, na luzie, ale bez wulgaryzmów.`
+    : `Wiek: ${age} lat — dorosły. Możesz żartować śmielej.`;
+  const activity = hist.length <= 1 && totalMin <= 1
+    ? `Uczeń ma dopiero ${hist.length} lekcję i tylko ~${totalMin} min rozmów — możesz się z tego pośmiać (brechta!), że na razie cieniutko, ale zachęcająco, bez dołowania.`
+    : `Odbytych lekcji: ${hist.length}, łącznie ~${totalMin} min rozmów.`;
+  return `DANE O UCZNIU (analizuj je i komentuj naturalnie, gdy się nadarzy): ${ageNote} ${activity} Zostało ~${leftMin} min czasu w tym miesiącu. Bądź spostrzegawcza — jeśli coś w tych danych aż prosi się o żarcik, rzuć go.`;
+}
+
 // Wywołanie Gemini z ponawianiem przy przejściowych błędach (429/503 — limit na minutę).
 async function geminiFetch(url, body) {
   let lastErr;
@@ -81,6 +102,20 @@ function stubAnalyze(text) {
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+// Suchary awaryjne (gdy AI niedostępne) — grzeczne, bezpieczne też dla dzieci.
+const JOKES = [
+  'Przychodzi baba do lekarza, a lekarz mówi: „Pani mnie okradła, ja tu jestem pacjent!"',
+  'Jak nazywa się ryba bez oka? Ryb.',
+  'Co robi bułka na dyskotece? Bua, bua, bua!',
+  'Dlaczego komputer poszedł do lekarza? Bo złapał wirusa.',
+  'Co mówi zero do ósemki? O, fajny pasek!',
+  'Idzie sobie liczba pi, idzie i idzie, i nie może dojść.',
+  'Co robi pizza u fryzjera? Grzywkę.',
+  'Dlaczego szkielet nie poszedł na imprezę? Bo nie miał z kim, sam kości.',
+  'Leży kot na wersalce. Wersalka nic, bo to mebel.',
+  'Co słychać u ślimaka? Nic, ślimaki są ciche.',
+];
+
 // Kompaktowy profil fonetyczny do promptów — bez surowych sampli,
 // za to z konkretnymi problemami, które Izabela ma pamiętać i łapać.
 function profileForPrompt() {
@@ -111,6 +146,7 @@ function lessonSystem() {
 
 TRYB LEKCJI — prowadzisz interaktywną, DŁUGĄ lekcję mówienia (cel ~45 minut):
 - ${userLine()}
+- ${userContext()}
 - Poziom ucznia: ${lvl}. ${beg ? 'POCZĄTKUJĄCY — prowadź po polsku, ucz bardzo prostych, krótkich angielskich fraz.' : 'Prowadź po angielsku, dobieraj trudność do ucznia.'}
 - JĘZYK PIERWSZEJ WYPOWIEDZI: ${adv ? 'uczeń jest zaawansowany (C1/C2) — pierwszą wypowiedź (powitanie i wprowadzenie) powiedz PO ANGIELSKU, ustaw "lang":"en".' : 'pierwszą wypowiedź lekcji (powitanie oraz wyjaśnienie zasad) powiedz PO POLSKU i ustaw "lang":"pl", żeby uczeń na pewno wszystko zrozumiał. Dopiero KOLEJNE wypowiedzi prowadź w języku wg poziomu.'}
 - ${oriented
@@ -178,6 +214,8 @@ const stubProvider = {
     };
   },
 
+  async tellJoke() { return pick(JOKES); },
+
   // Lekcja AI niedostępna bez Gemini — sygnał do fallbacku na proste kroki
   async lessonReply() { return { say: '', lang: 'pl', suggestions: [], done: true, unsupported: true }; },
   async reactToName() { return null; },
@@ -234,7 +272,7 @@ const geminiProvider = {
     const langRule = beg
       ? 'Uczeń jest POCZĄTKUJĄCY — prowadź rozmowę GŁÓWNIE PO POLSKU, łagodnie zachęcając do prostych angielskich słów/zdań. Tłumacz wszystko po polsku.'
       : 'Prowadź rozmowę po angielsku na poziomie ucznia; korekty i wyjaśnienia po polsku.';
-    const sys = `${IZABELA.systemPrompt}\n\nKONTEKST: Poziom CEFR: ${lvl}. ${langRule} ${userLine()} Profil fonetyczny ucznia: ${profileForPrompt()}.`;
+    const sys = `${IZABELA.systemPrompt}\n\nKONTEKST: Poziom CEFR: ${lvl}. ${langRule} ${userLine()} ${userContext()} Profil fonetyczny ucznia: ${profileForPrompt()}.`;
     const body = {
       system_instruction: { parts: [{ text: sys }] },
       contents: [{ role: 'user', parts: [{ text: userText }] }],
@@ -330,6 +368,15 @@ Zwróć JSON:
     } catch (e) { return null; }
   },
 
+  // Suchar na życzenie — w stylu Izabeli, dopasowany do wieku (dziecko → niewinny)
+  async tellJoke() {
+    try {
+      const contents = [{ role: 'user', parts: [{ text: `Opowiedz JEDEN krótki żart-suchar po polsku, w swoim stylu (totalny suchar, gra słów, „przychodzi baba do lekarza", dad-joke). ${userContext()} DOPASUJ do wieku: dla dziecka tylko niewinny i grzeczny. Max 2-3 krótkie zdania (będzie czytane na głos). Zwróć JSON: {"joke":"..."}` }] }];
+      const r = await this._callContents(contents, IZABELA.systemPrompt, CONFIG.GEMINI.fastModel);
+      return (r.joke || '').trim() || pick(JOKES);
+    } catch (e) { return pick(JOKES); }
+  },
+
   // Krótkie, OSOBISTE wspomnienie lekcji (do historii) — oczami Izabeli,
   // zwrócone do ucznia na „Ty", a nie sztywne „uczeń rozmawiał z Izabelą".
   async summarizeLesson(chatText) {
@@ -373,4 +420,5 @@ export const ai = {
   transcribe: (...a) => provider.transcribe(...a),
   reactToName: (...a) => provider.reactToName(...a),
   summarizeLesson: (...a) => provider.summarizeLesson(...a),
+  tellJoke: (...a) => provider.tellJoke(...a),
 };

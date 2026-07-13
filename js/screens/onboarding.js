@@ -21,7 +21,7 @@ const LEVELS = [
 
 // Kwestie Izabeli (mówione i w dymku) — kolejność: imię → cel → poziom
 const BUBBLES = [
-  'No hej, dobrze Cię tu mieć! Zanim ruszymy w kosmos, powiedz mi, jak masz na imię? Możesz wpisać albo po prostu powiedzieć.',
+  'No hej, dobrze Cię tu mieć! Zanim ruszymy w kosmos, powiedz mi, jak masz na imię i ile masz lat? Dzięki temu dobiorę wszystko pod Ciebie.',
   'Do czego potrzebujesz angielskiego? Dzięki temu dobiorę Ci tematy rozmów.',
   'Jak oceniasz swój poziom? Tylko bez stresu, i tak sprawdzę w praktyce.',
 ];
@@ -117,12 +117,18 @@ export function renderOnboarding(mount) {
     // ---------- krok 0: imię (wpisz albo POWIEDZ) ----------
     if (step === 0) {
       const nameInput = el('input', { type: 'text', value: knownName, placeholder: 'np. Kasia', maxlength: '30', autocomplete: 'given-name' });
+      const ageInput = el('input', { type: 'number', min: '4', max: '120', inputmode: 'numeric',
+        value: store.get().onboarding.age || '', placeholder: 'np. 25' });
       const goNext = () => {
         const v = nameInput.value.trim();
         if (!v) { toast('Zdradź imię — chcę wiedzieć, jak się do Ciebie zwracać', 'error'); return; }
+        const age = parseInt(ageInput.value, 10);
+        if (!age || age < 4 || age > 120) { toast('Podaj swój wiek (ile masz lat)', 'error'); return; }
+        store.patchKey('onboarding', { age });
         onName(v);
       };
-      nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') goNext(); });
+      nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') ageInput.focus(); });
+      ageInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') goNext(); });
 
       const sayBtn = el('button.btn.btn--sq', { onclick: sayName }, ['Powiedz imię']);
       let recing = false, handle = null;
@@ -150,7 +156,8 @@ export function renderOnboarding(mount) {
 
       card.append(
         el('h2.display', { style: 'margin:0', text: 'Jak masz na imię?' }),
-        el('div.field', { style: 'margin-top:12px' }, [nameInput]),
+        el('div.field', { style: 'margin-top:12px' }, [ el('label', { text: 'Imię' }), nameInput ]),
+        el('div.field', { style: 'margin-top:10px' }, [ el('label', { text: 'Ile masz lat?' }), ageInput ]),
         el('div.row', { style: 'justify-content:space-between;margin-top:18px' }, [
           sayBtn,
           el('button.btn.btn--primary', { onclick: goNext }, ['Dalej']),
