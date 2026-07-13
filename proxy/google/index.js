@@ -139,11 +139,9 @@ function passwordProblem(p) {
 // Działa, gdy ustawiony jest sekret RESEND_KEY; bez niego pomijamy (zostaje
 // zapis w Firestore). FROM/TO można nadpisać zmiennymi FEEDBACK_FROM/FEEDBACK_TO.
 async function sendFeedbackEmail(entry) {
-  const key = process.env.RESEND_KEY;
-  if (!key) return { sent: false, reason: 'no RESEND_KEY' };
   const to = process.env.FEEDBACK_TO || 'izabela@izabelacode.pl';
-  const from = process.env.FEEDBACK_FROM || 'Pogadaj.se <onboarding@resend.dev>';
   const sig = entry.name ? entry.name : 'Anonim';
+  const subject = `Opinia z pogadaj.se — ${sig}`;
   const lines = [
     `Podpis: ${sig}`,
     entry.email ? `Konto (email): ${entry.email}` : 'Konto: (brak / gość)',
@@ -151,17 +149,36 @@ async function sendFeedbackEmail(entry) {
     '',
     entry.text,
   ].filter((l) => l !== '').join('\n');
-  const body = {
-    from, to: [to], subject: `Opinia z pogadaj.se — ${sig}`, text: lines,
-  };
-  if (entry.email) body.reply_to = entry.email;
-  const r = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (!r.ok) throw new Error('Resend ' + r.status + ': ' + (await r.text()).slice(0, 200));
-  return { sent: true };
+
+  // 1) SMTP (np. Gmail dla izabela@izabelacode.pl) — gdy podane dane SMTP
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: Number(process.env.SMTP_PORT || 465),
+      secure: Number(process.env.SMTP_PORT || 465) === 465,
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    });
+    const from = process.env.FEEDBACK_FROM || process.env.SMTP_USER;
+    await transporter.sendMail({ from, to, subject, text: lines, replyTo: entry.email || undefined });
+    return { sent: true, via: 'smtp' };
+  }
+
+  // 2) Resend (zapasowo, gdy ustawiony RESEND_KEY)
+  if (process.env.RESEND_KEY) {
+    const from = process.env.FEEDBACK_FROM || 'Pogadaj.se <onboarding@resend.dev>';
+    const body = { from, to: [to], subject, text: lines };
+    if (entry.email) body.reply_to = entry.email;
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + process.env.RESEND_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) throw new Error('Resend ' + r.status + ': ' + (await r.text()).slice(0, 200));
+    return { sent: true, via: 'resend' };
+  }
+
+  return { sent: false, reason: 'no mail config' };
 }
 
 // Opinia użytkownika — zapis do Firestore (kolekcja feedback) jako trwały ślad.
