@@ -43,7 +43,11 @@ export function renderHistory(mount) {
     'Wszystko tu mam, o czym gadaliśmy. Fajnie się to ogląda.',
     'Zobacz, ile już razem przegadaliśmy. Robi wrażenie!',
   ];
-  const spoken = entries.length < 1 ? pick(fewJokes) : pick(manyLines);
+  // „Nieźle nam idzie" tylko gdy naprawdę jest historia. Przy 1 krótkiej lekcji
+  // to wciąż praktycznie pustka — wtedy Izabela żartuje, że cieniutko.
+  const totalMin = Math.round(entries.reduce((a, e) => a + (e.seconds || 0), 0) / 60);
+  const sparse = entries.length <= 1 || totalMin < 8;
+  const spoken = sparse ? pick(fewJokes) : pick(manyLines);
 
   // Kolumna okienek po PRAWEJ stronie, w dolnej części (biurko/konsola) —
   // nie zasłania twarzy Izabeli ani kotów. Zwinięte = tytuł, klik rozwija.
