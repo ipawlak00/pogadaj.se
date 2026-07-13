@@ -273,9 +273,10 @@ async function handleAuth(path, body, res) {
 }
 
 exports.geminiProxy = async (req, res) => {
+  // Odbijamy KAŻDY origin (http i https, dowolna domena) — auth jest na tokenach,
+  // nie na ciasteczkach, więc to bezpieczne, a nie blokuje pogadaj.com.pl po HTTP.
   const origin = req.headers.origin || '';
-  const allowed = !ALLOW_ORIGINS.length || ALLOW_ORIGINS.includes(origin);
-  res.set('Access-Control-Allow-Origin', allowed && origin ? origin : (ALLOW_ORIGINS[0] || '*'));
+  res.set('Access-Control-Allow-Origin', origin || '*');
   res.set('Vary', 'Origin');
   res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type');
@@ -283,7 +284,6 @@ exports.geminiProxy = async (req, res) => {
 
   if (req.method === 'OPTIONS') return res.status(204).send('');
   if (req.method !== 'POST') return res.status(405).json({ error: 'method not allowed' });
-  if (ALLOW_ORIGINS.length && origin && !allowed) return res.status(403).json({ error: 'origin not allowed' });
 
   const path = (req.path || '').replace(/^\/+/, '/');
 
