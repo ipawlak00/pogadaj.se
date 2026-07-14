@@ -1218,9 +1218,9 @@ body.on-lessons .cosmos { display: none; }
   /* Dymek jako ŁĄCZNIK zdjęcia z treścią: wchodzi na dół zdjęcia,
      ogonek celuje w górę w Izabelę; większy i czytelniejszy */
   .scene-bubble, .lessons-fs__bubble {
-    /* PEŁNA szerokość ekranu, wjeżdża na dół zdjęcia (zakrywa znaczek Gemini)
-       i jest gładkim łącznikiem między zdjęciem a treścią pod spodem. */
-    margin: -48px 0 12px !important; position: relative; z-index: 2;
+    /* Siedzi NA STYKU zdjęcia i białego tła: górą lekko wchodzi na zdjęcie
+       (zakrywa znaczek Gemini), resztą jest już na białym — łącznik dwóch stref. */
+    margin: -28px 0 12px !important; position: relative; z-index: 2;
     align-self: stretch !important;                       /* pełna szerokość karty */
     width: auto !important; max-width: none !important; min-width: 0 !important;
     box-sizing: border-box; min-height: 128px;            /* zawsze porządna wysokość */
