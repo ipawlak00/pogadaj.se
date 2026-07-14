@@ -17,6 +17,22 @@ const FUN_FACTS = [
   'Mój opal podobno dodaje odwagi, a ja i tak lubię go najbardziej za te kolory. Numer jeden w mojej kolekcji.',
 ];
 
+// Opowieści „z pokładu" na powitanie wracającego ucznia — jakby Izabela
+// zdawała relację z podróży: kosmos, statek, fizyka kwantowa, poruszanie się
+// w kosmosie, a czasem psoty kotów (Peja — kotka, Kocin — kot).
+const JOURNEY_TIDBITS = [
+  'Kiedy Cię nie było, przemknęliśmy tuż obok Mgławicy Kraba — to resztki gwiazdy, która wybuchła prawie tysiąc lat temu. Ludzie na Ziemi widzieli wtedy na niebie nowe światło, jaśniejsze od Wenus.',
+  'Nasz statek łapał właśnie grawitacyjną procę wokół małego księżyca — taki kosmiczny trik, żeby przyspieszyć bez spalania paliwa. Sprytne, co nie?',
+  'Czytałam ostatnio o fizyce kwantowej i głowa mi paruje: jedna maleńka cząstka potrafi być w dwóch miejscach naraz, dopóki na nią nie spojrzysz. Kosmos to jedna wielka ściema, mówię Ci!',
+  'Wiesz, że w kosmosie jak raz się rozpędzisz, to lecisz w nieskończoność? Nie ma powietrza, które by Cię hamowało. My sobie płyniemy tak leniwie między gwiazdami.',
+  'Kocin zasnął dziś rano w hełmie od skafandra i nie chciał wyłazić — wywabiłam go dopiero kocim chrupkiem. A Peja patrzyła na niego z boku, jakby był kompletnym głupkiem.',
+  'Peja odkryła, że w stanie nieważkości można pływać w powietrzu — od godziny odbija się od ścian jak futrzana piłeczka. Kocin się obraził, że nie umie tak samo.',
+  'Zerknęłam na pokładowy komputer: od naszej ostatniej rozmowy przelecieliśmy kawałek, który światło pokonuje w kilka minut. A wydawało się, że to była chwila!',
+  'Mijamy teraz taką ciszę, że słychać własne myśli. W kosmosie dźwięk nie ma się jak nieść — żadnego powietrza. Trochę jak w bibliotece, tylko z gwiazdami za oknem.',
+  'Kocin całą noc polował na czerwoną kropkę od wskaźnika laserowego, a rano obraził się na mnie, że mu jej nie oddałam. Koty i ich kosmiczne dramaty!',
+  'Tłumaczę Ci: gdybyś w kosmosie strzelił palcami, nikt by tego nie usłyszał. Za to światło leci tak szybko, że w sekundę okrążyłoby Ziemię siedem razy. Ogarniasz?',
+];
+
 // Poziomy do zmiany z pełnej wersji (te same co w onboardingu)
 const HOME_LEVELS = [
   { id: 'A1', title: 'A1, Początkujący', desc: 'Dopiero zaczynam, pojedyncze słowa.' },
@@ -104,20 +120,17 @@ export function renderHome(mount) {
       'żebyśmy razem szlifowali Twój angielski. No to zaczynamy!';
     bodySpoken = bodyText;
   } else {
+    // Wracający uczeń: ciepłe „siemanko" + od razu opowieść z podróży
+    // (kosmos/statek/fizyka/koty), a na końcu ile czasu zostało.
     hi = pick([
+      `Siemanko${name ? ', ' + name : ''}, witam ponownie!`,
+      `O, jesteś${name ? ', ' + name : ''}! Dobrze Cię znowu widzieć.`,
       `Witaj z powrotem${name ? ', ' + name : ''}!`,
-      'No i znów razem, świetnie!',
-      'O, jesteś! Dobrze Cię widzieć.',
+      'No i znów razem — lećmy dalej!',
     ]);
-    bodyText = `Masz jeszcze ${timeShort} rozmów w tym miesiącu. Klikaj i gadamy!`;
-    bodySpoken = `Masz jeszcze ${timeSpoken} rozmów w tym miesiącu. Klikaj i gadamy!`;
-  }
-  // Co jakiś czas (nie za każdym razem) Izabela wplata ciekawostkę — poza
-  // pierwszym wejściem, gdzie powitanie jest już długie.
-  if (!firstTime && Math.random() < 0.45) {
-    const fact = ' ' + pick(FUN_FACTS);
-    bodyText += fact;
-    bodySpoken += fact;
+    const tidbit = pick([...JOURNEY_TIDBITS, ...FUN_FACTS]);
+    bodyText = `${tidbit} A tak przy okazji: masz jeszcze ${timeShort} rozmów w tym miesiącu. Klikaj i gadamy!`;
+    bodySpoken = `${tidbit} A tak przy okazji: masz jeszcze ${timeSpoken} rozmów w tym miesiącu. Klikaj i gadamy!`;
   }
   // Zamiast jednego wielkiego dymka — krótkie zdania, które przeskakują
   // w miarę mówienia (dymek nie zakrywa sceny).
