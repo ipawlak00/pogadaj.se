@@ -1,11 +1,11 @@
 // =============================================================
-//  pogadaj.se — Konfiguracja globalna
+//  pogadaj.se, Konfiguracja globalna
 // -------------------------------------------------------------
 //  To jest JEDYNE miejsce, w którym przełączamy aplikację z trybu
 //  lokalnego (stub) na realny backend. Gdy będziemy mieć klucze:
 //    1. AI_PROVIDER = 'gemini' + wklej GEMINI_API_KEY (lub przez proxy)
 //    2. AUTH_PROVIDER / DB_PROVIDER = 'firebase' + uzupełnij FIREBASE
-//  Reszta aplikacji NIE wymaga zmian — usługi są za abstrakcją.
+//  Reszta aplikacji NIE wymaga zmian, usługi są za abstrakcją.
 // =============================================================
 
 export const CONFIG = {
@@ -58,7 +58,7 @@ export const CONFIG = {
 
   // --- Ustawienia -----------------------------------------------
   FREE_LESSONS: 3,
-  PHONETIC_WORDS_COUNT: 20,     // liczba słówek w kroku wymowy (15–50)
+  PHONETIC_WORDS_COUNT: 20,     // liczba słówek w kroku wymowy (15,50)
 };
 
 // Czy Gemini jest dostępne (proxy dla wszystkich LUB klucz lokalny/użytkownika)

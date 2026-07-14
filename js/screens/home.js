@@ -7,7 +7,7 @@ import { minutesWord, hoursWord } from '../data/phrases.js';
 import { pickFresh } from '../data/rotate.js';
 import { JOKES } from '../data/jokes.js';
 
-// Ciekawostki wplecione naturalnie (jak Izabela dzieli się myślą) — mózg,
+// Ciekawostki wplecione naturalnie (jak Izabela dzieli się myślą), mózg,
 // psychologia, kosmos, astrologia, magiczne kamienie. Co jakiś czas, nie zawsze.
 const FUN_FACTS = [
   'A tak w ogóle, wiesz co mi chodzi po głowie? Twój mózg zżera jakieś dwadzieścia procent energii całego ciała. Taki mały, a tak głodny.',
@@ -18,18 +18,18 @@ const FUN_FACTS = [
   'Mój opal podobno dodaje odwagi, a ja i tak lubię go najbardziej za te kolory. Numer jeden w mojej kolekcji.',
 ];
 
-// Opowieści „z pokładu" na powitanie wracającego ucznia — jakby Izabela
+// Opowieści „z pokładu" na powitanie wracającego ucznia, jakby Izabela
 // zdawała relację z podróży: kosmos, statek, fizyka kwantowa, poruszanie się
-// w kosmosie, a czasem psoty kotów (Peja — kotka, Kocin — kot).
+// w kosmosie, a czasem psoty kotów (Peja, kotka, Kocin, kot).
 const JOURNEY_TIDBITS = [
-  'Kiedy Cię nie było, przemknęliśmy tuż obok Mgławicy Kraba — to resztki gwiazdy, która wybuchła prawie tysiąc lat temu. Ludzie na Ziemi widzieli wtedy na niebie nowe światło, jaśniejsze od Wenus.',
-  'Nasz statek łapał właśnie grawitacyjną procę wokół małego księżyca — taki kosmiczny trik, żeby przyspieszyć bez spalania paliwa. Sprytne, co nie?',
+  'Kiedy Cię nie było, przemknęliśmy tuż obok Mgławicy Kraba, to resztki gwiazdy, która wybuchła prawie tysiąc lat temu. Ludzie na Ziemi widzieli wtedy na niebie nowe światło, jaśniejsze od Wenus.',
+  'Nasz statek łapał właśnie grawitacyjną procę wokół małego księżyca, taki kosmiczny trik, żeby przyspieszyć bez spalania paliwa. Sprytne, co nie?',
   'Czytałam ostatnio o fizyce kwantowej i głowa mi paruje: jedna maleńka cząstka potrafi być w dwóch miejscach naraz, dopóki na nią nie spojrzysz. Kosmos to jedna wielka ściema, mówię Ci!',
   'Wiesz, że w kosmosie jak raz się rozpędzisz, to lecisz w nieskończoność? Nie ma powietrza, które by Cię hamowało. My sobie płyniemy tak leniwie między gwiazdami.',
-  'Kocin zasnął dziś rano w hełmie od skafandra i nie chciał wyłazić — wywabiłam go dopiero kocim chrupkiem. A Peja patrzyła na niego z boku, jakby był kompletnym głupkiem.',
-  'Peja odkryła, że w stanie nieważkości można pływać w powietrzu — od godziny odbija się od ścian jak futrzana piłeczka. Kocin się obraził, że nie umie tak samo.',
+  'Kocin zasnął dziś rano w hełmie od skafandra i nie chciał wyłazić, wywabiłam go dopiero kocim chrupkiem. A Peja patrzyła na niego z boku, jakby był kompletnym głupkiem.',
+  'Peja odkryła, że w stanie nieważkości można pływać w powietrzu, od godziny odbija się od ścian jak futrzana piłeczka. Kocin się obraził, że nie umie tak samo.',
   'Zerknęłam na pokładowy komputer: od naszej ostatniej rozmowy przelecieliśmy kawałek, który światło pokonuje w kilka minut. A wydawało się, że to była chwila!',
-  'Mijamy teraz taką ciszę, że słychać własne myśli. W kosmosie dźwięk nie ma się jak nieść — żadnego powietrza. Trochę jak w bibliotece, tylko z gwiazdami za oknem.',
+  'Mijamy teraz taką ciszę, że słychać własne myśli. W kosmosie dźwięk nie ma się jak nieść, żadnego powietrza. Trochę jak w bibliotece, tylko z gwiazdami za oknem.',
   'Kocin całą noc polował na czerwoną kropkę od wskaźnika laserowego, a rano obraził się na mnie, że mu jej nie oddałam. Koty i ich kosmiczne dramaty!',
   'Tłumaczę Ci: gdybyś w kosmosie strzelił palcami, nikt by tego nie usłyszał. Za to światło leci tak szybko, że w sekundę okrążyłoby Ziemię siedem razy. Ogarniasz?',
 ];
@@ -43,10 +43,10 @@ const HOME_LEVELS = [
   { id: 'C1', title: 'C1, Zaawansowany', desc: 'Płynnie, poleruję detale.' },
 ];
 
-// PEŁNA WERSJA — tło (Izabela z kotami) zmienia się przy KAŻDYM wejściu.
+// PEŁNA WERSJA, tło (Izabela z kotami) zmienia się przy KAŻDYM wejściu.
 // Przyciski i dymek są ustawiane per-scena tak, by nie zasłaniać twarzy ani kotów.
 export function renderHome(mount) {
-  // Klasę 'on-lessons' ustawia router (app.js) wg trasy — tu nie ruszamy.
+  // Klasę 'on-lessons' ustawia router (app.js) wg trasy, tu nie ruszamy.
   const screen = el('div.home-fs');
   mount.append(screen);
 
@@ -59,7 +59,7 @@ export function renderHome(mount) {
   const usedSec = store.get().progress.fullSecondsUsed || 0;
   const totalSec = FULL_MONTH_MINUTES * 60;
   const leftSec = Math.max(0, totalSec - usedSec);
-  // floor, nie round — inaczej 14:59:30 wyświetlało się jako „14 h 60 min"
+  // floor, nie round, inaczej 14:59:30 wyświetlało się jako „14 h 60 min"
   const leftH = Math.floor(leftSec / 3600);
   const leftM = Math.floor((leftSec % 3600) / 60);
   const usedPct = Math.min(100, Math.round((usedSec / totalSec) * 100));
@@ -75,7 +75,7 @@ export function renderHome(mount) {
   screen.style.backgroundImage = `url('${layout.src}')`;
   if (layout.focus) screen.style.backgroundPosition = layout.focus;
 
-  // Tablica z czasem (kompaktowa, w lewym górnym rogu — bezpieczna strefa)
+  // Tablica z czasem (kompaktowa, w lewym górnym rogu, bezpieczna strefa)
   const board = el('div.home-board', {}, [
     el('div.time-board', {}, [
       el('div.time-board__time', { text: `Zostało ${leftH} h ${leftM} min` }),
@@ -98,7 +98,7 @@ export function renderHome(mount) {
     }, ['Kontynuuj lekcję']) : null,
   ]);
 
-  // Dymek z tym, co mówi Izabela (klik = powtórka) — w bezpiecznej strefie sceny
+  // Dymek z tym, co mówi Izabela (klik = powtórka), w bezpiecznej strefie sceny
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
   const firstTime = !store.get().progress.homeWelcomed;
 
@@ -127,15 +127,15 @@ export function renderHome(mount) {
       `Siemanko${name ? ', ' + name : ''}, witam ponownie!`,
       `O, jesteś${name ? ', ' + name : ''}! Dobrze Cię znowu widzieć.`,
       `Witaj z powrotem${name ? ', ' + name : ''}!`,
-      'No i znów razem — lećmy dalej!',
+      'No i znów razem, lećmy dalej!',
     ]);
     const tidbit = pickFresh('homeTidbit', [...JOURNEY_TIDBITS, ...FUN_FACTS]);
     bodyText = `${tidbit} A tak przy okazji: masz jeszcze ${timeShort} rozmów w tym miesiącu. Klikaj i gadamy!`;
     bodySpoken = `${tidbit} A tak przy okazji: masz jeszcze ${timeSpoken} rozmów w tym miesiącu. Klikaj i gadamy!`;
   }
-  // Zamiast jednego wielkiego dymka — krótkie zdania, które przeskakują
+  // Zamiast jednego wielkiego dymka, krótkie zdania, które przeskakują
   // w miarę mówienia (dymek nie zakrywa sceny).
-  // Dymek zmienia tekst AUTOMATYCZNIE w rytm mowy — pokazuje aktualne zdanie
+  // Dymek zmienia tekst AUTOMATYCZNIE w rytm mowy, pokazuje aktualne zdanie
   // (bez ręcznego scrollowania).
   const sentences = splitSentences(bodySpoken);
   const bodyP = el('p', { style: 'margin:4px 0 0', text: sentences[0] || bodyText });
@@ -154,16 +154,16 @@ export function renderHome(mount) {
     });
   }
 
-  // Klik „Opowiedz żart" — Izabela wali sucharem w dymku (i na głos)
+  // Klik „Opowiedz żart", Izabela wali sucharem w dymku (i na głos)
   let jokeBusy = false;
   function tellJoke() {
     if (jokeBusy) return; jokeBusy = true;
     speech.stopSpeaking();            // ucisz powitanie, żeby nie nadpisało żartu
     speech.unlockAudio();
     const hiEl = bubble.querySelector('.scene-bubble__hi');
-    if (hiEl) hiEl.textContent = '';  // bez nagłówka — sama treść żartu
+    if (hiEl) hiEl.textContent = '';  // bez nagłówka, sama treść żartu
     // Żart z pewnej puli (bez powtórek). W dymku pokazujemy zdanie po zdaniu
-    // w rytm mowy (setup → puenta) — krótkie kawałki nigdy nie wychodzą poza dymek.
+    // w rytm mowy (setup → puenta), krótkie kawałki nigdy nie wychodzą poza dymek.
     const joke = pickFresh('jokes', JOKES);
     const parts = splitSentences(joke);
     bodyP.textContent = parts[0] || joke;

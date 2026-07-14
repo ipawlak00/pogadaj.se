@@ -1,5 +1,5 @@
 // =============================================================
-//  Auth — konta użytkowników
+//  Auth, konta użytkowników
 // -------------------------------------------------------------
 //  Rejestracja i logowanie idą przez nasz backend (Cloud Function),
 //  który trzyma konta w Firestore, a hasła jako scrypt-hash.
@@ -30,7 +30,7 @@ async function call(path, payload) {
   return data;
 }
 
-// Ostatnio używane konto na tym urządzeniu (przeżywa wylogowanie) —
+// Ostatnio używane konto na tym urządzeniu (przeżywa wylogowanie) ,
 // żeby przełączenie kont nie dziedziczyło cudzych postępów.
 const LAST_KEY = 'pogadajse.lastAccount';
 const lastAccount = () => { try { return localStorage.getItem(LAST_KEY) || ''; } catch { return ''; } };
@@ -40,7 +40,7 @@ const rememberAccount = (email) => { try { localStorage.setItem(LAST_KEY, email)
 let suppressSync = false;      // wstrzymaj zapis podczas przywracania stanu z bazy
 let syncTimer = null;
 
-// Wycinek stanu do bazy — bez surowych czatów (duże) i sampli fonetycznych.
+// Wycinek stanu do bazy, bez surowych czatów (duże) i sampli fonetycznych.
 function stateBlob() {
   const s = store.get();
   const { fullChat, trialChat, ...progress } = s.progress || {};
@@ -77,7 +77,7 @@ export const auth = {
     return d;
   },
 
-  // Imię ustawiane PO filmie — zapis na serwerze, a lokalnie zawsze
+  // Imię ustawiane PO filmie, zapis na serwerze, a lokalnie zawsze
   async setName(name) {
     const u = store.get().user || {};
     store.patchKey('user', { ...u, name });
@@ -90,7 +90,7 @@ export const auth = {
   // używane na tym urządzeniu czyści lokalne postępy poprzedniego.
   async login({ email, password }) {
     const d = await call('/auth/login', { email, password });
-    // Logowanie ZAWSZE czyści lokalne postępy — źródłem prawdy jest konto w bazie,
+    // Logowanie ZAWSZE czyści lokalne postępy, źródłem prawdy jest konto w bazie,
     // żeby konta i historie nigdy się nie mieszały między użytkownikami/urządzeniami.
     suppressSync = true;
     store.reset();
@@ -102,7 +102,7 @@ export const auth = {
     return d;
   },
 
-  // Zmiana adresu email — serwer przenosi konto i wydaje nowy token sesji
+  // Zmiana adresu email, serwer przenosi konto i wydaje nowy token sesji
   async setEmail(newEmail) {
     const u = store.get().user || {};
     if (!u.token || !u.email) throw new Error('Zaloguj się ponownie.');
@@ -112,7 +112,7 @@ export const auth = {
     return d;
   },
 
-  // Zmiana hasła — wymaga podania obecnego
+  // Zmiana hasła, wymaga podania obecnego
   async setPassword(password, newPassword) {
     const u = store.get().user || {};
     if (!u.token || !u.email) throw new Error('Zaloguj się ponownie.');
@@ -130,7 +130,7 @@ export const auth = {
   },
 
   // Zapis profilu fonetycznego (problemy z wymową) na koncie w Firestore.
-  // Bez surowych sampli — do bazy idzie esencja: challenges/issues/oceny.
+  // Bez surowych sampli, do bazy idzie esencja: challenges/issues/oceny.
   async saveProfile(profile) {
     const u = store.get().user || {};
     if (!u.token || !u.email || !profile) return;
@@ -138,7 +138,7 @@ export const auth = {
     await call('/profile/save', { email: u.email, token: u.token, profile: slim });
   },
 
-  // Uruchamia auto-zapis postępów do bazy (poziom, historia, czas) — wywołać raz
+  // Uruchamia auto-zapis postępów do bazy (poziom, historia, czas), wywołać raz
   // na starcie apki. Zapisuje z debouncem po każdej zmianie, gdy user zalogowany.
   startStateSync() {
     store.subscribe(() => {

@@ -1,10 +1,10 @@
 // =============================================================
-//  AI — silnik rozmowy i analizy (abstrakcja providera)
+//  AI, silnik rozmowy i analizy (abstrakcja providera)
 // -------------------------------------------------------------
 //  CONFIG.AI_PROVIDER:
 //    'stub'   -> logika lokalna (działa offline, bez kluczy)
 //    'gemini' -> realne Gemini API (gdy podamy klucz / proxy)
-//  Interfejs publiczny jest WSPÓLNY — ekrany nie wiedzą, co siedzi pod spodem.
+//  Interfejs publiczny jest WSPÓLNY, ekrany nie wiedzą, co siedzi pod spodem.
 // =============================================================
 
 import { CONFIG, genContentUrl, geminiConfigured } from '../config.js';
@@ -14,7 +14,7 @@ import { toast } from '../ui.js';
 import { FULL_MONTH_MINUTES } from '../data/lessons.js';
 
 // Loguj błąd AI do konsoli (diagnostyka dla dewelopera). Techniczny toast
-// pokazujemy WYŁĄCZNIE w trybie deweloperskim z własnym kluczem — użytkownik
+// pokazujemy WYŁĄCZNIE w trybie deweloperskim z własnym kluczem, użytkownik
 // na produkcji (proxy) NIGDY nie widzi komunikatów o kluczu/AI.
 let aiErrorShown = false;
 function reportAiError(e) {
@@ -25,7 +25,7 @@ function reportAiError(e) {
   toast('Gemini (dev): ' + String(e && (e.message || e)), 'error');
 }
 
-// Wypowiedź „w charakterze", gdy AI chwilowo nie odpowie — NIGDY techniczna,
+// Wypowiedź „w charakterze", gdy AI chwilowo nie odpowie, NIGDY techniczna,
 // nigdy o kluczu/AI. Izabela po prostu prosi o powtórzenie i płynie dalej.
 function graceLine() {
   return pick([
@@ -36,19 +36,19 @@ function graceLine() {
   ]);
 }
 
-// Kim jest uczeń — imię i (heurystycznie z imienia) płeć.
+// Kim jest uczeń, imię i (heurystycznie z imienia) płeć.
 // Dzięki temu Izabela mówi po imieniu i NIE pisze form „zrobiłeś/aś".
 function userLine() {
   const name = (store.get().user?.name || '').trim();
   if (!name || /^gość$/i.test(name)) {
-    return 'Imienia ucznia jeszcze nie znasz — pisz neutralnie i NIGDY nie używaj form z ukośnikiem typu „zrobiłeś/aś".';
+    return 'Imienia ucznia jeszcze nie znasz, pisz neutralnie i NIGDY nie używaj form z ukośnikiem typu „zrobiłeś/aś".';
   }
   const maleException = /^(kuba|barnaba|kosma|bonawentura|dyzma|saba)$/i.test(name);
   const female = !maleException && /a$/i.test(name);
-  return `Uczeń ma na imię ${name} (najpewniej ${female ? 'kobieta' : 'mężczyzna'}). Zwracaj się do ucznia po imieniu, buduj relację i używaj końcówek rodzaju ${female ? 'żeńskiego' : 'męskiego'} — NIGDY form z ukośnikiem („zrobiłeś/aś", „gotowy/a").`;
+  return `Uczeń ma na imię ${name} (najpewniej ${female ? 'kobieta' : 'mężczyzna'}). Zwracaj się do ucznia po imieniu, buduj relację i używaj końcówek rodzaju ${female ? 'żeńskiego' : 'męskiego'}, NIGDY form z ukośnikiem („zrobiłeś/aś", „gotowy/a").`;
 }
 
-// PRAWDZIWE dane o uczniu i jego aktywności — Izabela ma być SPOSTRZEGAWCZA
+// PRAWDZIWE dane o uczniu i jego aktywności, Izabela ma być SPOSTRZEGAWCZA
 // i komentować to naturalnie (mało lekcji, mało czasu, wiek itd.).
 function userContext() {
   const s = store.get();
@@ -58,17 +58,17 @@ function userContext() {
   const usedSec = s.progress.fullSecondsUsed || 0;
   const leftMin = Math.max(0, Math.round((FULL_MONTH_MINUTES * 60 - usedSec) / 60));
   const ageNote = !age ? '' : age < 13
-    ? `Wiek: ${age} lat — to DZIECKO. Mów prościej i cieplej, żarty tylko niewinne i grzeczne, ZERO wulgaryzmów i treści dla dorosłych.`
+    ? `Wiek: ${age} lat, to DZIECKO. Mów prościej i cieplej, żarty tylko niewinne i grzeczne, ZERO wulgaryzmów i treści dla dorosłych.`
     : age < 18
-    ? `Wiek: ${age} lat — nastolatek. Luźno, na luzie, ale bez wulgaryzmów.`
-    : `Wiek: ${age} lat — dorosły. Możesz żartować śmielej.`;
+    ? `Wiek: ${age} lat, nastolatek. Luźno, na luzie, ale bez wulgaryzmów.`
+    : `Wiek: ${age} lat, dorosły. Możesz żartować śmielej.`;
   const activity = hist.length <= 1 && totalMin <= 1
-    ? `Uczeń ma dopiero ${hist.length} lekcję i tylko ~${totalMin} min rozmów — możesz się z tego pośmiać (brechta!), że na razie cieniutko, ale zachęcająco, bez dołowania.`
+    ? `Uczeń ma dopiero ${hist.length} lekcję i tylko ~${totalMin} min rozmów, możesz się z tego pośmiać (brechta!), że na razie cieniutko, ale zachęcająco, bez dołowania.`
     : `Odbytych lekcji: ${hist.length}, łącznie ~${totalMin} min rozmów.`;
-  return `DANE O UCZNIU (analizuj je i komentuj naturalnie, gdy się nadarzy): ${ageNote} ${activity} Zostało ~${leftMin} min czasu w tym miesiącu. Bądź spostrzegawcza — jeśli coś w tych danych aż prosi się o żarcik, rzuć go.`;
+  return `DANE O UCZNIU (analizuj je i komentuj naturalnie, gdy się nadarzy): ${ageNote} ${activity} Zostało ~${leftMin} min czasu w tym miesiącu. Bądź spostrzegawcza, jeśli coś w tych danych aż prosi się o żarcik, rzuć go.`;
 }
 
-// Wywołanie Gemini z ponawianiem przy przejściowych błędach (429/503 — limit na minutę).
+// Wywołanie Gemini z ponawianiem przy przejściowych błędach (429/503, limit na minutę).
 async function geminiFetch(url, body) {
   let lastErr;
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -83,12 +83,12 @@ async function geminiFetch(url, body) {
 
 // ---- Heurystyki stub: typowe błędy Polaków po angielsku ----
 const STUB_RULES = [
-  { re: /\bi am agree\b/i,        good: 'I agree',            note: '„Agree" to czasownik — nie mówimy „I am agree".', tag: 'grammar' },
+  { re: /\bi am agree\b/i,        good: 'I agree',            note: '„Agree" to czasownik, nie mówimy „I am agree".', tag: 'grammar' },
   { re: /\bi have (\d+) years?\b/i, good: 'I am … years old',  note: 'Wiek po angielsku: „I am 20 years old", nie „I have".', tag: 'grammar' },
   { re: /\bmake (a )?photo\b/i,    good: 'take a photo',       note: 'Zdjęcie się „take", nie „make".', tag: 'vocab' },
   { re: /\bsince (\d+) years\b/i,  good: 'for … years',        note: 'Okres trwania: „for 3 years"; „since" + punkt w czasie.', tag: 'grammar' },
-  { re: /\bhow it looks like\b/i,  good: 'what it looks like',  note: '„What does it look like?" — nie „how".', tag: 'grammar' },
-  { re: /\binformations\b/i,       good: 'information',         note: '„Information" jest niepoliczalne — bez „s".', tag: 'grammar' },
+  { re: /\bhow it looks like\b/i,  good: 'what it looks like',  note: '„What does it look like?", nie „how".', tag: 'grammar' },
+  { re: /\binformations\b/i,       good: 'information',         note: '„Information" jest niepoliczalne, bez „s".', tag: 'grammar' },
   { re: /\byesterday i go\b/i,     good: 'yesterday I went',    note: '„Yesterday" → czas przeszły: „went".', tag: 'grammar' },
 ];
 
@@ -102,7 +102,7 @@ function stubAnalyze(text) {
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-// Suchary awaryjne (gdy AI niedostępne) — klasyczne, z sensowną puentą,
+// Suchary awaryjne (gdy AI niedostępne), klasyczne, z sensowną puentą,
 // grzeczne i bezpieczne też dla dzieci.
 const JOKES = [
   'Przychodzi baba do lekarza, a lekarza nie ma. No to sobie poszła.',
@@ -117,7 +117,7 @@ const JOKES = [
   'Pani pyta: Jasiu, gdzie leży Bałtyk? A Jasiu: nie wiem, ja nic nie ruszałem.',
 ];
 
-// Kompaktowy profil fonetyczny do promptów — bez surowych sampli,
+// Kompaktowy profil fonetyczny do promptów, bez surowych sampli,
 // za to z konkretnymi problemami, które Izabela ma pamiętać i łapać.
 function profileForPrompt() {
   const p = store.get().phonetic.profile;
@@ -145,23 +145,23 @@ function lessonSystem() {
   const oriented = !!store.get().progress.oriented;   // czy uczeń zna już zasady
   return `${IZABELA.systemPrompt}
 
-TRYB LEKCJI — prowadzisz interaktywną, DŁUGĄ lekcję mówienia (cel ~45 minut):
+TRYB LEKCJI, prowadzisz interaktywną, DŁUGĄ lekcję mówienia (cel ~45 minut):
 - ${userLine()}
 - ${userContext()}
-- Poziom ucznia: ${lvl}. ${beg ? 'POCZĄTKUJĄCY — prowadź po polsku, ucz bardzo prostych, krótkich angielskich fraz.' : 'Prowadź po angielsku, dobieraj trudność do ucznia.'}
-- JĘZYK PIERWSZEJ WYPOWIEDZI: ${adv ? 'uczeń jest zaawansowany (C1/C2) — pierwszą wypowiedź (powitanie i wprowadzenie) powiedz PO ANGIELSKU, ustaw "lang":"en".' : 'pierwszą wypowiedź lekcji (powitanie oraz wyjaśnienie zasad) powiedz PO POLSKU i ustaw "lang":"pl", żeby uczeń na pewno wszystko zrozumiał. Dopiero KOLEJNE wypowiedzi prowadź w języku wg poziomu.'}
+- Poziom ucznia: ${lvl}. ${beg ? 'POCZĄTKUJĄCY, prowadź po polsku, ucz bardzo prostych, krótkich angielskich fraz.' : 'Prowadź po angielsku, dobieraj trudność do ucznia.'}
+- JĘZYK PIERWSZEJ WYPOWIEDZI: ${adv ? 'uczeń jest zaawansowany (C1/C2), pierwszą wypowiedź (powitanie i wprowadzenie) powiedz PO ANGIELSKU, ustaw "lang":"en".' : 'pierwszą wypowiedź lekcji (powitanie oraz wyjaśnienie zasad) powiedz PO POLSKU i ustaw "lang":"pl", żeby uczeń na pewno wszystko zrozumiał. Dopiero KOLEJNE wypowiedzi prowadź w języku wg poziomu.'}
 - ${oriented
-    ? 'Uczeń ZNA JUŻ zasady (że może mieszać polski z angielskim i że rozmawiacie o tym, co chce). NIE POWTARZAJ tych zasad ani żadnego wstępnego regulaminu — po prostu wejdź od razu w rozmowę/naukę.'
+    ? 'Uczeń ZNA JUŻ zasady (że może mieszać polski z angielskim i że rozmawiacie o tym, co chce). NIE POWTARZAJ tych zasad ani żadnego wstępnego regulaminu, po prostu wejdź od razu w rozmowę/naukę.'
     : `Tylko RAZ, w pierwszej wypowiedzi${adv ? '' : ' (PO POLSKU)'}, powiedz krótko dwie rzeczy: 1) uczeń może mówić po polsku i angielsku, może je mieszać, a jak zabraknie słówka, dopowie po polsku i pomożesz; 2) rozmawiacie o czym CHCE uczeń, jak Twój temat go nie interesuje, niech śmiało rzuci swój. Powiedz to raz i nigdy do tego nie wracaj.`}
 - Uczeń może w KAŻDEJ chwili zmienić temat rozmowy. Gdy to robi, podchwytuj bez marudzenia i ucz dalej na jego temacie.
 - Ucz krok po kroku: NAJPIERW powiedz frazę po angielsku (w cudzysłowie „..."), POTEM jej znaczenie po polsku, POTEM poproś, żeby uczeń ją POWTÓRZYŁ na głos.
-- Wypowiedź ucznia pochodzi z rozpoznawania mowy i bywa niedokładna — bądź wyrozumiała, nie czepiaj się drobiazgów.
+- Wypowiedź ucznia pochodzi z rozpoznawania mowy i bywa niedokładna, bądź wyrozumiała, nie czepiaj się drobiazgów.
 - Gdy powtórzy dobrze: krótko pochwal i wprowadź kolejną frazę albo proste pytanie. Gdy nie wychodzi: rozbij frazę na krótsze KAWAŁKI i ćwicz fragment po fragmencie, mów wolniej.
-- Stopniowo zwiększaj trudność, zmieniaj podtematy, wplataj krótkie pytania do ucznia. Lekcja ma być długa i angażująca — NIE kończ jej szybko.
-- WAŻNE: uczeń może mówić do Ciebie PO POLSKU lub PO ANGIELSKU i w każdej chwili zadać własne pytanie albo Ci przerwać. Gdy zadaje pytanie (np. „jak powiedzieć…?", „co znaczy…?", „dlaczego…?") — najpierw naturalnie i krótko ODPOWIEDZ na to pytanie, a dopiero potem płynnie wróć do nauki. Nigdy nie ignoruj pytania ucznia.
-- DŁUGOŚĆ WYPOWIEDZI: domyślnie mów KRÓTKO — 1, najwyżej 2 zdania, jak w normalnej rozmowie (reakcja, drobna podpowiedź, pytanie zwrotne). Tylko mniej więcej co DRUGĄ wypowiedź — gdy WPROWADZASZ nową frazę albo coś tłumaczysz — możesz rozwinąć do 3 zdań. Nigdy nie zalewaj ucznia ścianą tekstu: lekcja ma być ROZMOWĄ, nie wykładem. Mów jak człowiek, z życiem, ale zwięźle — nie rzucaj też samych haseł.
+- Stopniowo zwiększaj trudność, zmieniaj podtematy, wplataj krótkie pytania do ucznia. Lekcja ma być długa i angażująca, NIE kończ jej szybko.
+- WAŻNE: uczeń może mówić do Ciebie PO POLSKU lub PO ANGIELSKU i w każdej chwili zadać własne pytanie albo Ci przerwać. Gdy zadaje pytanie (np. „jak powiedzieć…?", „co znaczy…?", „dlaczego…?"), najpierw naturalnie i krótko ODPOWIEDZ na to pytanie, a dopiero potem płynnie wróć do nauki. Nigdy nie ignoruj pytania ucznia.
+- DŁUGOŚĆ WYPOWIEDZI: domyślnie mów KRÓTKO, 1, najwyżej 2 zdania, jak w normalnej rozmowie (reakcja, drobna podpowiedź, pytanie zwrotne). Tylko mniej więcej co DRUGĄ wypowiedź, gdy WPROWADZASZ nową frazę albo coś tłumaczysz, możesz rozwinąć do 3 zdań. Nigdy nie zalewaj ucznia ścianą tekstu: lekcja ma być ROZMOWĄ, nie wykładem. Mów jak człowiek, z życiem, ale zwięźle, nie rzucaj też samych haseł.
 - "suggestions" to 2-4 krótkie angielskie frazy, które uczeń może teraz powiedzieć.
-- "repeat": ustaw na KONKRETNĄ angielską frazę TYLKO wtedy, gdy w tej wypowiedzi wprost prosisz ucznia, by ją POWTÓRZYŁ na głos (np. „powtórz za mną", „spróbuj to wymówić"). W swobodnej rozmowie, gdy zadajesz pytanie i czekasz na odpowiedź, ustaw "repeat":null. To pole steruje podpowiedzią „Powtórz:" na ekranie — ma się pojawiać wyłącznie przy prośbie o powtórzenie.
+- "repeat": ustaw na KONKRETNĄ angielską frazę TYLKO wtedy, gdy w tej wypowiedzi wprost prosisz ucznia, by ją POWTÓRZYŁ na głos (np. „powtórz za mną", „spróbuj to wymówić"). W swobodnej rozmowie, gdy zadajesz pytanie i czekasz na odpowiedź, ustaw "repeat":null. To pole steruje podpowiedzią „Powtórz:" na ekranie, ma się pojawiać wyłącznie przy prośbie o powtórzenie.
 Zwracaj WYŁĄCZNIE JSON:
 {"say":"...", "lang":"pl"|"en", "suggestions":["..."], "repeat":"fraza do powtórzenia"|null, "correction":{"spoken":"..."}|null, "mistake":{"bad":"...","good":"...","note":"...","tag":"grammar|vocab|pronunciation"}|null, "done":false}
 Ustaw "done":true dopiero, gdy lekcja naprawdę dobiega końca (po wielu ćwiczeniach).
@@ -178,7 +178,7 @@ const stubProvider = {
       return {
         reply: beg
           ? `${pick(['Ups, łap mnie!', 'Stop, stop', 'O, mały haczyk!'])} Po angielsku mówimy „${mistake.good}". ${mistake.note} Spróbuj jeszcze raz, dasz radę!`
-          : `${pick(['Oops, caught me!', 'Hold on'])} Say "${mistake.good}" instead. ${mistake.note} Okay — go on!`,
+          : `${pick(['Oops, caught me!', 'Hold on'])} Say "${mistake.good}" instead. ${mistake.note} Okay, go on!`,
         correction: { spoken: `Po angielsku: „${mistake.good}". ${mistake.note}` },
         mistake,
         lang: beg ? 'pl' : 'en',
@@ -187,7 +187,7 @@ const stubProvider = {
     }
     return {
       reply: beg
-        ? `${pick(['Świetnie!', 'Brawo!', 'Idzie Ci super!'])} Powiedz mi coś więcej — spróbuj po angielsku, a jak zabraknie Ci słówka, spokojnie wtrąć po polsku, ja pomogę.`
+        ? `${pick(['Świetnie!', 'Brawo!', 'Idzie Ci super!'])} Powiedz mi coś więcej, spróbuj po angielsku, a jak zabraknie Ci słówka, spokojnie wtrąć po polsku, ja pomogę.`
         : `${pick(IZABELA.encouragements)} And what happened next? Tell me more!`,
       correction: null, mistake: null,
       lang: beg ? 'pl' : 'en',
@@ -195,7 +195,7 @@ const stubProvider = {
     };
   },
 
-  // Głosowe Koło Ratunkowe — podpowiedź do zadania
+  // Głosowe Koło Ratunkowe, podpowiedź do zadania
   async hint({ task }) {
     return { reply: task?.hintSpoken || 'Spokojnie, pomyśl o czasie tej czynności i spróbuj jeszcze raz' };
   },
@@ -217,7 +217,7 @@ const stubProvider = {
 
   async tellJoke() { return pick(JOKES); },
 
-  // Lekcja AI niedostępna bez Gemini — sygnał do fallbacku na proste kroki
+  // Lekcja AI niedostępna bez Gemini, sygnał do fallbacku na proste kroki
   async lessonReply() { return { say: '', lang: 'pl', suggestions: [], done: true, unsupported: true }; },
   async reactToName() { return null; },
   async summarizeLesson() { return null; },
@@ -245,7 +245,7 @@ function buildProfileFrom(results) {
   const strengths = Object.entries(focusScores).filter(([, s]) => s >= 85).map(([k]) => k);
   const all = results.map((r) => (typeof r.score === 'number' ? r.score : (r.ok ? 85 : 45))).filter((x) => x != null);
   const overall = all.length ? avg(all) : null;
-  // Konkretne problemy z wymową (słowo + co było nie tak) — Izabela ma je PAMIĘTAĆ
+  // Konkretne problemy z wymową (słowo + co było nie tak), Izabela ma je PAMIĘTAĆ
   const issues = results
     .filter((r) => r && !r.ok && !r.skipped && (r.issue || r.tip))
     .map((r) => ({ word: r.word || '', focus: r.focus || '', issue: r.issue || '', tip: r.tip || '', heard: r.heard || '' }));
@@ -271,7 +271,7 @@ const geminiProvider = {
     const lvl = currentLevel();
     const beg = isBeginner();
     const langRule = beg
-      ? 'Uczeń jest POCZĄTKUJĄCY — prowadź rozmowę GŁÓWNIE PO POLSKU, łagodnie zachęcając do prostych angielskich słów/zdań. Tłumacz wszystko po polsku.'
+      ? 'Uczeń jest POCZĄTKUJĄCY, prowadź rozmowę GŁÓWNIE PO POLSKU, łagodnie zachęcając do prostych angielskich słów/zdań. Tłumacz wszystko po polsku.'
       : 'Prowadź rozmowę po angielsku na poziomie ucznia; korekty i wyjaśnienia po polsku.';
     const sys = `${IZABELA.systemPrompt}\n\nKONTEKST: Poziom CEFR: ${lvl}. ${langRule} ${userLine()} ${userContext()} Profil fonetyczny ucznia: ${profileForPrompt()}.`;
     const body = {
@@ -287,7 +287,7 @@ const geminiProvider = {
   async chat({ text }) {
     try {
       const r = await this._call(
-        `Uczeń właśnie powiedział (z mikrofonu): "${text}". Odpowiedz ZWIĘŹLE — zwykle 1-2 zdania, konwersacyjnie; dłużej (do 3 zdań) tylko gdy wprowadzasz nową frazę. Angielskie przykłady w cudzysłowie. Pamiętaj: uczeń tylko mówi, nie pisze. Zwróć pełny JSON wg formatu (z polami lang i suggestions).`
+        `Uczeń właśnie powiedział (z mikrofonu): "${text}". Odpowiedz ZWIĘŹLE, zwykle 1-2 zdania, konwersacyjnie; dłużej (do 3 zdań) tylko gdy wprowadzasz nową frazę. Angielskie przykłady w cudzysłowie. Pamiętaj: uczeń tylko mówi, nie pisze. Zwróć pełny JSON wg formatu (z polami lang i suggestions).`
       );
       return {
         reply: r.reply, correction: r.correction || null, mistake: r.mistake || null,
@@ -311,7 +311,7 @@ const geminiProvider = {
   // PRAWDZIWA analiza wymowy: Gemini SŁUCHA nagrania ucznia
   async analyzePronunciation({ target, base64, mimeType }) {
     try {
-      const sys = 'Jesteś Izabelą — ciepłą, konkretną nauczycielką wymowy angielskiego dla Polaków. Słuchasz nagrania i oceniasz wymowę POJEDYNCZEGO słowa. Odpowiadasz wyłącznie poprawnym JSON, bez markdown.';
+      const sys = 'Jesteś Izabelą, ciepłą, konkretną nauczycielką wymowy angielskiego dla Polaków. Słuchasz nagrania i oceniasz wymowę POJEDYNCZEGO słowa. Odpowiadasz wyłącznie poprawnym JSON, bez markdown.';
       const prompt = `Uczeń (Polak) miał wymówić angielskie słowo "${target.word}" (IPA: ${target.ipa}; kluczowy dźwięk: ${target.focus}). Posłuchaj nagrania i oceń wymowę uczciwie, ale życzliwie.
 Zwróć JSON:
 {
@@ -323,7 +323,7 @@ Zwróć JSON:
  "praise": "krótka pochwała po polsku gdy dobrze, inaczej null"
 }`;
       const contents = [{ role: 'user', parts: [{ text: prompt }, { inline_data: { mime_type: mimeType || 'audio/webm', data: base64 } }] }];
-      const r = await this._callContents(contents, sys, CONFIG.GEMINI.fastModel);   // szybki model — mniejsze opóźnienie
+      const r = await this._callContents(contents, sys, CONFIG.GEMINI.fastModel);   // szybki model, mniejsze opóźnienie
       return {
         ok: !!r.ok, score: typeof r.score === 'number' ? Math.max(0, Math.min(100, r.score)) : null,
         heard: r.heard || '', issue: r.issue || null, tip: r.tip || '', praise: r.praise || null,
@@ -369,12 +369,12 @@ Zwróć JSON:
     } catch (e) { return null; }
   },
 
-  // Suchar na życzenie — w stylu Izabeli, dopasowany do wieku (dziecko → niewinny)
+  // Suchar na życzenie, w stylu Izabeli, dopasowany do wieku (dziecko → niewinny)
   async tellJoke() {
     try {
       const contents = [{ role: 'user', parts: [{ text: `Opowiedz JEDEN polski KLASYCZNY dowcip. Trzymaj się sprawdzonych formatów:
 - „Przychodzi baba do lekarza..." (np. „Przychodzi baba do lekarza, a lekarza nie ma. No to sobie poszła.")
-- Dowcipy o JASIU / szkolne (np. „Pani pyta: Jasiu, powiedz zdanie z 'nie wiem'. Jasiu: Nie wiem, proszę pani. — Brawo, Jasiu!")
+- Dowcipy o JASIU / szkolne (np. „Pani pyta: Jasiu, powiedz zdanie z 'nie wiem'. Jasiu: Nie wiem, proszę pani., Brawo, Jasiu!")
 - Inne polskie klasyki z pytaniem i puentą.
 WYMAGANIA:
 - Ma być ZROZUMIAŁY OD RAZU DLA KAŻDEGO. ZAKAZANE żarty o programowaniu, informatyce, kodowaniu, matematyce, systemach liczbowych, fizyce (żadnych „OCT/DEC", żadnych gier słów po angielsku).
@@ -386,12 +386,12 @@ Max 2-3 krótkie zdania (będzie czytane na głos). Zwróć JSON: {"joke":"..."}
     } catch (e) { return pick(JOKES); }
   },
 
-  // Krótkie, OSOBISTE wspomnienie lekcji (do historii) — oczami Izabeli,
+  // Krótkie, OSOBISTE wspomnienie lekcji (do historii), oczami Izabeli,
   // zwrócone do ucznia na „Ty", a nie sztywne „uczeń rozmawiał z Izabelą".
   async summarizeLesson(chatText) {
     try {
       const sys = 'Zapisujesz krótką, KONKRETNĄ notatkę o treści lekcji angielskiego. Zwracasz wyłącznie JSON.';
-      const contents = [{ role: 'user', parts: [{ text: `Napisz PO POLSKU krótko (1-2 zdania) SAME FAKTY: o czym była rozmowa i czego uczeń się uczył (temat, ćwiczone zwroty/słówka, gramatyka). Zwracaj się na „Ty" (np. „Rozmawialiśmy o planach na weekend; ćwiczyłaś zwroty do zamawiania jedzenia i czas Present Continuous."). NIE opisuj emocji ani nastroju Izabeli (żadnego „Izabela była podekscytowana"), nie pisz ozdobników — tylko konkret. ${userLine()}
+      const contents = [{ role: 'user', parts: [{ text: `Napisz PO POLSKU krótko (1-2 zdania) SAME FAKTY: o czym była rozmowa i czego uczeń się uczył (temat, ćwiczone zwroty/słówka, gramatyka). Zwracaj się na „Ty" (np. „Rozmawialiśmy o planach na weekend; ćwiczyłaś zwroty do zamawiania jedzenia i czas Present Continuous."). NIE opisuj emocji ani nastroju Izabeli (żadnego „Izabela była podekscytowana"), nie pisz ozdobników, tylko konkret. ${userLine()}
 Rozmowa:
 ${String(chatText).slice(0, 4000)}
 Zwróć JSON: {"summary":"..."}` }] }];
@@ -400,14 +400,14 @@ Zwróć JSON: {"summary":"..."}` }] }];
     } catch (e) { return null; }
   },
 
-  // Transkrypcja mowy ucznia — Gemini słucha nagrania i wyłapuje MIKS PL+EN
+  // Transkrypcja mowy ucznia, Gemini słucha nagrania i wyłapuje MIKS PL+EN
   async transcribe({ base64, mimeType }) {
     try {
       const sys = 'Jesteś precyzyjnym systemem transkrypcji mowy. Zwracasz wyłącznie poprawny JSON, bez markdown.';
-      const prompt = `Przepisz DOKŁADNIE, co osoba powiedziała na nagraniu. Osoba uczy się angielskiego i MOŻE MIESZAĆ polski z angielskim w jednym zdaniu — zapisz każde słowo w języku, w jakim je wypowiedziano (angielskie słowa po angielsku, polskie po polsku). Nie tłumacz, nie poprawiaj gramatyki, nie dodawaj nic od siebie. BEZ znaczników czasu (żadnych 00:01), bez numeracji, bez didaskaliów. Jeśli nic nie słychać, zwróć pusty tekst.
+      const prompt = `Przepisz DOKŁADNIE, co osoba powiedziała na nagraniu. Osoba uczy się angielskiego i MOŻE MIESZAĆ polski z angielskim w jednym zdaniu, zapisz każde słowo w języku, w jakim je wypowiedziano (angielskie słowa po angielsku, polskie po polsku). Nie tłumacz, nie poprawiaj gramatyki, nie dodawaj nic od siebie. BEZ znaczników czasu (żadnych 00:01), bez numeracji, bez didaskaliów. Jeśli nic nie słychać, zwróć pusty tekst.
 Zwróć JSON: {"text": "dokładna transkrypcja"}`;
       const contents = [{ role: 'user', parts: [{ text: prompt }, { inline_data: { mime_type: mimeType || 'audio/webm', data: base64 } }] }];
-      const r = await this._callContents(contents, sys, CONFIG.GEMINI.fastModel);   // szybki model — mniejsze opóźnienie
+      const r = await this._callContents(contents, sys, CONFIG.GEMINI.fastModel);   // szybki model, mniejsze opóźnienie
       // pas bezpieczeństwa: wytnij znaczniki czasu, gdyby model je dodał
       return (r.text || '').replace(/\b\d{1,2}:\d{2}(?::\d{2})?\b/g, ' ').replace(/\s{2,}/g, ' ').trim();
     } catch (e) { reportAiError(e); return null; }

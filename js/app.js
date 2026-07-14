@@ -1,5 +1,5 @@
 // =============================================================
-//  pogadaj.se — punkt wejścia + router (hash-based)
+//  pogadaj.se, punkt wejścia + router (hash-based)
 // =============================================================
 
 import { CONFIG, isDev } from './config.js';
@@ -25,7 +25,7 @@ function resolve() {
   const hash = location.hash || '#/';
   const st = store.get();
 
-  // Reset hasła z linku w mailu (#/reset?e=...&t=...) — dostępny bez logowania
+  // Reset hasła z linku w mailu (#/reset?e=...&t=...), dostępny bez logowania
   if (hash.startsWith('#/reset')) return renderReset(appEl);
 
   // /lesson/:id
@@ -54,7 +54,7 @@ function resolve() {
       if (!st.progress.introSeen) return redirect('#/intro');
       if (!st.onboarding.completed) return redirect('#/onboarding');
       if (!st.phonetic.completed) return redirect('#/phonetic');
-      // Trial schowany — wszyscy lądują na statku (pełna wersja).
+      // Trial schowany, wszyscy lądują na statku (pełna wersja).
       return renderHome(appEl);
   }
 }
@@ -83,13 +83,13 @@ function routeKey(hash, st) {
 function render() {
   // Wyciszamy mowę POPRZEDNIEGO ekranu tutaj, zanim nowy ekran zacznie mówić.
   // (Dawniej robiły to ekrany w swoim cleanupie hashchange, ale ten odpalał się
-  // PO renderze nowego ekranu i ucinał jego pierwszą kwestię — stąd cisza.)
+  // PO renderze nowego ekranu i ucinał jego pierwszą kwestię, stąd cisza.)
   speech.stopSpeaking();
   clear(appEl);
   window.scrollTo(0, 0);
   const rk = routeKey(location.hash || '#/', store.get());
   document.body.dataset.route = rk;
-  // Klasę pełnoekranowych scen (home/historia) trzyma ROUTER — inaczej cleanup
+  // Klasę pełnoekranowych scen (home/historia) trzyma ROUTER, inaczej cleanup
   // poprzedniego ekranu ściągał ją PO dodaniu przez nowy ekran (tło przeciekało).
   document.body.classList.toggle('on-lessons', rk === 'lessons');
   resolve();

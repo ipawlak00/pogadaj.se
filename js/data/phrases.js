@@ -1,8 +1,8 @@
 // =============================================================
-//  Odzywki Izabeli — generator luźnych powitań
+//  Odzywki Izabeli, generator luźnych powitań
 // -------------------------------------------------------------
 //  Dymki składają się z klocków (powitanie + zwrot do ucznia +
-//  zajawka), więc ZA KAŻDYM razem brzmią inaczej — bez kosztu
+//  zajawka), więc ZA KAŻDYM razem brzmią inaczej, bez kosztu
 //  zapytań do AI i bez czekania.
 // =============================================================
 
@@ -18,7 +18,7 @@ const VOCATIVES = (name) => {
   const base = ['mordeczko', 'ziomeczku',
     isFemale(name) ? 'koleżanko kochana' : 'koleżko',
     isFemale(name) ? 'wariatko kolorowa' : 'wariacie kolorowy'];
-  // imię na równi z ksywkami — bez wałkowania go w kółko
+  // imię na równi z ksywkami, bez wałkowania go w kółko
   return name ? [name, ...base] : base;
 };
 
@@ -43,7 +43,7 @@ export function greetingHi(name) {
 export function pushLine() { return pick(PUSHES); }
 
 // Powitanie na wejściu w lekcję (mówione od razu, zanim AI się dogra).
-// Powiedzonko (PUSH) doklejamy tylko czasem — żeby nie brzmieć jak zdarta płyta.
+// Powiedzonko (PUSH) doklejamy tylko czasem, żeby nie brzmieć jak zdarta płyta.
 export function lessonHello(name) {
   const voc = Math.random() < 0.45 ? `, ${pick(VOCATIVES(name))}` : '';
   const mid = pick([

@@ -37,7 +37,7 @@ export const LESSONS = [
           { en: 'is', pl: 'jest (on/ona)' },
           { en: 'are', pl: 'jesteś / są' },
         ],
-        hint: 'Mówisz o sobie — „ja jestem". Po angielsku „I" łączymy z „am".',
+        hint: 'Mówisz o sobie, „ja jestem". Po angielsku „I" łączymy z „am".',
       },
       { type: 'say', en: 'Nice to meet you', pl: 'Miło Cię poznać' },
     ],
@@ -70,7 +70,7 @@ export const LESSONS = [
           { en: 'have', pl: 'mam' },
           { en: 'want', pl: 'chcę' },
         ],
-        hint: 'Coś Ci smakuje, sprawia przyjemność — czyli to „lubisz".',
+        hint: 'Coś Ci smakuje, sprawia przyjemność, czyli to „lubisz".',
       },
       { type: 'say', en: 'See you later', pl: 'Do zobaczenia' },
       { type: 'say', en: 'Goodbye', pl: 'Do widzenia' },
@@ -84,7 +84,7 @@ export const LESSONS = [
     title: 'Proste zdania',
     emoji: '',
     badge: 'free',
-    desc: 'Krótkie, przydatne zdania — poprosić, zapytać, powiedzieć o sobie.',
+    desc: 'Krótkie, przydatne zdania, poprosić, zapytać, powiedzieć o sobie.',
     type: 'lesson',
     aiTopic: 'Proste, przydatne zdania w podróży i na co dzień: I want water, I am hungry, where is the toilet, how much is it, can you help me, proste zdania w czasie przeszłym (yesterday I went...). Poziom podstawowy.',
     intro: 'Lecimy dalej! Teraz całe krótkie zdania, które naprawdę przydają się w podróży i na co dzień. Słuchasz i powtarzasz za mną.',
@@ -102,7 +102,7 @@ export const LESSONS = [
           { en: 'went', pl: 'poszedłem / poszłam (wczoraj)' },
           { en: 'gone', pl: '(już) poszło, skończone' },
         ],
-        hint: 'To było wczoraj — czyli coś, co już się wydarzyło, w przeszłości.',
+        hint: 'To było wczoraj, czyli coś, co już się wydarzyło, w przeszłości.',
       },
       { type: 'say', en: 'Where is the toilet?', pl: 'Gdzie jest toaleta?' },
       { type: 'say', en: 'How much is it?', pl: 'Ile to kosztuje?' },
@@ -112,7 +112,7 @@ export const LESSONS = [
   },
 ];
 
-// ---- Zestaw B1/B2 — rozmowa już się klei, szlifujemy swobodę ----
+// ---- Zestaw B1/B2, rozmowa już się klei, szlifujemy swobodę ----
 export const LESSONS_MID = [
   {
     id: 'small-talk',
@@ -120,10 +120,10 @@ export const LESSONS_MID = [
     num: 1,
     title: 'Small talk bez spiny',
     badge: 'free',
-    desc: 'Zagadać do kogoś naturalnie — pogoda, weekend, praca. I jak nie brzmieć jak robot.',
+    desc: 'Zagadać do kogoś naturalnie, pogoda, weekend, praca. I jak nie brzmieć jak robot.',
     type: 'lesson',
     aiTopic: 'Small talk na poziomie B1/B2: naturalne rozpoczynanie rozmowy, pytania podtrzymujące (How come? What was that like?), reagowanie na odpowiedzi, unikanie kalki z polskiego. Rozmowa głównie po angielsku, korekty po polsku.',
-    intro: 'Dziś uczymy się gadać o niczym — czyli o wszystkim. Small talk otwiera każde drzwi!',
+    intro: 'Dziś uczymy się gadać o niczym, czyli o wszystkim. Small talk otwiera każde drzwi!',
     steps: [
       { type: 'say', en: 'How was your weekend?', pl: 'Jak minął weekend?' },
       { type: 'say', en: 'I have been super busy lately', pl: 'Ostatnio jestem strasznie zajęty' },
@@ -137,10 +137,10 @@ export const LESSONS_MID = [
     num: 2,
     title: 'Opowiedz swój dzień',
     badge: 'free',
-    desc: 'Płynne opowiadanie o tym, co się wydarzyło — czasy przeszłe w praktyce, bez tabelek.',
+    desc: 'Płynne opowiadanie o tym, co się wydarzyło, czasy przeszłe w praktyce, bez tabelek.',
     type: 'lesson',
     aiTopic: 'Opowiadanie o swoim dniu i wydarzeniach (B1/B2): Past Simple vs Present Perfect w praktyce, łączniki (so, then, actually, it turned out), naturalny storytelling. Uczeń opowiada, Izabela dopytuje i koryguje.',
-    intro: 'Dziś Ty gadasz, ja słucham. Opowiesz mi swój dzień po angielsku — a ja podkręcę Twoją opowieść.',
+    intro: 'Dziś Ty gadasz, ja słucham. Opowiesz mi swój dzień po angielsku, a ja podkręcę Twoją opowieść.',
     steps: [
       { type: 'say', en: 'This morning I woke up late', pl: 'Dziś rano zaspałem' },
       { type: 'say', en: 'It turned out to be a great day', pl: 'Okazało się, że to świetny dzień' },
@@ -153,10 +153,10 @@ export const LESSONS_MID = [
     num: 3,
     title: 'Sytuacje z życia',
     badge: 'free',
-    desc: 'Reklamacja, rezerwacja, nieporozumienie — angielski, kiedy coś idzie nie tak.',
+    desc: 'Reklamacja, rezerwacja, nieporozumienie, angielski, kiedy coś idzie nie tak.',
     type: 'lesson',
     aiTopic: 'Radzenie sobie w realnych sytuacjach (B1/B2): reklamacja w sklepie, zmiana rezerwacji, prośba o wyjaśnienie (Could you clarify...?), uprzejma asertywność. Odgrywanie scenek, Izabela gra drugą stronę.',
-    intro: 'Dziś scenki z życia — coś poszło nie tak i trzeba to ogarnąć po angielsku. Ja gram obsługę, Ty klienta!',
+    intro: 'Dziś scenki z życia, coś poszło nie tak i trzeba to ogarnąć po angielsku. Ja gram obsługę, Ty klienta!',
     steps: [
       { type: 'say', en: 'Excuse me, there is a problem with my order', pl: 'Przepraszam, jest problem z moim zamówieniem' },
       { type: 'say', en: 'Could you clarify what you mean?', pl: 'Czy możesz wyjaśnić, co masz na myśli?' },
@@ -165,7 +165,7 @@ export const LESSONS_MID = [
   },
 ];
 
-// ---- Zestaw C1 — płynność jest, polerujemy detale i styl ----
+// ---- Zestaw C1, płynność jest, polerujemy detale i styl ----
 export const LESSONS_HIGH = [
   {
     id: 'strong-opinions',
@@ -176,7 +176,7 @@ export const LESSONS_HIGH = [
     desc: 'Przekonująco bronić zdania, niuansować, grzecznie się nie zgadzać.',
     type: 'lesson',
     aiTopic: 'Dyskusja na poziomie C1: wyrażanie i obrona opinii, hedging (arguably, to some extent), grzeczne kontrargumenty (I see your point, but...), unikanie zbyt bezpośrednich kalk z polskiego. Izabela podrzuca kontrowersyjne (lekkie) tematy i gra adwokata diabła.',
-    intro: 'Dziś się pospieramy — kulturalnie! Ja podrzucam temat i gram adwokata diabła, Ty bronisz swojego zdania.',
+    intro: 'Dziś się pospieramy, kulturalnie! Ja podrzucam temat i gram adwokata diabła, Ty bronisz swojego zdania.',
     steps: [
       { type: 'say', en: 'I see your point, but I strongly disagree', pl: 'Rozumiem Twój punkt widzenia, ale zdecydowanie się nie zgadzam' },
       { type: 'say', en: 'That is arguably the biggest challenge we face', pl: 'To prawdopodobnie największe wyzwanie, przed jakim stoimy' },
@@ -188,10 +188,10 @@ export const LESSONS_HIGH = [
     num: 2,
     title: 'Angielski w robocie',
     badge: 'free',
-    desc: 'Spotkania, prezentacje, feedback — brzmieć profesjonalnie, nie sztywno.',
+    desc: 'Spotkania, prezentacje, feedback, brzmieć profesjonalnie, nie sztywno.',
     type: 'lesson',
     aiTopic: 'Profesjonalny angielski (C1): prowadzenie spotkania, dyplomatyczny feedback (I was wondering if we could...), podsumowywanie, różnica między formalnym a naturalnym tonem. Scenki biurowe, Izabela gra współpracownika.',
-    intro: 'Wchodzimy w tryb biurowy — ale bez korpomowy. Nauczysz się brzmieć profesjonalnie i po ludzku naraz.',
+    intro: 'Wchodzimy w tryb biurowy, ale bez korpomowy. Nauczysz się brzmieć profesjonalnie i po ludzku naraz.',
     steps: [
       { type: 'say', en: 'Let me summarize what we have agreed on', pl: 'Podsumuję, co ustaliliśmy' },
       { type: 'say', en: 'I was wondering if we could revisit this decision', pl: 'Zastanawiam się, czy moglibyśmy wrócić do tej decyzji' },
@@ -206,7 +206,7 @@ export const LESSONS_HIGH = [
     desc: 'Brzmieć jak native: idiomy, phrasale i słowa, których podręczniki nie uczą.',
     type: 'lesson',
     aiTopic: 'Idiomy, phrasal verbs i niuanse znaczeniowe (C1): naturalne kolokwializmy, różnice rejestru, fałszywi przyjaciele, humor językowy. Izabela wplata idiomy w rozmowę i prosi ucznia o użycie ich we własnych zdaniach.',
-    intro: 'Dziś smaczki — idiomy i zwroty, po których brzmi się jak swój. Będzie się działo!',
+    intro: 'Dziś smaczki, idiomy i zwroty, po których brzmi się jak swój. Będzie się działo!',
     steps: [
       { type: 'say', en: 'It is not my cup of tea, to be honest', pl: 'Szczerze mówiąc, to nie moja bajka' },
       { type: 'say', en: 'We will figure it out as we go', pl: 'Rozgryziemy to po drodze' },
@@ -214,7 +214,7 @@ export const LESSONS_HIGH = [
   },
 ];
 
-// Sceny (tła) przeplatające się przy lekcjach/zadaniach — Twoje grafiki.
+// Sceny (tła) przeplatające się przy lekcjach/zadaniach, Twoje grafiki.
 export const SCENES = [
   'assets/scenes/scene-01.jpg', 'assets/scenes/scene-02.jpg', 'assets/scenes/scene-03.jpg',
   'assets/scenes/scene-04.jpg', 'assets/scenes/scene-05.jpg',
@@ -291,7 +291,7 @@ export function getTrialLesson(level) {
     num: 1,
     title: 'Lekcja próbna',
     badge: 'free',
-    desc: `${TRIAL_MINUTES} minut rozmowy z Izabelą — do wykorzystania po kawałku, kiedy chcesz.`,
+    desc: `${TRIAL_MINUTES} minut rozmowy z Izabelą, do wykorzystania po kawałku, kiedy chcesz.`,
     type: 'lesson',
     scene: base.scene,
     aiTopic: TRIAL_TOPICS[band],

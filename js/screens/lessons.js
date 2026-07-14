@@ -6,7 +6,7 @@ import { TRIAL_MINUTES } from '../data/lessons.js';
 import { greetingHi, minutesWord } from '../data/phrases.js';
 import { openFeedback, feedbackCorner, accountButton } from '../ui.js';
 
-// Trzy pasma poziomów — wpływają na temat i trudność lekcji próbnej
+// Trzy pasma poziomów, wpływają na temat i trudność lekcji próbnej
 const LEVEL_BANDS = [
   { level: 'A1', title: 'Zaczynam', desc: 'Pojedyncze słowa, proste zwroty. Budujemy od zera.' },
   { level: 'B1', title: 'Coś już umiem', desc: 'Dogadam się, ale robię błędy i brakuje mi słów.' },
@@ -36,14 +36,14 @@ export function renderLessons(mount) {
       return { hi: 'No i wyskoczył nam czas próbny!', body: `Ale nie znikaj${name ? ', ' + name : ''}. Niedługo ruszamy z pełnymi lekcjami. Trzymaj wymowę w formie!` };
     }
     if (used > 0) {
-      // Powrót z lekcji — Izabela już się witała, podtrzymuje kontakt naturalnie
+      // Powrót z lekcji, Izabela już się witała, podtrzymuje kontakt naturalnie
       const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
       const hi = pick(['I jak wrażenia?', 'No i jak było?', 'O, wracasz!', `Miło Cię znowu widzieć${name ? ', ' + name : ''}!`, 'No hej, znowu razem!']);
       const opener = pick(['Podobała Ci się nasza rozmowa?', 'Fajnie się gadało, co?', 'Dobrze nam szło ostatnio.']);
       const closer = pick(['Wpadaj śmiało.', 'No to jak, wchodzisz?', 'Ja tu zawsze gotowa do gadania.', 'Klikaj i lecimy dalej.', 'Na spokojnie, bez spiny.', 'Czekam!']);
       return { hi, body: `${opener} Mamy jeszcze około ${left} ${minutesWord(left)} razem do przegadania. ${closer}` };
     }
-    // Pierwsze wejście — powitanie składane z klocków, za każdym razem inne.
+    // Pierwsze wejście, powitanie składane z klocków, za każdym razem inne.
     // Bez doklejania kolejnego powiedzonka na końcu (greetingHi może już mieć jedno).
     return {
       hi: greetingHi(name),
@@ -65,13 +65,13 @@ export function renderLessons(mount) {
     const spoken = `${bt.hi} ${bt.body}`;
 
     const topRight = el('div.lessons-fs__tools', {}, [
-      // kto jest zalogowany (klik = profil) — żeby konta nigdy się nie myliły
+      // kto jest zalogowany (klik = profil), żeby konta nigdy się nie myliły
       accountButton(),
       level ? el('button.btn.btn--ghost', { onclick: () => drawPicker(), title: 'Zmień poziom' }, [`Poziom: ${level} · zmień`]) : null,
       el('button.btn.btn--ghost', { onclick: () => { auth.signOut(); location.hash = '#/'; location.reload(); } }, ['Wyloguj']),
     ]);
 
-    // Dymek Izabeli — mówiony na wejściu, klik = powtórka
+    // Dymek Izabeli, mówiony na wejściu, klik = powtórka
     const bubble = el('div.lessons-fs__bubble', {
       title: 'Kliknij, a powtórzę',
       style: 'cursor:pointer',
@@ -96,7 +96,7 @@ export function renderLessons(mount) {
           el('span.trial-tile__num', { text: '0′' }),
           el('span.trial-tile__name', { text: 'Czas próbny wykorzystany' }),
         ]);
-    // Pasek postępu zamiast zegara — spójny z pełną wersją, bez procentów
+    // Pasek postępu zamiast zegara, spójny z pełną wersją, bez procentów
     const pct = Math.round(frac * 100);
     const clock = el('div.trial-clock', {}, [
       el('div.time-board', {}, [
@@ -132,7 +132,7 @@ export function renderLessons(mount) {
     // Izabela mówi to, co w dymku (raz na wejście)
     speech.speak(spoken, { lang: 'pl-PL' });
 
-    // Bez wybranego poziomu — najpierw pytamy, żeby rozmowa nie była nudna ani za trudna
+    // Bez wybranego poziomu, najpierw pytamy, żeby rozmowa nie była nudna ani za trudna
     if (!level) drawPicker();
   }
 

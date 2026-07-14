@@ -19,7 +19,7 @@ const LEVELS = [
   { id: 'C1', title: 'C1, Zaawansowany', desc: 'Płynnie, poleruję detale.' },
 ];
 
-// Kwestie Izabeli (mówione i w dymku) — kolejność: imię → cel → poziom
+// Kwestie Izabeli (mówione i w dymku), kolejność: imię → cel → poziom
 const BUBBLES = [
   'No hej, dobrze Cię tu mieć! Zanim ruszymy w kosmos, powiedz mi, jak masz na imię i ile masz lat? Dzięki temu dobiorę wszystko pod Ciebie.',
   'Do czego potrzebujesz angielskiego? Dzięki temu dobiorę Ci tematy rozmów.',
@@ -51,7 +51,7 @@ export function renderOnboarding(mount) {
   if (!store.get().user?.token && !store.get().user) { navigate('#/'); return; }
 
   // Po filmie ZAWSZE zaczynamy od przedstawienia się i imienia (nawet jeśli imię
-  // jest już znane — wtedy podpowiadamy je w polu). Wcześniej pomijało ten krok.
+  // jest już znane, wtedy podpowiadamy je w polu). Wcześniej pomijało ten krok.
   let step = 0;
   const knownName = (store.get().user?.name || '').trim();
   const data = { name: knownName, goal: null, level: null };
@@ -121,7 +121,7 @@ export function renderOnboarding(mount) {
         value: store.get().onboarding.age || '', placeholder: 'np. 25' });
       const goNext = () => {
         const v = nameInput.value.trim();
-        if (!v) { toast('Zdradź imię — chcę wiedzieć, jak się do Ciebie zwracać', 'error'); return; }
+        if (!v) { toast('Zdradź imię, chcę wiedzieć, jak się do Ciebie zwracać', 'error'); return; }
         const age = parseInt(ageInput.value, 10);
         if (!age || age < 4 || age > 120) { toast('Podaj swój wiek (ile masz lat)', 'error'); return; }
         store.patchKey('onboarding', { age });
@@ -134,7 +134,7 @@ export function renderOnboarding(mount) {
       let recing = false, handle = null;
       async function sayName() {
         if (recing) { handle?.stop(); return; }
-        if (!speech.canRecord()) { toast('Mikrofon niedostępny w tej przeglądarce — wpisz imię', 'error'); return; }
+        if (!speech.canRecord()) { toast('Mikrofon niedostępny w tej przeglądarce, wpisz imię', 'error'); return; }
         speech.stopSpeaking();
         try {
           handle = await speech.recordAudio({ autoStop: true, silenceMs: 1100, maxMs: 6000, onStop: finishRec });
@@ -149,7 +149,7 @@ export function renderOnboarding(mount) {
         try { const audio = await h.done; text = await ai.transcribe(audio); } catch (e) { /* ignore */ }
         sayBtn.disabled = false; sayBtn.textContent = 'Powiedz imię';
         const name = extractName(text);
-        if (!name) { toast('Nie dosłyszałam — powiedz jeszcze raz albo wpisz', 'error'); return; }
+        if (!name) { toast('Nie dosłyszałam, powiedz jeszcze raz albo wpisz', 'error'); return; }
         nameInput.value = name;
         goNext();
       }

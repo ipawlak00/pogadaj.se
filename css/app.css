@@ -1276,7 +1276,8 @@ body.on-lessons .cosmos { display: none; }
   /* Widok lekcji: większe, czytelniejsze dymki i więcej miejsca na czat */
   .lc-stage { min-height: 30vh !important; }
   .lc-main { padding: 12px 14px 16px; }
-  .lc-main .chat { max-height: none !important; padding-left: 6px; }
+  /* Czat scrolluje się WEWNĄTRZ (nie przewijamy całej strony) */
+  .lc-main .chat { max-height: 40vh !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; padding-left: 6px; }
   body.in-lesson .msg--izabela, body.in-lesson .msg--user { font-size: .98rem; line-height: 1.5; padding: 10px 12px; }
   .lesson-chat-card h2 { font-size: 1.05rem; }
   .mic-btn { font-size: 1rem; }

@@ -1,7 +1,7 @@
 import { el } from '../ui.js';
 
 // =============================================================
-//  Awatar Izabeli — komponent wielokrotnego użytku
+//  Awatar Izabeli, komponent wielokrotnego użytku
 // -------------------------------------------------------------
 //  Jeden punkt prawdy dla "twarzy marki". Reaguje miną (mood) i
 //  pulsuje przy mówieniu. Kolejne miny/stroje dorzucamy do FACES

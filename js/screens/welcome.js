@@ -2,7 +2,7 @@ import { el, toast, navigate } from '../ui.js';
 import { auth, passwordProblem } from '../services/auth.js';
 import { store } from '../state.js';
 
-// Ekran logowania / zakładania konta — JEDNA karta, dwa tryby.
+// Ekran logowania / zakładania konta, JEDNA karta, dwa tryby.
 // Rejestracja: imię + email + hasło + powtórz hasło. Logowanie: email + hasło.
 export function renderWelcome(mount) {
   let mode = 'login';   // 'login' | 'signup'
@@ -68,7 +68,7 @@ export function renderWelcome(mount) {
       el('div.level-box.feedback-box', {}, [
         el('button.level-close', { onclick: () => overlay.remove(), 'aria-label': 'Zamknij' }, ['X']),
         el('h2.display', { style: 'margin:0 0 4px;color:#14314f', text: 'Przypomnijmy hasło' }),
-        el('p', { style: 'margin:0 0 12px;color:#46688c', text: 'Podaj email użyty przy zakładaniu konta — wyślę link do ustawienia nowego hasła.' }),
+        el('p', { style: 'margin:0 0 12px;color:#46688c', text: 'Podaj email użyty przy zakładaniu konta, wyślę link do ustawienia nowego hasła.' }),
         el('div.field', {}, [ el('label', { text: 'Email' }), inp ]),
         sendBtn,
       ]),
@@ -123,7 +123,7 @@ function friendlyError(err) {
   if (/origin not allowed|forbidden|\b403\b/i.test(m)) {
     return 'Coś blokuje połączenie z serwerem. Spróbuj ponownie za chwilę.';
   }
-  // Komunikaty z serwera są już po polsku i przyjazne — pokazujemy je wprost.
+  // Komunikaty z serwera są już po polsku i przyjazne, pokazujemy je wprost.
   if (m && !/\b\d{3}\b|http|fetch|json|undefined/i.test(m)) return m;
   return 'Ojej, coś nie pykło. Spróbuj jeszcze raz za chwilę.';
 }

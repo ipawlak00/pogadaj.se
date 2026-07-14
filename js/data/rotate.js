@@ -1,7 +1,7 @@
 import { store } from '../state.js';
 
 // Losowanie BEZ POWTÓREK dla danego użytkownika. Izabela nie powtarza tej samej
-// kwestii, dopóki nie wyczerpie całej puli — wtedy zaczyna od nowa.
+// kwestii, dopóki nie wyczerpie całej puli, wtedy zaczyna od nowa.
 // Zużyte kwestie trzymamy w progress.usedLines[category] (per konto, sync do bazy).
 export function pickFresh(category, arr) {
   if (!arr || !arr.length) return '';

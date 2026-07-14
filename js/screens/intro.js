@@ -3,7 +3,7 @@ import { speech } from '../services/speech.js';
 import { store } from '../state.js';
 
 // Wejście na pokład: film na cały ekran (bez kontrolek, startuje sam),
-// a po nim OD RAZU test fonetyczny — tam wita Izabela.
+// a po nim OD RAZU test fonetyczny, tam wita Izabela.
 export function renderIntro(mount) {
   const video = el('video', { src: 'assets/izabela/intro.mp4',
     playsinline: 'true', preload: 'auto' });
@@ -15,7 +15,7 @@ export function renderIntro(mount) {
       video,
     ])
   );
-  // Startujemy od razu; gdyby przeglądarka zablokowała dźwięk — dotknięcie ekranu wznawia
+  // Startujemy od razu; gdyby przeglądarka zablokowała dźwięk, dotknięcie ekranu wznawia
   video.play().catch(() => {});
   video.onclick = () => { if (video.paused) video.play().catch(() => {}); };
 

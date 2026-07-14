@@ -1,5 +1,5 @@
 // =============================================================
-//  UI — drobne helpery DOM (bez frameworka)
+//  UI, drobne helpery DOM (bez frameworka)
 // =============================================================
 
 import { CONFIG } from './config.js';
@@ -43,7 +43,7 @@ export function openFeedback(page) {
     placeholder: 'Napisz, co myślisz o aplikacji i lekcji. Coś nie działało? Masz pomysł, co poprawić albo naprawić? Pisz śmiało, czytam wszystko.',
     maxlength: '4000',
   });
-  // Podpis OPCJONALNY — imię albo ksywka (można zostawić puste)
+  // Podpis OPCJONALNY, imię albo ksywka (można zostawić puste)
   const signIn = el('input.feedback-sign', {
     type: 'text', maxlength: '40', value: st.user?.name || '',
     placeholder: 'Imię lub ksywka (opcjonalnie)',
@@ -164,7 +164,7 @@ export function topbar(rightNode) {
 }
 
 // Nawigacja hashem. Gdy hash się NIE zmienia (np. logowanie na '#/'),
-// przeglądarka nie wyśle hashchange — wysyłamy go sami, żeby router
+// przeglądarka nie wyśle hashchange, wysyłamy go sami, żeby router
 // przerysował ekran (inaczej „Zaloguj" nic nie robiło).
 export const navigate = (hash) => {
   if (location.hash === hash || (!location.hash && hash === '#/')) {
@@ -175,12 +175,12 @@ export const navigate = (hash) => {
 };
 
 // Przycisk podłączenia prawdziwego AI (Gemini). Klucz wpisuje użytkownik u siebie
-// — trafia tylko do localStorage tego urządzenia, nigdy do repo.
+//, trafia tylko do localStorage tego urządzenia, nigdy do repo.
 export function aiConnectButton() {
   const connected = hasGeminiKey();
   return el('button.btn.btn--ghost', { style: 'font-size:.8rem',
     onclick: () => {
-      const k = prompt('Wklej swój klucz Gemini API (z aistudio.google.com).\n\nKlucz zostaje TYLKO na tym urządzeniu — nie wysyłamy go nigdzie poza Google ani nie zapisujemy w kodzie.');
+      const k = prompt('Wklej swój klucz Gemini API (z aistudio.google.com).\n\nKlucz zostaje TYLKO na tym urządzeniu, nie wysyłamy go nigdzie poza Google ani nie zapisujemy w kodzie.');
       if (k && k.trim()) { setGeminiKey(k); location.reload(); }
     },
   }, [connected ? 'Izabela AI: połączona (zmień klucz)' : 'Połącz Izabelę z prawdziwym AI']);

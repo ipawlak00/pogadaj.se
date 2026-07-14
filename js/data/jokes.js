@@ -1,4 +1,4 @@
-// Klasyczne polskie suchary (gra słów) — krótkie, z wyraźną puentą, zrozumiałe
+// Klasyczne polskie suchary (gra słów), krótkie, z wyraźną puentą, zrozumiałe
 // dla każdego i bezpieczne dla dzieci. Bez wulgaryzmów, bez informatyki/matematyki.
 // Zebrane z popularnych polskich zbiorów kawałów.
 export const JOKES = [
