@@ -386,6 +386,18 @@ Max 2-3 krótkie zdania (będzie czytane na głos). Zwróć JSON: {"joke":"..."}
     } catch (e) { return pick(JOKES); }
   },
 
+  // Świeża ciekawostka „z pokładu" na powitanie (zawsze nowa, w stylu Izabeli):
+  // kosmos, statek, fizyka kwantowa, poruszanie się w kosmosie, czasem psoty kotów.
+  async spaceTidbit() {
+    try {
+      const themes = ['kosmos i gwiazdy', 'nasz statek i podróż', 'fizyka kwantowa', 'poruszanie się w kosmosie', 'planety i księżyce', 'psota kotów Peji lub Kocina na pokładzie', 'ciekawostka o mózgu albo psychologii', 'magiczne kamienie i opal'];
+      const theme = themes[Math.floor(Math.random() * themes.length)];
+      const contents = [{ role: 'user', parts: [{ text: `Powitaj się krótko z wracającym uczniem i od razu rzuć JEDNĄ świeżą, zaskakującą ciekawostkę na temat: ${theme}. Ma być ZA KAŻDYM RAZEM INNA, konkretna i naprawdę ciekawa (nie ogólnik). Mów po polsku, swoim luźnym, ciepłym stylem, jakbyś zdawała relację z podróży przez kosmos. Maksymalnie 2 krótkie zdania (będzie czytane na głos). Bez powtarzania utartych formułek. Zwróć JSON: {"say":"..."}` }] }];
+      const r = await this._callContents(contents, IZABELA.systemPrompt, CONFIG.GEMINI.fastModel);
+      return (r.say || '').trim();
+    } catch (e) { return ''; }
+  },
+
   // Krótkie, OSOBISTE wspomnienie lekcji (do historii), oczami Izabeli,
   // zwrócone do ucznia na „Ty", a nie sztywne „uczeń rozmawiał z Izabelą".
   async summarizeLesson(chatText) {

@@ -2,6 +2,7 @@ import { el, navigate, feedbackCorner, accountButton } from '../ui.js';
 import { store } from '../state.js';
 import { auth } from '../services/auth.js';
 import { speech, splitSentences } from '../services/speech.js';
+import { ai } from '../services/ai.js';
 import { FULL_MONTH_MINUTES, HOME_SCENES } from '../data/lessons.js';
 import { minutesWord, hoursWord } from '../data/phrases.js';
 import { pickFresh } from '../data/rotate.js';
@@ -110,48 +111,59 @@ export function renderHome(mount) {
     : leftH ? `${leftH} ${hoursWord(leftH)}`
     : `${leftM} ${minutesWord(leftM)}`;
 
-  let hi, bodyText, bodySpoken;
+  let hi, timeSpokenLine;
   if (firstTime) {
     // Pierwsze wejście do pełnej wersji: ciepłe przywitanie + kim jest Izabela
     store.patchKey('progress', { homeWelcomed: true });
     hi = `Cześć${name ? ', ' + name : ''}! Ale się cieszę, że zostajesz ze mną na dłużej.`;
-    bodyText = 'Poznamy się teraz lepiej. Wiesz, ja tak sobie lecę przez kosmos, w ciągłej podróży, ' +
+    timeSpokenLine = 'Poznamy się teraz lepiej. Wiesz, ja tak sobie lecę przez kosmos, w ciągłej podróży, ' +
       'szukając przygód. Ze mną lecą moje koty, Kocin i Peja, a od teraz też Ty. ' +
       `Na naszą wspólną podróż mam dla Ciebie ${timeSpoken} w miesiącu na rozmowy, ` +
       'żebyśmy razem szlifowali Twój angielski. No to zaczynamy!';
-    bodySpoken = bodyText;
   } else {
-    // Wracający uczeń: ciepłe „siemanko" + od razu opowieść z podróży
-    // (kosmos/statek/fizyka/koty), a na końcu ile czasu zostało.
     hi = pickFresh('homeHi', [
       `Siemanko${name ? ', ' + name : ''}, witam ponownie!`,
       `O, jesteś${name ? ', ' + name : ''}! Dobrze Cię znowu widzieć.`,
       `Witaj z powrotem${name ? ', ' + name : ''}!`,
       'No i znów razem, lećmy dalej!',
     ]);
-    const tidbit = pickFresh('homeTidbit', [...JOURNEY_TIDBITS, ...FUN_FACTS]);
-    bodyText = `${tidbit} A tak przy okazji: masz jeszcze ${timeShort} rozmów w tym miesiącu. Klikaj i gadamy!`;
-    bodySpoken = `${tidbit} A tak przy okazji: masz jeszcze ${timeSpoken} rozmów w tym miesiącu. Klikaj i gadamy!`;
+    timeSpokenLine = `Masz jeszcze ${timeSpoken} rozmów w tym miesiącu. Klikaj i gadamy!`;
   }
-  // Zamiast jednego wielkiego dymka, krótkie zdania, które przeskakują
-  // w miarę mówienia (dymek nie zakrywa sceny).
-  // Dymek zmienia tekst AUTOMATYCZNIE w rytm mowy, pokazuje aktualne zdanie
-  // (bez ręcznego scrollowania).
-  const sentences = splitSentences(bodySpoken);
-  const bodyP = el('p', { style: 'margin:4px 0 0', text: sentences[0] || bodyText });
+  // Dymek: sam tekst przewija się w rytm mowy (bez osobnego, stałego nagłówka).
+  const bodyP = el('p', { style: 'margin:4px 0 0', text: hi });
   const bubble = el('div.scene-bubble', {
     style: layout.bubble, title: 'Kliknij, a powtórzę',
     onclick: () => playWelcome(),
   }, [
     el('div.scene-bubble__who', { text: 'Izabela' }),
-    el('div.scene-bubble__hi', { text: hi }),
     bodyP,
   ]);
+
+  // Ciekawostka na powitanie wracającego: ZAWSZE świeża (AI), a gdy AI niedostępne
+  // — z puli bez powtórek. Dobierana przy każdym odtworzeniu, więc nie nudzi.
+  async function freshTidbit() {
+    let t = '';
+    try { t = await ai.spaceTidbit(); } catch (e) { /* fallback niżej */ }
+    if (!t) t = pickFresh('homeTidbit', [...JOURNEY_TIDBITS, ...FUN_FACTS]);
+    return t;
+  }
+
+  function speakSeq(seq) {
+    bodyP.textContent = seq[0] || '';
+    speech.speakSequence(seq, { lang: 'pl-PL', onPart: (t, i) => { bodyP.textContent = seq[i] || t; } });
+  }
+
   function playWelcome() {
-    speech.speakSequence([hi, ...sentences], {
-      lang: 'pl-PL',
-      onPart: (t, i) => { if (i > 0) bodyP.textContent = sentences[i - 1]; },
-    });
+    speech.stopSpeaking();
+    if (firstTime) { speakSeq([hi, ...splitSentences(timeSpokenLine)]); return; }
+    // Wracający: „hi" od razu (bez ciszy), a w tle świeża ciekawostka.
+    bodyP.textContent = hi;
+    const tidbitPromise = freshTidbit();
+    speech.speak(hi, { lang: 'pl-PL', onEnd: async (e) => {
+      if (e && e.cancelled) return;
+      const tidbit = await tidbitPromise;
+      speakSeq([...splitSentences(tidbit), ...splitSentences(timeSpokenLine)]);
+    } });
   }
 
   // Klik „Opowiedz żart", Izabela wali sucharem w dymku (i na głos)
@@ -160,8 +172,6 @@ export function renderHome(mount) {
     if (jokeBusy) return; jokeBusy = true;
     speech.stopSpeaking();            // ucisz powitanie, żeby nie nadpisało żartu
     speech.unlockAudio();
-    const hiEl = bubble.querySelector('.scene-bubble__hi');
-    if (hiEl) hiEl.textContent = '';  // bez nagłówka, sama treść żartu
     // Żart z pewnej puli (bez powtórek). W dymku pokazujemy zdanie po zdaniu
     // w rytm mowy (setup → puenta), krótkie kawałki nigdy nie wychodzą poza dymek.
     const joke = pickFresh('jokes', JOKES);
