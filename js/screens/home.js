@@ -5,6 +5,7 @@ import { speech, splitSentences } from '../services/speech.js';
 import { ai } from '../services/ai.js';
 import { FULL_MONTH_MINUTES, HOME_SCENES } from '../data/lessons.js';
 import { minutesWord, hoursWord } from '../data/phrases.js';
+import { pickFresh } from '../data/rotate.js';
 
 // Ciekawostki wplecione naturalnie (jak Izabela dzieli się myślą) — mózg,
 // psychologia, kosmos, astrologia, magiczne kamienie. Co jakiś czas, nie zawsze.
@@ -122,13 +123,13 @@ export function renderHome(mount) {
   } else {
     // Wracający uczeń: ciepłe „siemanko" + od razu opowieść z podróży
     // (kosmos/statek/fizyka/koty), a na końcu ile czasu zostało.
-    hi = pick([
+    hi = pickFresh('homeHi', [
       `Siemanko${name ? ', ' + name : ''}, witam ponownie!`,
       `O, jesteś${name ? ', ' + name : ''}! Dobrze Cię znowu widzieć.`,
       `Witaj z powrotem${name ? ', ' + name : ''}!`,
       'No i znów razem — lećmy dalej!',
     ]);
-    const tidbit = pick([...JOURNEY_TIDBITS, ...FUN_FACTS]);
+    const tidbit = pickFresh('homeTidbit', [...JOURNEY_TIDBITS, ...FUN_FACTS]);
     bodyText = `${tidbit} A tak przy okazji: masz jeszcze ${timeShort} rozmów w tym miesiącu. Klikaj i gadamy!`;
     bodySpoken = `${tidbit} A tak przy okazji: masz jeszcze ${timeSpoken} rozmów w tym miesiącu. Klikaj i gadamy!`;
   }

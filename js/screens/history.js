@@ -2,6 +2,7 @@ import { el, navigate, feedbackCorner } from '../ui.js';
 import { store } from '../state.js';
 import { speech } from '../services/speech.js';
 import { minutesWord, isFemale } from '../data/phrases.js';
+import { pickFresh } from '../data/rotate.js';
 
 // HISTORIA LEKCJI — Izabela rysuje przy konsoli (scene-17).
 // Okienka lekcji (zwinięte do tytułu) rozrzucone w strefach, które NIE
@@ -35,16 +36,25 @@ export function renderHistory(mount) {
     'Serio, ledwo zaczęliśmy — tu jeszcze echo się niesie. Dawaj, nagadamy trochę!',
     'Chudziutko tu, mówię Ci. Godzinki jeszcze nie zebraliśmy, więc chwalić się nie ma czym. Na razie!',
   ];
-  const manyLines = [
-    'O, patrz, cała nasza historia jak na dłoni. Nieźle nam idzie, co?',
-    'Wszystko tu mam, o czym gadaliśmy. Fajnie się to ogląda.',
-    'Zobacz, ile już razem przegadaliśmy. Robi wrażenie!',
+  // Godzina–8h: jest podstawa, ale bez szału — Izabela zagrzewa do dalszej jazdy.
+  const midLines = [
+    'No i mamy godzinę z hakiem! Spoko, jest git — ale szału jeszcze nie ma. Ciśnij dalej!',
+    'Godzinka wbita, nieźle! Tylko wiesz co, przegadać osiem godzin to dopiero jest coś. Lecimy!',
+    'O, robi się! Jest podstawa, ale nie osiadaj na laurach — dobijemy do naprawdę grubych liczb.',
+    `Coś tam nagadaliśmy, szacun. Ale ja bym Cię widziała na ośmiu godzinach — wpadaj częściej, ${addr}!`,
+    'Jest zaczyn! Nie odpuszczaj — im więcej gadania, tym szybciej Ci wejdzie. Ciśniemy dalej!',
   ];
-  // Dopóki nie ma chociaż GODZINY nagadane, w historii realnie prawie nic nie ma
-  // — wtedy Izabela się brechta, że pusto. „Nieźle nam idzie" dopiero od godziny.
+  // 8h+: realna pochwała — to już kawał roboty.
+  const manyLines = [
+    'O, patrz, ile już przegadaliśmy — kawał roboty! Naprawdę nieźle nam idzie.',
+    'Osiem godzin gadania z hakiem? To już wyższa liga, mega jestem z Ciebie dumna!',
+    'Zobacz, ile tego jest. Robi wrażenie — tak trzymaj, mistrzu!',
+    'Kopę tego uzbieraliśmy. Widać robotę i widać postęp — brawo Ty!',
+  ];
+  // Progi: <1h prawie pusto (brechta), 1–8h „git, ale ciśnij", 8h+ pochwała.
   const totalMin = Math.round(entries.reduce((a, e) => a + (e.seconds || 0), 0) / 60);
-  const sparse = totalMin < 60;
-  const spoken = sparse ? pick(fewJokes) : pick(manyLines);
+  const pool = totalMin < 60 ? fewJokes : totalMin < 480 ? midLines : manyLines;
+  const spoken = pickFresh('history', pool);
 
   // Kolumna okienek po PRAWEJ stronie, w dolnej części (biurko/konsola) —
   // nie zasłania twarzy Izabeli ani kotów. Zwinięte = tytuł, klik rozwija.

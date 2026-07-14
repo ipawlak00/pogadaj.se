@@ -1198,10 +1198,13 @@ body.on-lessons .cosmos { display: none; }
     transform: none !important; width: auto !important; max-width: none !important;
     max-height: none !important; margin: 10px 14px !important;
   }
-  .home-board { display: flex !important; justify-content: center; }
-  /* przyciski home na pełną szerokość karty (wyśrodkowane, nie do lewej) */
-  .home-controls { display: flex !important; flex-direction: column; gap: 10px; align-items: stretch !important; }
-  .home-controls > .btn { width: 100%; justify-content: center; }
+  /* Tablica czasu ROŚNIE w pionie: górną krawędzią dotyka dymka, dolną —
+     przycisku historii. Szerokość (boki) bez zmian: min(300px, 88vw). */
+  .home-board { display: flex !important; justify-content: center; align-items: stretch !important; flex: 1 1 auto !important; }
+  .home-board .time-board { height: 100%; display: flex; flex-direction: column; justify-content: center; }
+  /* przyciski home na pełną szerokość karty, wyśrodkowane */
+  .home-controls { display: flex !important; flex-direction: column; gap: 10px; align-items: center !important; }
+  .home-controls > .btn { width: 100%; justify-content: center; text-align: center; }
   .history-cards { display: flex; flex-direction: column; gap: 10px; }
   .history-item { position: static !important; width: 100% !important; max-width: 100% !important; }
   .trial-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
