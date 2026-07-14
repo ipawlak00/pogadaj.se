@@ -119,6 +119,16 @@ export const auth = {
     await call('/auth/setpassword', { email: u.email, token: u.token, password, newPassword });
   },
 
+  // Przypomnienie hasła: wyślij link resetujący na email (serwer zawsze zwraca ok).
+  async requestReset(email) {
+    return call('/auth/reset-request', { email });
+  },
+
+  // Reset hasła: token z maila + nowe hasło.
+  async confirmReset(email, token, newPassword) {
+    return call('/auth/reset-confirm', { email, token, newPassword });
+  },
+
   // Zapis profilu fonetycznego (problemy z wymową) na koncie w Firestore.
   // Bez surowych sampli — do bazy idzie esencja: challenges/issues/oceny.
   async saveProfile(profile) {

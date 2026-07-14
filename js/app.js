@@ -16,6 +16,7 @@ import { renderHome } from './screens/home.js';
 import { renderHistory } from './screens/history.js';
 import { renderLessons } from './screens/lessons.js';
 import { renderConversation } from './screens/conversation.js';
+import { renderReset } from './screens/reset.js';
 
 const appEl = document.getElementById('app');
 
@@ -23,6 +24,9 @@ const appEl = document.getElementById('app');
 function resolve() {
   const hash = location.hash || '#/';
   const st = store.get();
+
+  // Reset hasła z linku w mailu (#/reset?e=...&t=...) — dostępny bez logowania
+  if (hash.startsWith('#/reset')) return renderReset(appEl);
 
   // /lesson/:id
   const lessonMatch = hash.match(/^#\/lesson\/(.+)$/);
@@ -83,7 +87,11 @@ function render() {
   speech.stopSpeaking();
   clear(appEl);
   window.scrollTo(0, 0);
-  document.body.dataset.route = routeKey(location.hash || '#/', store.get());
+  const rk = routeKey(location.hash || '#/', store.get());
+  document.body.dataset.route = rk;
+  // Klasę pełnoekranowych scen (home/historia) trzyma ROUTER — inaczej cleanup
+  // poprzedniego ekranu ściągał ją PO dodaniu przez nowy ekran (tło przeciekało).
+  document.body.classList.toggle('on-lessons', rk === 'lessons');
   resolve();
 }
 

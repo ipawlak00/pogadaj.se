@@ -7,11 +7,7 @@ import { minutesWord, isFemale } from '../data/phrases.js';
 // Okienka lekcji (zwinięte do tytułu) rozrzucone w strefach, które NIE
 // zasłaniają twarzy Izabeli ani kotów. Klik rozwija podsumowanie.
 export function renderHistory(mount) {
-  document.body.classList.add('on-lessons');
-  window.addEventListener('hashchange', () => {
-    document.body.classList.remove('on-lessons');
-  }, { once: true });
-
+  // Klasę 'on-lessons' ustawia router (app.js) wg trasy — tu nie ruszamy.
   const screen = el('div.history-fs');
   mount.append(screen);
 

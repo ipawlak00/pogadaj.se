@@ -18,6 +18,7 @@ export function renderWelcome(mount) {
 
   const mainBtn = el('button.btn.btn--primary.auth-submit', { onclick: submit }, ['Zaloguj się']);
   const switchBtn = el('button.btn.auth-create', { style: 'margin-top:14px', onclick: toggleMode }, ['Stwórz darmowe konto']);
+  const forgotLink = el('button.auth-forgot', { type: 'button', onclick: forgotPassword }, ['Nie pamiętasz hasła?']);
 
   [pass, pass2, email, name].forEach((inp) => inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); }));
 
@@ -33,6 +34,7 @@ export function renderWelcome(mount) {
         pass2Field,
         passHint,
         mainBtn,
+        forgotLink,
         switchBtn,
       ]),
 
@@ -52,8 +54,36 @@ export function renderWelcome(mount) {
     nameField.style.display = signup ? 'block' : 'none';
     pass2Field.style.display = signup ? 'block' : 'none';
     passHint.style.display = signup ? 'block' : 'none';
+    forgotLink.style.display = signup ? 'none' : 'block';
     pass.autocomplete = signup ? 'new-password' : 'current-password';
     (signup ? name : email).focus();
+  }
+
+  // Przypomnienie hasła: e-mail z linkiem resetującym (SMTP izabela@izabelacode.pl).
+  function forgotPassword() {
+    const inp = el('input', { type: 'email', placeholder: 'twój@email.com', autocomplete: 'email', value: email.value.trim() });
+    const sendBtn = el('button.btn.btn--primary.btn--lg.btn--block', { style: 'color:#fff', onclick: send }, ['Wyślij link']);
+    inp.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') send(); });
+    const overlay = el('div.level-overlay', { onclick: (ev) => { if (ev.target === overlay) overlay.remove(); } }, [
+      el('div.level-box.feedback-box', {}, [
+        el('button.level-close', { onclick: () => overlay.remove(), 'aria-label': 'Zamknij' }, ['X']),
+        el('h2.display', { style: 'margin:0 0 4px;color:#14314f', text: 'Przypomnijmy hasło' }),
+        el('p', { style: 'margin:0 0 12px;color:#46688c', text: 'Podaj email użyty przy zakładaniu konta — wyślę link do ustawienia nowego hasła.' }),
+        el('div.field', {}, [ el('label', { text: 'Email' }), inp ]),
+        sendBtn,
+      ]),
+    ]);
+    document.body.append(overlay);
+    setTimeout(() => inp.focus(), 50);
+
+    async function send() {
+      const e = inp.value.trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) { toast('Podaj poprawny adres email', 'error'); return; }
+      sendBtn.disabled = true; sendBtn.textContent = 'Wysyłam…';
+      try { await auth.requestReset(e); } catch (err) { /* i tak pokazujemy neutralny komunikat */ }
+      overlay.remove();
+      toast('Jeśli konto istnieje, link do zmiany hasła jest już w Twojej skrzynce. Sprawdź też spam.');
+    }
   }
 
   async function submit() {

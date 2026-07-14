@@ -155,6 +155,42 @@ function verifyToken(tok, email) {
   } catch { return false; }
 }
 
+// Token resetu hasła — krótki (1 h), z osobną „solą" celu, żeby nie mylił się
+// z tokenem sesji. Email podawany osobno w /reset-confirm, więc go tu nie osadzamy.
+function makeResetToken(email) {
+  const exp = Date.now() + 1000 * 60 * 60;   // 1 godzina
+  const sig = crypto.createHmac('sha256', sessionSecret()).update(`${email}|${exp}|reset`).digest('hex');
+  return Buffer.from(`${exp}|${sig}`).toString('base64url');
+}
+
+function verifyResetToken(tok, email) {
+  try {
+    const [exp, sig] = Buffer.from(String(tok), 'base64url').toString().split('|');
+    if (!exp || !sig || Date.now() > Number(exp)) return false;
+    const good = crypto.createHmac('sha256', sessionSecret()).update(`${email}|${exp}|reset`).digest('hex');
+    return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(good));
+  } catch { return false; }
+}
+
+// Mail z linkiem do resetu hasła (przez SMTP, np. Gmail izabela@izabelacode.pl).
+async function sendResetEmail(to, link) {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return { sent: false };
+  const nodemailer = require('nodemailer');
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: Number(process.env.SMTP_PORT || 465),
+    secure: Number(process.env.SMTP_PORT || 465) === 465,
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+  });
+  const from = process.env.FEEDBACK_FROM || process.env.SMTP_USER;
+  const text = 'Cześć!\n\nDostaliśmy prośbę o zmianę hasła do pogadaj.se.\n'
+    + 'Kliknij w link, żeby ustawić nowe hasło (ważny 1 godzinę):\n\n'
+    + link + '\n\n'
+    + 'Jeśli to nie Ty prosiłeś o reset — zignoruj tę wiadomość, hasło zostaje bez zmian.\n\n— Izabela';
+  await transporter.sendMail({ from, to, subject: 'Zmiana hasła — pogadaj.se', text });
+  return { sent: true };
+}
+
 // Hasło: min 8 znaków, wielka litera, znak specjalny
 function passwordProblem(p) {
   if (typeof p !== 'string' || p.length < 8) return 'Hasło musi mieć co najmniej 8 znaków.';
@@ -229,7 +265,7 @@ async function fsAddFeedback(entry) {
   if (!r.ok) throw new Error('Firestore feedback ' + r.status + ': ' + (await r.text()).slice(0, 200));
 }
 
-async function handleAuth(path, body, res) {
+async function handleAuth(path, body, res, origin) {
   const email = String(body.email || '').trim().toLowerCase();
   const password = String(body.password || '');
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'Podaj poprawny adres email.' });
@@ -315,6 +351,31 @@ async function handleAuth(path, body, res) {
     return res.status(200).json({ ok: true });
   }
 
+  // Przypomnienie/reset hasła — krok 1: wyślij link na email (jeśli konto istnieje).
+  // Zawsze zwracamy ok, żeby nie zdradzać, które adresy są zarejestrowane.
+  if (path === '/auth/reset-request') {
+    const u = await fsGetUser(email);
+    if (u) {
+      const token = makeResetToken(email);
+      const base = (origin && /^https?:\/\//.test(origin)) ? origin : 'https://pogadaj.com.pl';
+      const link = `${base}/#/reset?e=${encodeURIComponent(email)}&t=${encodeURIComponent(token)}`;
+      try { await sendResetEmail(email, link); } catch (e) { console.error('[reset-mail]', e); }
+    }
+    return res.status(200).json({ ok: true });
+  }
+
+  // Reset hasła — krok 2: token z maila + nowe hasło.
+  if (path === '/auth/reset-confirm') {
+    if (!verifyResetToken(body.token, email)) return res.status(401).json({ error: 'Link wygasł albo jest nieprawidłowy. Poproś o nowy.' });
+    const u = await fsGetUser(email);
+    if (!u) return res.status(404).json({ error: 'Nie ma takiego konta.' });
+    const pp = passwordProblem(String(body.newPassword || ''));
+    if (pp) return res.status(400).json({ error: pp });
+    const salt = crypto.randomBytes(16).toString('hex');
+    await fsPutUser({ ...u, salt, hash: hashPassword(String(body.newPassword), salt) });
+    return res.status(200).json({ ok: true, email });
+  }
+
   return res.status(404).json({ error: 'unknown auth path' });
 }
 
@@ -353,10 +414,11 @@ exports.geminiProxy = async (req, res) => {
   // Konta użytkowników
   if (path === '/auth/register' || path === '/auth/login' || path === '/auth/setname'
       || path === '/auth/setemail' || path === '/auth/setpassword'
+      || path === '/auth/reset-request' || path === '/auth/reset-confirm'
       || path === '/profile/save' || path === '/state/save') {
     try {
       const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-      return await handleAuth(path, body, res);
+      return await handleAuth(path, body, res, origin);
     } catch (e) {
       console.error('[auth]', e);
       return res.status(500).json({ error: 'Błąd serwera przy logowaniu. Spróbuj za chwilę.' });

@@ -29,11 +29,7 @@ const HOME_LEVELS = [
 // PEŁNA WERSJA — tło (Izabela z kotami) zmienia się przy KAŻDYM wejściu.
 // Przyciski i dymek są ustawiane per-scena tak, by nie zasłaniać twarzy ani kotów.
 export function renderHome(mount) {
-  document.body.classList.add('on-lessons');
-  window.addEventListener('hashchange', () => {
-    document.body.classList.remove('on-lessons');
-  }, { once: true });
-
+  // Klasę 'on-lessons' ustawia router (app.js) wg trasy — tu nie ruszamy.
   const screen = el('div.home-fs');
   mount.append(screen);
 

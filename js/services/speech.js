@@ -99,14 +99,14 @@ if (typeof window !== 'undefined') {
 // Czy fragment w cudzysłowie faktycznie wygląda na angielski?
 // Izabela cytuje też POLSKIE słowa („witaj", „twoja mama") — te muszą zostać
 // przy polskim głosie. Liczymy trafienia w OBU językach i wygrywa większość.
-// Angielskie słowa-sygnały. Świadomie BEZ „a/i/to/an" — te są też polskie
-// i myliły detekcję (polskie cytaty czytane były po angielsku).
+// Angielskie słowa-sygnały. Świadomie BEZ „a/i/to/an/my/do/we/was" — te są też
+// polskimi słowami i myliły detekcję (polskie cytaty czytane były po angielsku).
 const EN_WORDS = new Set(['hello', 'hi', 'hey', 'good', 'morning', 'evening', 'night', 'afternoon',
-  'thank', 'thanks', 'you', 'please', 'name', 'my', 'is', 'are', 'am', 'yes', 'not',
+  'thank', 'thanks', 'you', 'please', 'name', 'is', 'are', 'am', 'yes', 'not',
   'what', 'how', 'where', 'when', 'why', 'who', 'nice', 'meet', 'the', 'it', 'me',
-  'like', 'want', 'need', 'have', 'has', 'do', 'does', 'did', 'can', 'could', 'would', 'will',
+  'like', 'want', 'need', 'have', 'has', 'does', 'did', 'can', 'could', 'would', 'will',
   'help', 'sorry', 'bye', 'goodbye', 'see', 'later', 'day', 'coffee', 'tea', 'water', 'from',
-  'been', 'was', 'were', 'this', 'that', 'your', 'his', 'her', 'we', 'they', 'he', 'she',
+  'been', 'were', 'this', 'that', 'your', 'his', 'her', 'they', 'he', 'she',
   'go', 'went', 'come', 'and', 'or', 'but', 'very', 'much', 'too', 'for', 'about', 'here',
   // częste angielskie słowa treściowe (żeby łapać zdania uczące)
   'get', 'got', 'make', 'made', 'take', 'took', 'tell', 'say', 'said', 'know', 'think',

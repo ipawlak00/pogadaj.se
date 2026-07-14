@@ -608,6 +608,12 @@ body:not([data-route="welcome"]) .mic-btn {
   color: var(--accent-bright); text-transform: uppercase; letter-spacing: .05em; font-size: .9rem;
   font-weight: 700; padding: 16px; margin-top: 14px; border-radius: 12px; }
 .auth-create:hover { border-color: var(--accent); }
+/* „Nie pamiętasz hasła?" — dyskretny link pod przyciskiem logowania */
+.auth-forgot {
+  display: block; width: 100%; margin-top: 12px; background: none; border: none; cursor: pointer;
+  color: var(--accent-bright); font-size: .82rem; text-decoration: underline; text-underline-offset: 3px;
+}
+.auth-forgot:hover { color: var(--accent); }
 .auth-footer { margin-top: 22px; color: var(--text-faint); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; }
 .auth-footer b { color: var(--accent-bright); font-weight: 700; }
 /* dyskretny reset postępów (przydatny do testów „świeżego" użytkownika) */
@@ -1221,18 +1227,25 @@ body.on-lessons .cosmos { display: none; }
     height: auto !important; overflow: visible !important; /* dymek ZAWSZE obejmuje tekst */
     overflow-wrap: anywhere; word-break: break-word;       /* długie słowa się zawijają */
     display: flex; flex-direction: column; justify-content: center;
-    font-size: 1.14rem !important; line-height: 1.55; padding: 22px 20px !important;
+    font-size: 1rem !important; line-height: 1.5; padding: 18px 18px !important;
     border-radius: 20px 20px 18px 18px !important; border-width: 2px;
     background: #ffffff !important;
     box-shadow: 0 -6px 22px rgba(6,25,55,.16), 0 12px 30px rgba(6,25,55,.28) !important;
+  }
+  /* PEŁNA szerokość ekranu — mocny override (bije width:92% z reguł portrait). */
+  .home-fs .scene-bubble, .history-fs .scene-bubble,
+  .lessons-fs .scene-bubble, .lessons-fs .lessons-fs__bubble {
+    position: relative !important; left: auto !important; right: auto !important;
+    transform: none !important; width: auto !important; max-width: none !important;
+    align-self: stretch !important; margin-left: 0 !important; margin-right: 0 !important;
   }
   /* tekst dymka nigdy nie wystaje: pełna szerokość, własne zawijanie */
   .scene-bubble p, .lessons-fs__bubble p,
   .scene-bubble__hi, .scene-bubble__who {
     width: 100%; overflow-wrap: anywhere; word-break: break-word; white-space: normal;
   }
-  .scene-bubble__who { font-size: .82rem; }
-  .scene-bubble__hi { font-size: 1.28rem; margin-bottom: 2px; }
+  .scene-bubble__who { font-size: .78rem; }
+  .scene-bubble__hi { font-size: 1.08rem; margin-bottom: 2px; }
   .scene-bubble p, .lessons-fs__bubble p { margin: 4px 0 0; }
   .scene-bubble::after, .lessons-fs__bubble::after {
     content: ''; position: absolute; top: -9px; left: 28px;
