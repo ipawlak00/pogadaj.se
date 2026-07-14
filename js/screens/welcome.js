@@ -1,6 +1,5 @@
 import { el, toast, navigate } from '../ui.js';
 import { auth, passwordProblem } from '../services/auth.js';
-import { store } from '../state.js';
 
 // Ekran logowania / zakładania konta, JEDNA karta, dwa tryby.
 // Rejestracja: imię + email + hasło + powtórz hasło. Logowanie: email + hasło.
@@ -39,10 +38,6 @@ export function renderWelcome(mount) {
       ]),
 
       el('div.auth-footer', { html: 'POWERED BY <b>IZABELACODE</b>' }),
-      el('button.auth-reset', {
-        onclick: () => { store.reset(); location.hash = '#/'; location.reload(); },
-        title: 'Czyści postępy i ustawienia zapisane na tym urządzeniu',
-      }, ['Zacznij od nowa']),
     ])
   );
 
