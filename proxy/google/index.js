@@ -210,6 +210,23 @@ async function sendResetEmail(to, link) {
   return { sent: true };
 }
 
+// Powiadomienie dla właścicielki (izabela@izabelacode.pl): nowe konto / próba
+// rejestracji po osiągnięciu limitu. Best-effort — nie blokuje rejestracji.
+async function sendAdminEmail(subject, text) {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return { sent: false };
+  const nodemailer = require('nodemailer');
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: Number(process.env.SMTP_PORT || 465),
+    secure: Number(process.env.SMTP_PORT || 465) === 465,
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+  });
+  const from = process.env.FEEDBACK_FROM || process.env.SMTP_USER;
+  const to = process.env.FEEDBACK_TO || 'izabela@izabelacode.pl';
+  await transporter.sendMail({ from, to, subject, text });
+  return { sent: true };
+}
+
 // Hasło: min 8 znaków, wielka litera, znak specjalny
 function passwordProblem(p) {
   if (typeof p !== 'string' || p.length < 8) return 'Hasło musi mieć co najmniej 8 znaków.';
@@ -299,12 +316,24 @@ async function handleAuth(path, body, res, origin) {
     let userCount = 0;
     try { userCount = await fsCountUsers(); } catch (e) { console.error('[count]', e); }
     if (userCount >= MAX_USERS) {
+      // Powiadom właścicielkę, że ktoś chciał dołączyć mimo kompletu.
+      try {
+        await sendAdminEmail(`pogadaj.se — próba rejestracji (komplet)`,
+          `Ktoś chciał założyć konto, ale limit miejsc (${MAX_USERS}) jest osiągnięty.\n\n`
+          + `Email: ${email}\nImię: ${name || '(nie podano)'}\nCzas: ${new Date().toISOString()}`);
+      } catch (e) { console.error('[notify-full]', e); }
       return res.status(403).json({ error: 'Na razie mamy komplet — miejsca są ograniczone na etapie testów. Napisz do Izabeli, żeby dołączyć do listy.' });
     }
     const salt = crypto.randomBytes(16).toString('hex');
     const id = crypto.randomUUID();                       // unikalne ID użytkownika
     const number = await nextUserNumber();                // kolejny numer konta (000001…)
     await fsPutUser({ id, number, name, email, salt, hash: hashPassword(password, salt) });
+    // Powiadom właścicielkę o nowym koncie.
+    try {
+      await sendAdminEmail(`pogadaj.se — nowe konto nr ${number}`,
+        `Nowa osoba właśnie założyła konto w pogadaj.se.\n\n`
+        + `Numer: ${number}\nEmail: ${email}\nImię: ${name || '(jeszcze nie podane)'}\nCzas: ${new Date().toISOString()}`);
+    } catch (e) { console.error('[notify-new]', e); }
     return res.status(200).json({ ok: true, id, number, name, email, token: makeToken(email) });
   }
 
