@@ -133,6 +133,25 @@ async function fsDeleteUser(email) {
   if (!r.ok && r.status !== 404) throw new Error('Firestore DELETE ' + r.status + ': ' + (await r.text()).slice(0, 200));
 }
 
+// Liczba istniejących kont (do limitu na etap testów). Aggregation COUNT — tanie.
+async function fsCountUsers() {
+  const [token, project] = await Promise.all([gcpToken(), gcpProject()]);
+  const url = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents:runAggregationQuery`;
+  const body = { structuredAggregationQuery: {
+    structuredQuery: { from: [{ collectionId: 'users' }] },
+    aggregations: [{ alias: 'c', count: {} }],
+  } };
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error('Firestore COUNT ' + r.status + ': ' + (await r.text()).slice(0, 200));
+  const d = await r.json();
+  const row = Array.isArray(d) ? d.find((x) => x.result) : d;
+  return Number(row?.result?.aggregateFields?.c?.integerValue || 0);
+}
+
 // ---- hasła i tokeny sesji ----
 const hashPassword = (password, salt) =>
   crypto.scryptSync(password, salt, 64).toString('hex');
@@ -275,6 +294,13 @@ async function handleAuth(path, body, res, origin) {
     const pp = passwordProblem(password);
     if (pp) return res.status(400).json({ error: pp });
     if (await fsGetUser(email)) return res.status(409).json({ error: 'Konto z tym adresem już istnieje. Zaloguj się.' });
+    // Limit kont na etap testów (podnoszony zmienną MAX_USERS bez zmiany kodu).
+    const MAX_USERS = Number(process.env.MAX_USERS || 20);
+    let userCount = 0;
+    try { userCount = await fsCountUsers(); } catch (e) { console.error('[count]', e); }
+    if (userCount >= MAX_USERS) {
+      return res.status(403).json({ error: 'Na razie mamy komplet — miejsca są ograniczone na etapie testów. Napisz do Izabeli, żeby dołączyć do listy.' });
+    }
     const salt = crypto.randomBytes(16).toString('hex');
     const id = crypto.randomUUID();                       // unikalne ID użytkownika
     const number = await nextUserNumber();                // kolejny numer konta (000001…)
