@@ -83,12 +83,9 @@ export function renderHome(mount) {
     ]),
   ]);
 
-  // Historia + akcje w JEDNEJ kolumnie, ustawianej per-scena
+  // Kolejność (o którą prosiłaś): Historia → Zacznij nową lekcję (środek) → Kontynuuj
   const controls = el('div.home-controls', { style: layout.controls }, [
     el('button.btn.btn--sq', { onclick: () => navigate('#/history') }, ['Sprawdź historię swoich lekcji']),
-    hasFullSession ? el('button.btn.btn--sq', {
-      onclick: () => { speech.unlockAudio(); navigate('#/lesson/full'); },
-    }, ['Kontynuuj lekcję']) : null,
     el('button.btn.btn--primary', {
       onclick: () => {
         store.patchKey('progress', { fullHistory: [], fullChat: [], currentFullId: null });
@@ -96,6 +93,9 @@ export function renderHome(mount) {
         navigate('#/lesson/full');
       },
     }, ['Zacznij nową lekcję']),
+    hasFullSession ? el('button.btn.btn--sq', {
+      onclick: () => { speech.unlockAudio(); navigate('#/lesson/full'); },
+    }, ['Kontynuuj lekcję']) : null,
   ]);
 
   // Dymek z tym, co mówi Izabela (klik = powtórka) — w bezpiecznej strefie sceny
