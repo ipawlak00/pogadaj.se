@@ -1218,9 +1218,9 @@ body.on-lessons .cosmos { display: none; }
   /* Dymek jako ŁĄCZNIK zdjęcia z treścią: wchodzi na dół zdjęcia,
      ogonek celuje w górę w Izabelę; większy i czytelniejszy */
   .scene-bubble, .lessons-fs__bubble {
-    /* Siedzi NA STYKU zdjęcia i białego tła: górą lekko wchodzi na zdjęcie
-       (zakrywa znaczek Gemini), resztą jest już na białym — łącznik dwóch stref. */
-    margin: -28px 0 12px !important; position: relative; z-index: 2;
+    /* Siedzi NA STYKU zdjęcia i białego tła — w połowie na zdjęciu, w połowie
+       na białym (łącznik). Dokładny najazd ustawia override `body ...` niżej. */
+    margin: -60px 0 12px !important; position: relative; z-index: 2;
     align-self: stretch !important;                       /* pełna szerokość karty */
     width: auto !important; max-width: none !important; min-width: 0 !important;
     box-sizing: border-box; min-height: 128px;            /* zawsze porządna wysokość */
@@ -1232,14 +1232,17 @@ body.on-lessons .cosmos { display: none; }
     background: #ffffff !important;
     box-shadow: 0 -6px 22px rgba(6,25,55,.16), 0 12px 30px rgba(6,25,55,.28) !important;
   }
-  /* PEŁNA szerokość + normalny przepływ — mocny override (bije width:92% ORAZ
-     bottom:19% z reguł portrait, które podnosiły dymek w górę na zdjęcie). */
-  .home-fs .scene-bubble, .history-fs .scene-bubble,
-  .lessons-fs .scene-bubble, .lessons-fs .lessons-fs__bubble {
-    position: relative !important; left: auto !important; right: auto !important;
-    top: auto !important; bottom: auto !important; max-height: none !important;
+  /* PEŁNA szerokość + normalny przepływ. Prefiks `body` podbija specyficzność,
+     żeby PEWNIE bić regułę portrait `.home-fs .scene-bubble { bottom:19% }`,
+     która podnosiła dymek w górę na środek zdjęcia. `inset:auto` zeruje
+     wszystkie przesunięcia naraz. Najazd -60px => dymek siedzi w połowie na
+     zdjęciu, w połowie na białym tle pod spodem (łącznik). */
+  body .home-fs .scene-bubble, body .history-fs .scene-bubble,
+  body .lessons-fs .scene-bubble, body .lessons-fs .lessons-fs__bubble {
+    position: relative !important; inset: auto !important;
     transform: none !important; width: auto !important; max-width: none !important;
-    align-self: stretch !important; margin-left: 0 !important; margin-right: 0 !important;
+    max-height: none !important; align-self: stretch !important;
+    margin: -60px 0 12px !important;
   }
   /* tekst dymka nigdy nie wystaje: pełna szerokość, własne zawijanie */
   .scene-bubble p, .lessons-fs__bubble p,
