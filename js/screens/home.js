@@ -2,10 +2,10 @@ import { el, navigate, feedbackCorner, accountButton } from '../ui.js';
 import { store } from '../state.js';
 import { auth } from '../services/auth.js';
 import { speech, splitSentences } from '../services/speech.js';
-import { ai } from '../services/ai.js';
 import { FULL_MONTH_MINUTES, HOME_SCENES } from '../data/lessons.js';
 import { minutesWord, hoursWord } from '../data/phrases.js';
 import { pickFresh } from '../data/rotate.js';
+import { JOKES } from '../data/jokes.js';
 
 // Ciekawostki wplecione naturalnie (jak Izabela dzieli się myślą) — mózg,
 // psychologia, kosmos, astrologia, magiczne kamienie. Co jakiś czas, nie zawsze.
@@ -156,19 +156,23 @@ export function renderHome(mount) {
 
   // Klik „Opowiedz żart" — Izabela wali sucharem w dymku (i na głos)
   let jokeBusy = false;
-  async function tellJoke() {
+  function tellJoke() {
     if (jokeBusy) return; jokeBusy = true;
     speech.stopSpeaking();            // ucisz powitanie, żeby nie nadpisało żartu
     speech.unlockAudio();
     const hiEl = bubble.querySelector('.scene-bubble__hi');
-    if (hiEl) hiEl.textContent = '';  // bez nagłówka „Suchar dnia!" — sama treść żartu
-    bodyP.textContent = 'Zaraz coś wymyślę…';
-    let joke = '';
-    try { joke = await ai.tellJoke(); } catch (e) { /* fallback niżej */ }
-    if (!joke) joke = 'Ojej, dowcip mi uciekł. Kliknij jeszcze raz, złapię go!';
-    bodyP.textContent = joke;
-    speech.speak(joke, { lang: 'pl-PL' });
-    jokeBusy = false;
+    if (hiEl) hiEl.textContent = '';  // bez nagłówka — sama treść żartu
+    // Żart z pewnej puli (bez powtórek). W dymku pokazujemy zdanie po zdaniu
+    // w rytm mowy (setup → puenta) — krótkie kawałki nigdy nie wychodzą poza dymek.
+    const joke = pickFresh('jokes', JOKES);
+    const parts = splitSentences(joke);
+    bodyP.textContent = parts[0] || joke;
+    speech.speakSequence(parts.length ? parts : [joke], {
+      lang: 'pl-PL',
+      onPart: (t, i) => { bodyP.textContent = parts[i] || t; },
+      onDone: () => { jokeBusy = false; },
+    });
+    setTimeout(() => { jokeBusy = false; }, 15000);   // zapas, gdyby mowa nie ruszyła
   }
 
   const level = store.get().onboarding.level;

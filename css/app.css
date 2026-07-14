@@ -1176,7 +1176,7 @@ body.on-lessons .cosmos { display: none; }
     display: flex !important; flex-direction: column !important;
     overflow-y: auto !important; -webkit-overflow-scrolling: touch;
     /* JASNE tło pod zdjęciem — treść i dymek ładnie się wybijają */
-    background: #e7f0fa !important; padding-bottom: 74px;
+    background: #e7f0fa !important; padding-bottom: 96px;
   }
   /* na jasnym tle przyciski górnego paska w ciemniejszej ramce (widoczne) */
   .lessons-fs__top { background: #dbe8f5; }
@@ -1199,12 +1199,23 @@ body.on-lessons .cosmos { display: none; }
     max-height: none !important; margin: 10px 14px !important;
   }
   /* Tablica czasu ROŚNIE w pionie: górną krawędzią dotyka dymka, dolną —
-     przycisku historii. Szerokość (boki) bez zmian: min(300px, 88vw). */
-  .home-board { display: flex !important; justify-content: center; align-items: stretch !important; flex: 1 1 auto !important; }
-  .home-board .time-board { height: 100%; display: flex; flex-direction: column; justify-content: center; }
-  /* przyciski home na pełną szerokość karty, wyśrodkowane */
-  .home-controls { display: flex !important; flex-direction: column; gap: 10px; align-items: center !important; }
-  .home-controls > .btn { width: 100%; justify-content: center; text-align: center; }
+     przycisku historii. min-height gwarantuje widoczne rozciągnięcie nawet gdy
+     brak wolnej przestrzeni; flex-grow zjada resztę luki. Szerokość bez zmian. */
+  .home-board {
+    display: flex !important; justify-content: center; align-items: stretch !important;
+    flex: 1 1 auto !important; min-height: 24vh !important;
+  }
+  .home-board .time-board {
+    height: 100% !important; min-height: 24vh !important;
+    display: flex !important; flex-direction: column; justify-content: center;
+  }
+  /* przyciski home wyśrodkowane — jednakowa szerokość, każdy (też niebieski)
+     na środku karty; zapas na dole, by nie kolidowały z rogiem opinii */
+  .home-controls { display: flex !important; flex-direction: column; gap: 10px; align-items: center !important; padding-bottom: 8px; }
+  .home-controls > .btn {
+    width: 100% !important; max-width: 460px; margin-left: auto !important; margin-right: auto !important;
+    justify-content: center; text-align: center;
+  }
   .history-cards { display: flex; flex-direction: column; gap: 10px; }
   .history-item { position: static !important; width: 100% !important; max-width: 100% !important; }
   .trial-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
