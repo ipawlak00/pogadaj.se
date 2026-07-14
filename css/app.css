@@ -1175,8 +1175,9 @@ body.on-lessons .cosmos { display: none; }
   /* na jasnym tle przyciski górnego paska w ciemniejszej ramce (widoczne) */
   .lessons-fs__top { background: #dbe8f5; }
   .home-fs::before, .history-fs::before, .lessons-fs::before { display: none !important; }
-  /* Całe zdjęcie sceny (16:9) — widać też koty, nic nie przycinamy z boków */
-  .scene-photo { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; flex: none; }
+  /* Zdjęcie sceny — trochę wyższe (4:3), boki lekko przycięte (cover), dół
+     zakrywa dymek-łącznik. Znaczek Gemini w rogu i tak znika pod dymkiem. */
+  .scene-photo { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; flex: none; }
 
   /* Pasek górny jako zwykły rząd nad zdjęciem */
   .lessons-fs__top { position: static !important; padding: 10px 12px; }
@@ -1211,15 +1212,24 @@ body.on-lessons .cosmos { display: none; }
   /* Dymek jako ŁĄCZNIK zdjęcia z treścią: wchodzi na dół zdjęcia,
      ogonek celuje w górę w Izabelę; większy i czytelniejszy */
   .scene-bubble, .lessons-fs__bubble {
-    margin: -20px 12px 10px !important; position: relative; z-index: 2;
+    /* PEŁNA szerokość ekranu, wjeżdża na dół zdjęcia (zakrywa znaczek Gemini)
+       i jest gładkim łącznikiem między zdjęciem a treścią pod spodem. */
+    margin: -48px 0 12px !important; position: relative; z-index: 2;
     align-self: stretch !important;                       /* pełna szerokość karty */
     width: auto !important; max-width: none !important; min-width: 0 !important;
-    box-sizing: border-box; min-height: 120px;            /* zawsze porządna wysokość */
+    box-sizing: border-box; min-height: 128px;            /* zawsze porządna wysokość */
+    height: auto !important; overflow: visible !important; /* dymek ZAWSZE obejmuje tekst */
+    overflow-wrap: anywhere; word-break: break-word;       /* długie słowa się zawijają */
     display: flex; flex-direction: column; justify-content: center;
-    font-size: 1.14rem !important; line-height: 1.55; padding: 20px 20px !important;
-    border-radius: 16px !important; border-width: 2px;
+    font-size: 1.14rem !important; line-height: 1.55; padding: 22px 20px !important;
+    border-radius: 20px 20px 18px 18px !important; border-width: 2px;
     background: #ffffff !important;
-    box-shadow: 0 12px 30px rgba(6,25,55,.28) !important;
+    box-shadow: 0 -6px 22px rgba(6,25,55,.16), 0 12px 30px rgba(6,25,55,.28) !important;
+  }
+  /* tekst dymka nigdy nie wystaje: pełna szerokość, własne zawijanie */
+  .scene-bubble p, .lessons-fs__bubble p,
+  .scene-bubble__hi, .scene-bubble__who {
+    width: 100%; overflow-wrap: anywhere; word-break: break-word; white-space: normal;
   }
   .scene-bubble__who { font-size: .82rem; }
   .scene-bubble__hi { font-size: 1.28rem; margin-bottom: 2px; }

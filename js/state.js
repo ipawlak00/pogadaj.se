@@ -61,7 +61,7 @@ export const store = {
     this.patchKey('onboarding', { completed: true, goal, level });
   },
   setPhoneticProfile(profile) {
-    this.patchKey('phonetic', { completed: true, profile });
+    this.patchKey('phonetic', { completed: true, skipped: false, profile });
   },
   markLessonDone(id) {
     if (!state.progress.lessonsDone.includes(id)) {

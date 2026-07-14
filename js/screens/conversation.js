@@ -281,7 +281,25 @@ export function renderConversation(mount, lessonId) {
     if (isFull) {
       const adv = isAdvanced();   // tylko C1/C2 witają się po angielsku
       const pickOne = (a) => a[Math.floor(Math.random() * a.length)];
-      const past = (store.get().progress.history || [])
+      const curId = store.get().progress.currentFullId;
+      const prevFull = (store.get().progress.history || [])
+        .filter((h) => h.kind === 'full' && h.id !== curId);
+      const firstMeeting = prevFull.length === 0;      // pierwsza pełna lekcja z tym uczniem
+      const skipped = !!store.get().phonetic?.skipped;  // pominął test wymowy?
+
+      if (firstMeeting) {
+        // PIERWSZE spotkanie — Izabela NIE udaje, że się znają, i NIE zmyśla
+        // wspólnej przeszłości. Poznaje ucznia i pyta, o czym chce pogadać.
+        const hello = adv
+          ? pickOne([`Hi${name ? ' ' + name : ''}! So good to finally talk to you.`, 'Hey, welcome aboard! Let’s get to know each other.'])
+          : pickOne([`Cześć${name ? ', ' + name : ''}! Ale miło Cię wreszcie usłyszeć.`, 'O, jesteś! Świetnie, poznajmy się bliżej.', 'Hej, dobrze Cię widzieć na pokładzie!']);
+        introGate = new Promise((res) => { speakLine(hello, { lang: adv ? 'en' : 'pl', onEnd: res }); setTimeout(res, 7000); });
+        history.push({ role: 'user', text: `To Wasza PIERWSZA wspólna lekcja — dopiero się poznajecie. Absolutnie NIE udawaj, że już się znacie, i NIE odwołuj się do żadnych wcześniejszych rozmów, tematów ani ćwiczeń (żadnych nie było). Już się przywitałaś słowami "${hello}" — nie witaj się ponownie. Teraz ciepło i krótko zagadaj ucznia, zapytaj, o czym chciałby dziś porozmawiać po angielsku, i zaproponuj prosty, przyjemny temat na start.${skipped ? ' Uczeń pominął test wymowy — możesz mimochodem wspomnieć, że w każdej chwili możecie go zrobić, wystarczy, że powie „zróbmy test wymowy".' : ''} ${adv ? 'Prowadź rozmowę po angielsku.' : 'TĘ pierwszą wypowiedź powiedz PO POLSKU (ustaw "lang":"pl"); angielskie frazy w cudzysłowie. Kolejne wypowiedzi prowadź wg poziomu ucznia.'}` });
+        await aiTurn();
+        return;
+      }
+
+      const past = prevFull
         .filter((h) => h.summary)
         .slice(-4)
         .map((h) => '- ' + h.summary)
@@ -290,8 +308,8 @@ export function renderConversation(mount, lessonId) {
         ? pickOne([`Hey${name ? ' ' + name : ''}, good to see you again!`, 'Hello hello, welcome back!', `Hi${name ? ' ' + name : ''}! Ready to chat?`])
         : pickOne([`No hej${name ? ', ' + name : ''}, dobrze Cię znowu widzieć!`, 'O, jesteś! No to gadamy.', 'Siema, wpadaj, rozgość się!']);
       introGate = new Promise((res) => { speakLine(hello, { lang: adv ? 'en' : 'pl', onEnd: res }); setTimeout(res, 7000); });
-      history.push({ role: 'user', text: `To jest KOLEJNA lekcja z uczniem, którego już dobrze znasz — jesteście starymi znajomymi. NIE zaczynaj nauki od zera, NIE ucz ponownie powitań typu "Hello" ani przedstawiania się (to dawno za Wami).${past ? `\nPodsumowania Waszych poprzednich lekcji (nawiązuj do nich naturalnie):\n${past}` : ''}
-Już się przywitałaś słowami "${hello}" — NIE witaj się ponownie. Teraz: jednym zdaniem nawiąż do tego, co ostatnio ćwiczyliście albo do samego ucznia, i ZAPYTAJ, o czym chce dziś pogadać — możesz przy tym zaproponować temat, który jest naturalnym krokiem DALEJ względem poprzednich lekcji. ${adv ? 'Prowadź rozmowę po angielsku, jak z dobrym znajomym.' : 'TĘ pierwszą wypowiedź powiedz PO POLSKU (ustaw "lang":"pl"), żeby uczeń wszystko zrozumiał; angielskie frazy w cudzysłowie. Kolejne wypowiedzi prowadź wg poziomu ucznia.'}` });
+      history.push({ role: 'user', text: `To jest KOLEJNA lekcja z uczniem, którego już znasz. NIE zaczynaj nauki od zera, NIE ucz ponownie powitań typu "Hello" ani przedstawiania się (to już za Wami).${past ? `\nPodsumowania Waszych poprzednich lekcji (nawiązuj tylko do tego, co tu faktycznie jest):\n${past}` : '\nNie masz zapisanych podsumowań poprzednich lekcji — więc NIE zmyślaj konkretnych tematów, o których rzekomo rozmawialiście.'}
+Już się przywitałaś słowami "${hello}" — NIE witaj się ponownie. Teraz: jednym zdaniem nawiąż do ucznia${past ? ' albo do tego, co ostatnio ćwiczyliście,' : ''} i ZAPYTAJ, o czym chce dziś pogadać${skipped ? '. Uczeń pominął test wymowy — możesz mimochodem wspomnieć, że zrobicie go, gdy tylko powie' : ''}. ${adv ? 'Prowadź rozmowę po angielsku, jak z dobrym znajomym.' : 'TĘ pierwszą wypowiedź powiedz PO POLSKU (ustaw "lang":"pl"); angielskie frazy w cudzysłowie. Kolejne wypowiedzi prowadź wg poziomu ucznia.'}` });
       await aiTurn();
       return;
     }
@@ -329,9 +347,27 @@ Już się przywitałaś słowami "${hello}" — NIE witaj się ponownie. Teraz: 
   }
 
   async function handleAiAnswer(text) {
+    if (isFull && wantsPhoneticTest(text)) { startPhoneticFromLesson(); return; }
     history.push({ role: 'user', text });
     persistLesson();
     await aiTurn();
+  }
+
+  // Uczeń może w trakcie lekcji poprosić o test wymowy — wykrywamy prośbę
+  // i przechodzimy do Paszportu Fonetycznego (przechodzi go od nowa).
+  function wantsPhoneticTest(t) {
+    const s = (t || '').toLowerCase();
+    return /(test|sprawd[zź]\w*|ćwicz\w*|cwicz\w*|zrób\w*|zrobmy|zróbmy|powtórzmy|przećwicz\w*)[^.!?]{0,30}(wymow|fonetyczn|fonetyk)/.test(s)
+        || /(wymow\w*|fonetyk\w*)[^.!?]{0,30}(test|sprawd[zź])/.test(s)
+        || /paszport\s+fonetyczn/.test(s);
+  }
+  function startPhoneticFromLesson() {
+    const line = 'Jasne, zróbmy Twój test wymowy! Odpalam go już — a potem wróć, dokończymy lekcję.';
+    addMessage('izabela', line);
+    persistLesson();                                   // wznowimy lekcję po teście
+    speech.stopSpeaking();
+    speech.speak(line, { lang: 'pl-PL', onEnd: (e) => { if (!e?.cancelled) navigate('#/phonetic'); } });
+    setTimeout(() => { if (location.hash.startsWith('#/lesson')) navigate('#/phonetic'); }, 2800);
   }
 
   // ---------- pomocnicze ----------
