@@ -28,21 +28,22 @@ export function renderHistory(mount) {
   const addr = isFemale(name) ? 'koleżanko' : 'kolego';
 
   const fewJokes = [
-    `Jeszcze tu pustki! Musisz to zmienić, ${addr}.`,
-    'No, rozgadana historia to to jeszcze nie jest. Zmieniamy to?',
-    'Ale echo! Trzeba tu nagadać trochę lekcji.',
-    `Moje kotki mają więcej wpisów w dzienniczku niż Ty. Nadrabiamy, ${addr}!`,
-    'Cieniutko tu jeszcze. Wpadaj na lekcję, a zaraz się zaroi.',
+    `Ej, no bez jaj — tu praktycznie nic nie ma! Ale brechta. Trzeba nagadać, ${addr}.`,
+    'Pustka jak w kosmosie, tylko bez gwiazdek. Nagadaj mi trochę, to się zaroi!',
+    `Ale tu głucho! Moje kotki mają bogatszy pamiętnik niż Ty, ${addr}. No brechta!`,
+    'Historia? Jaka historia, przecież tu wieje! Wpadaj na lekcję, zmieniamy to.',
+    'Serio, ledwo zaczęliśmy — tu jeszcze echo się niesie. Dawaj, nagadamy trochę!',
+    'Chudziutko tu, mówię Ci. Godzinki jeszcze nie zebraliśmy, więc chwalić się nie ma czym. Na razie!',
   ];
   const manyLines = [
     'O, patrz, cała nasza historia jak na dłoni. Nieźle nam idzie, co?',
     'Wszystko tu mam, o czym gadaliśmy. Fajnie się to ogląda.',
     'Zobacz, ile już razem przegadaliśmy. Robi wrażenie!',
   ];
-  // „Nieźle nam idzie" tylko gdy naprawdę jest historia. Przy 1 krótkiej lekcji
-  // to wciąż praktycznie pustka — wtedy Izabela żartuje, że cieniutko.
+  // Dopóki nie ma chociaż GODZINY nagadane, w historii realnie prawie nic nie ma
+  // — wtedy Izabela się brechta, że pusto. „Nieźle nam idzie" dopiero od godziny.
   const totalMin = Math.round(entries.reduce((a, e) => a + (e.seconds || 0), 0) / 60);
-  const sparse = entries.length <= 1 || totalMin < 8;
+  const sparse = totalMin < 60;
   const spoken = sparse ? pick(fewJokes) : pick(manyLines);
 
   // Kolumna okienek po PRAWEJ stronie, w dolnej części (biurko/konsola) —
