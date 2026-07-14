@@ -1,5 +1,5 @@
 // pogadaj.se — Service Worker (offline shell dla PWA)
-const CACHE = 'pogadajse-v0.1.0';
+const CACHE = 'pogadajse-v0.1.1';
 const ASSETS = [
   './',
   './index.html',
@@ -7,7 +7,6 @@ const ASSETS = [
   './css/app.css',
   './js/app.js',
   './manifest.webmanifest',
-  './assets/izabela/avatar.svg',
   './assets/favicon.svg',
 ];
 

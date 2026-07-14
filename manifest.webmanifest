@@ -11,6 +11,6 @@
   "lang": "pl",
   "categories": ["education", "productivity"],
   "icons": [
-    { "src": "assets/izabela/avatar.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "assets/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }

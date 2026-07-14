@@ -121,10 +121,9 @@ export function renderPhonetic(mount) {
     // Bez procentów — ocena liczbowa tylko stresuje. Liczy się wskazówka.
     return el('div.pron-result.fade-in', { style: 'width:100%' }, [
       r.heard ? el('div.muted', { style: 'margin-top:8px', html: `Usłyszałam: „<b>${r.heard}</b>"` }) : null,
-      (!good && r.issue) ? el('div.pron-issue', { text: '' + r.issue }) : null,
-      r.tip ? el('div', { style: 'margin-top:8px', text: (good ? '' : '') + (good ? (r.praise || 'Brzmi świetnie!') : r.tip) }) : null,
+      r.tip ? el('div', { style: 'margin-top:8px', text: good ? (r.praise || 'Brzmi świetnie!') : r.tip }) : null,
       el('div.row', { style: 'justify-content:center;gap:10px;margin-top:14px' }, [
-        el('button.btn.btn--primary', { onclick: next }, ['Dalej']),
+        el('button.btn.btn--primary.btn--lg', { onclick: next, style: 'color:#fff' }, ['Dalej']),
       ]),
     ]);
   }
