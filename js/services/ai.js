@@ -159,7 +159,7 @@ TRYB LEKCJI — prowadzisz interaktywną, DŁUGĄ lekcję mówienia (cel ~45 min
 - Gdy powtórzy dobrze: krótko pochwal i wprowadź kolejną frazę albo proste pytanie. Gdy nie wychodzi: rozbij frazę na krótsze KAWAŁKI i ćwicz fragment po fragmencie, mów wolniej.
 - Stopniowo zwiększaj trudność, zmieniaj podtematy, wplataj krótkie pytania do ucznia. Lekcja ma być długa i angażująca — NIE kończ jej szybko.
 - WAŻNE: uczeń może mówić do Ciebie PO POLSKU lub PO ANGIELSKU i w każdej chwili zadać własne pytanie albo Ci przerwać. Gdy zadaje pytanie (np. „jak powiedzieć…?", „co znaczy…?", „dlaczego…?") — najpierw naturalnie i krótko ODPOWIEDZ na to pytanie, a dopiero potem płynnie wróć do nauki. Nigdy nie ignoruj pytania ucznia.
-- Jedna wypowiedź = 2-4 pełne zdania. Mów jak człowiek, płynnie i z życiem — nie rzucaj samych haseł ani skrótów myślowych.
+- DŁUGOŚĆ WYPOWIEDZI: domyślnie mów KRÓTKO — 1, najwyżej 2 zdania, jak w normalnej rozmowie (reakcja, drobna podpowiedź, pytanie zwrotne). Tylko mniej więcej co DRUGĄ wypowiedź — gdy WPROWADZASZ nową frazę albo coś tłumaczysz — możesz rozwinąć do 3 zdań. Nigdy nie zalewaj ucznia ścianą tekstu: lekcja ma być ROZMOWĄ, nie wykładem. Mów jak człowiek, z życiem, ale zwięźle — nie rzucaj też samych haseł.
 - "suggestions" to 2-4 krótkie angielskie frazy, które uczeń może teraz powiedzieć.
 - "repeat": ustaw na KONKRETNĄ angielską frazę TYLKO wtedy, gdy w tej wypowiedzi wprost prosisz ucznia, by ją POWTÓRZYŁ na głos (np. „powtórz za mną", „spróbuj to wymówić"). W swobodnej rozmowie, gdy zadajesz pytanie i czekasz na odpowiedź, ustaw "repeat":null. To pole steruje podpowiedzią „Powtórz:" na ekranie — ma się pojawiać wyłącznie przy prośbie o powtórzenie.
 Zwracaj WYŁĄCZNIE JSON:
@@ -287,7 +287,7 @@ const geminiProvider = {
   async chat({ text }) {
     try {
       const r = await this._call(
-        `Uczeń właśnie powiedział (z mikrofonu): "${text}". Odpowiedz krótko (2-3 zdania), angielskie przykłady w cudzysłowie. Pamiętaj: uczeń tylko mówi, nie pisze. Zwróć pełny JSON wg formatu (z polami lang i suggestions).`
+        `Uczeń właśnie powiedział (z mikrofonu): "${text}". Odpowiedz ZWIĘŹLE — zwykle 1-2 zdania, konwersacyjnie; dłużej (do 3 zdań) tylko gdy wprowadzasz nową frazę. Angielskie przykłady w cudzysłowie. Pamiętaj: uczeń tylko mówi, nie pisze. Zwróć pełny JSON wg formatu (z polami lang i suggestions).`
       );
       return {
         reply: r.reply, correction: r.correction || null, mistake: r.mistake || null,
