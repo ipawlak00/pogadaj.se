@@ -72,7 +72,7 @@ export function renderPhonetic(mount) {
           resultArea(),
           el('div.row', { style: 'justify-content:center;gap:10px;margin-top:6px' }, [
             el('button.btn.btn--sq', { onclick: skip }, ['Pomiń słowo']),
-            el('button.btn.btn--sq', { onclick: skipAll }, ['Pomiń cały test']),
+            el('button.btn.btn--sq', { onclick: askSkip }, ['Pomiń cały test']),
           ]),
           dots(),
         ]),
@@ -202,22 +202,39 @@ export function renderPhonetic(mount) {
 
   function skip() { best = { ok: false, score: 0, focus: words[idx].focus, skipped: true }; next(); }
 
-  // „Pomiń cały test", uczeń nie chce teraz robić testu. Bez udawania analizy:
-  // ciepła reakcja, oznaczamy jako pominięty (zrobi go później w lekcji) i dalej.
-  function skipAll() {
+  // „Pomiń cały test" — okienko potwierdzenia NAD testem (rozmyte tło), spójne
+  // z resztą aplikacji, z informacją jak wrócić do testu później.
+  function askSkip() {
+    const close = () => { overlay.remove(); document.removeEventListener('keydown', onEsc); };
+    const onEsc = (e) => { if (e.key === 'Escape') close(); };
+    const overlay = el('div.level-overlay', { onclick: (e) => { if (e.target === overlay) close(); } }, [
+      el('div.level-box', {}, [
+        el('h2.display', { style: 'margin:0 0 8px;color:#14314f', text: 'Pominąć test wymowy?' }),
+        el('p', { style: 'margin:0 0 20px;color:#46688c;font-size:1.02rem;line-height:1.6',
+          text: 'Spoko, nie musisz teraz. W każdej chwili w trakcie lekcji powiedz Izabeli „zróbmy test wymowy", a ona od razu go odpali. Wrócisz do niego, kiedy zechcesz.' }),
+        el('div.stack', { style: 'gap:10px' }, [
+          el('button.btn.btn--primary.btn--lg.btn--block', { style: 'color:#fff', onclick: close }, ['Wróć do testu']),
+          el('button.btn.btn--block', {
+            style: 'background:#1c1c26;color:#e8eefb;border:1px solid rgba(255,255,255,.14)',
+            onclick: doSkip,
+          }, ['Pomiń test']),
+        ]),
+      ]),
+    ]);
+    document.addEventListener('keydown', onEsc);
+    document.body.append(overlay);
+  }
+
+  // Potwierdzone pominięcie: bez udawania analizy, ciepła reakcja i na pokład.
+  function doSkip() {
     speech.stopSpeaking();
     store.patchKey('phonetic', { completed: true, skipped: true, profile: null });
     store.patchKey('progress', { fullUnlocked: true });
     auth.saveProfile({ skipped: true }).catch(() => {});
-    const line = 'No dobra, jak nie chcesz teraz gadać, to nie będę Cię ciągnąć za język! ' +
-      'Twoją wymowę sprawdzimy sobie później, w trakcie lekcji po prostu powiedz „zróbmy test wymowy", a od razu go odpalę. Lecimy!';
-    screen.replaceChildren(el('div.card.center.stack', { style: 'max-width:520px;margin:10vh auto' }, [
-      el('h2.display', { style: 'color:#14314f', text: 'Spoko, zrobimy to później' }),
-      el('p.muted', { style: 'font-size:1.05rem;line-height:1.6', text: line }),
-      el('button.btn.btn--primary.btn--lg', { style: 'color:#fff', onclick: () => navigate('#/home') }, ['Wchodzę na pokład']),
-    ]));
-    speech.speak(line, { lang: 'pl-PL', onEnd: (e) => { if (!e?.cancelled) navigate('#/home'); } });
-    setTimeout(() => { if (location.hash.includes('phonetic')) navigate('#/home'); }, 8000);
+    const line = 'No dobra, jak nie chcesz teraz, to nie będę Cię ciągnąć za język! ' +
+      'Wymowę sprawdzimy w trakcie lekcji, tylko powiedz „zróbmy test wymowy". Lecimy na pokład!';
+    speech.speak(line, { lang: 'pl-PL' });
+    navigate('#/home');
   }
 
   function next() {
