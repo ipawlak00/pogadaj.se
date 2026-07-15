@@ -390,7 +390,7 @@ Max 2-3 krótkie zdania (będzie czytane na głos). Zwróć JSON: {"joke":"..."}
   // kosmos, statek, fizyka kwantowa, poruszanie się w kosmosie, czasem psoty kotów.
   async spaceTidbit() {
     try {
-      const themes = ['kosmos i gwiazdy', 'nasz statek i podróż', 'fizyka kwantowa', 'poruszanie się w kosmosie', 'planety i księżyce', 'psota kotów Peji lub Kocina na pokładzie', 'ciekawostka o mózgu albo psychologii', 'magiczne kamienie i opal'];
+      const themes = ['kosmos i gwiazdy', 'nasz statek i podróż', 'fizyka kwantowa', 'poruszanie się w kosmosie', 'planety i księżyce', 'psota kotów Peji lub Kocina na pokładzie', 'ciekawostka o mózgu albo psychologii', 'magiczne kamienie i opal', 'zabawna polska kalka językowa (dosłowne tłumaczenie typu „thank you from the mountain") z podaniem poprawnej wersji'];
       const theme = themes[Math.floor(Math.random() * themes.length)];
       const contents = [{ role: 'user', parts: [{ text: `Powitaj się krótko z wracającym uczniem i od razu rzuć JEDNĄ świeżą, zaskakującą ciekawostkę na temat: ${theme}. Ma być ZA KAŻDYM RAZEM INNA, konkretna i naprawdę ciekawa (nie ogólnik). Mów po polsku, swoim luźnym, ciepłym stylem, jakbyś zdawała relację z podróży przez kosmos. Maksymalnie 2 krótkie zdania (będzie czytane na głos). Bez powtarzania utartych formułek. Zwróć JSON: {"say":"..."}` }] }];
       const r = await this._callContents(contents, IZABELA.systemPrompt, CONFIG.GEMINI.fastModel);

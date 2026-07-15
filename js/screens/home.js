@@ -7,6 +7,7 @@ import { FULL_MONTH_MINUTES, HOME_SCENES } from '../data/lessons.js';
 import { minutesWord, hoursWord } from '../data/phrases.js';
 import { pickFresh } from '../data/rotate.js';
 import { JOKES } from '../data/jokes.js';
+import { KALKI_LINES } from '../data/kalki.js';
 
 // Ciekawostki wplecione naturalnie (jak Izabela dzieli się myślą), mózg,
 // psychologia, kosmos, astrologia, magiczne kamienie. Co jakiś czas, nie zawsze.
@@ -144,7 +145,7 @@ export function renderHome(mount) {
   async function freshTidbit() {
     let t = '';
     try { t = await ai.spaceTidbit(); } catch (e) { /* fallback niżej */ }
-    if (!t) t = pickFresh('homeTidbit', [...JOURNEY_TIDBITS, ...FUN_FACTS]);
+    if (!t) t = pickFresh('homeTidbit', [...JOURNEY_TIDBITS, ...FUN_FACTS, ...KALKI_LINES]);
     return t;
   }
 
