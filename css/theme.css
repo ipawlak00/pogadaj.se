@@ -163,6 +163,11 @@ a { color: var(--accent-bright); text-decoration: none; }
   .iza-rocket { display: none; }
 }
 
+/* Na telefonie duża planeta wystawała zza zdjęcia na landingu — chowamy ją */
+@media (max-width: 760px) {
+  .planet--a { display: none; }
+}
+
 /* =============================================================
    Motyw per-ekran — planety/pomarańcz TYLKO na logowaniu.
    Po wejściu na pokład: tło statku + chłodny błękit (golf Izabeli).
