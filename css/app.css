@@ -1344,8 +1344,8 @@ body.on-lessons .cosmos { display: none; }
 .landing__footer b { color: var(--accent-bright); font-weight: 700; }
 
 /* Telefon: pion — pasek, zdjęcie (band), treść, stopka */
-/* telefon w pionie ORAZ w poziomie (niski ekran) -> układ pionowy, przewijalny */
-@media (max-width: 760px), (max-height: 560px) {
+/* telefon w pionie ORAZ w poziomie (niski ekran, tylko dotyk) -> układ pionowy */
+@media (max-width: 760px), (max-height: 560px) and (pointer: coarse) {
   .landing { display: flex; flex-direction: column; }
   .landing__top { order: 0; padding: 16px; }
   .landing__logo { font-size: 1.25rem; }
@@ -1374,7 +1374,7 @@ body.on-lessons .cosmos { display: none; }
 
 /* linijka zaufania pod CTA na landingu (dla ekipy: 15 h) — z odstępem od przycisku */
 .landing__trust { margin: 30px 0 0; max-width: 34ch; font-size: .92rem; line-height: 1.5; color: #9fb0d4; }
-@media (max-width: 760px), (max-height: 560px) {
+@media (max-width: 760px), (max-height: 560px) and (pointer: coarse) {
   /* na telefonie: CTA sporo niżej (pod rakietą), tekst pod nim do LEWEJ
      i każda informacja porozsuwana od siebie */
   .landing__brand { padding: 0 16px; }
@@ -1392,7 +1392,7 @@ body.on-lessons .cosmos { display: none; }
 /* Bez auto-powiększania tekstu przy obrocie telefonu (bug iOS Safari) */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
-/* Landscape na telefonie: wyższa banda ze zdjęciem, żeby widać więcej Izabeli */
-@media (orientation: landscape) and (max-height: 620px) {
+/* Landscape na telefonie (dotyk): wyższa banda ze zdjęciem, więcej Izabeli */
+@media (orientation: landscape) and (max-height: 620px) and (pointer: coarse) {
   .landing__hero { height: 66vh; object-position: 35% 30%; }
 }
