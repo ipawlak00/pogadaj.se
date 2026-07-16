@@ -25,7 +25,7 @@ export function renderLanding(mount) {
         ' i gadaj po angielsku już dzisiaj!',
       ]),
       el('button.btn.btn--primary.btn--lg.landing__cta', { style: 'color:#fff', onclick: () => navigate('#/register') }, ['Wejdź na Statek']),
-      el('p.landing__trust', { text: 'Masz 15 godzin na przetestowanie apki i ćwiczenie rozmów po angielsku. Wchodź i gadaj!' }),
+      el('p.landing__trust', { text: 'Masz 15 godzin na przetestowanie apki i ćwiczenie rozmów po angielsku.' }),
     ]),
 
     // Dryfujący napis IzabelaCode (subtelnie, w górnej części)
