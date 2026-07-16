@@ -22,7 +22,10 @@ export function renderLanding(mount) {
       el('h1.landing__headline', {}, [
         'Wbijaj na statek ',
         el('span.landing__name', { text: 'Izabeli' }),
-        ' i gadaj po angielsku już dzisiaj.',
+        el('br'),
+        'i gadaj po angielsku',
+        el('br'),
+        'już dzisiaj.',
       ]),
       el('button.btn.btn--primary.btn--lg.landing__cta', { style: 'color:#fff', onclick: () => navigate('#/register') }, ['Wejdź na Statek']),
       el('p.landing__trust', { text: 'Masz 15 godzin na przetestowanie apki i ćwiczenie rozmów po angielsku.' }),
