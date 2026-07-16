@@ -28,7 +28,11 @@ export function renderLanding(mount) {
         'już dzisiaj.',
       ]),
       el('button.btn.btn--primary.btn--lg.landing__cta', { style: 'color:#fff', onclick: () => navigate('#/register') }, ['Wejdź na Statek']),
-      el('p.landing__trust', { text: 'Masz 15 godzin na przetestowanie apki i ćwiczenie rozmów po angielsku.' }),
+      el('p.landing__trust', {}, [
+        'Masz 15 godzin na przetestowanie apki',
+        el('br'),
+        'i ćwiczenie rozmów po angielsku.',
+      ]),
       el('p.landing__trust.landing__ps', { text: 'Nie zapomnij zostawić opinii.' }),
       el('p.landing__trust.landing__senkju', { html: '<b>Senkju my friend</b>' }),
     ]),
