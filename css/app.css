@@ -1370,3 +1370,7 @@ body.on-lessons .cosmos { display: none; }
 }
 .auth-back:hover { border-color: var(--accent-bright); color: #fff; }
 @media (max-width: 760px) { .auth-back { font-size: .78rem; padding: 8px 11px; } }
+
+/* linijka zaufania pod CTA na landingu (dla ekipy: 15 h) */
+.landing__trust { margin: 16px 0 0; max-width: 30ch; font-size: .92rem; line-height: 1.45; color: #9fb0d4; }
+@media (max-width: 760px) { .landing__trust { margin-left: auto; margin-right: auto; text-align: center; } }

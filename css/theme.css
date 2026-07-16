@@ -124,7 +124,7 @@ a { color: var(--accent-bright); text-decoration: none; }
   16%      { opacity: 1; }
   32%, 100%{ transform: translateX(130%) rotate(8deg); opacity: 0; }
 }
-.planet--a { width: 120px; height: 120px; left: 11%; top: 28%; animation: floatY 13s ease-in-out infinite; }
+.planet--a { width: 120px; height: 120px; left: 11%; top: 9%; animation: floatY 13s ease-in-out infinite; }
 .planet--b { width: 64px; height: 64px; right: 12%; top: 22%; opacity: .9; animation: floatY 17s ease-in-out infinite reverse; }
 .planet--c { width: 44px; height: 44px; left: 30%; bottom: 12%; opacity: .85; animation: floatY 21s ease-in-out infinite; }
 
