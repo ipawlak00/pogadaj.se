@@ -90,7 +90,7 @@ body.in-lesson .cosmos { display: none; }
 body.in-lesson {
   --text: #14314f; --text-dim: #46688c; --text-faint: #7b96b3;
   --surface-border: rgba(100, 170, 225, .35);
-  background: linear-gradient(180deg, #e6f2fd 0%, #f7fbff 55%, #e9f5fe 100%);
+  background: var(--galaxy-bg) fixed;   /* piękne kosmiczne tło za kartą lekcji */
 }
 body.in-lesson .logo { text-shadow: none; }
 body.in-lesson .card {
@@ -1176,15 +1176,9 @@ body.on-lessons .cosmos { display: none; }
   .home-fs, .history-fs, .lessons-fs {
     display: flex !important; flex-direction: column !important;
     overflow-y: auto !important; -webkit-overflow-scrolling: touch;
-    /* KOSMICZNE tło pod zdjęciem — głęboki gradient + delikatne gwiazdki.
-       Białe dymki, jasna tablica czasu i przyciski ładnie się na nim wybijają. */
-    background:
-      radial-gradient(1.4px 1.4px at 18% 24%, rgba(255,255,255,.75) 50%, transparent 51%),
-      radial-gradient(1.4px 1.4px at 72% 58%, rgba(255,255,255,.55) 50%, transparent 51%),
-      radial-gradient(1px 1px at 42% 82%, rgba(200,220,255,.6) 50%, transparent 51%),
-      radial-gradient(1px 1px at 88% 30%, rgba(255,255,255,.5) 50%, transparent 51%),
-      radial-gradient(1.2px 1.2px at 30% 66%, rgba(255,255,255,.5) 50%, transparent 51%),
-      radial-gradient(ellipse at 50% 6%, #232c5e 0%, #121732 46%, #0a0e1f 100%) !important;
+    /* Piękne kosmiczne tło (galaktyka, mgławice, Droga Mleczna, gwiazdy).
+       Białe dymki, jasna tablica czasu i karty historii ładnie się wybijają. */
+    background: var(--galaxy-bg) !important;
     padding-bottom: 96px;
   }
   /* górny pasek: ciemny, półprzezroczysty; przyciski jasne i czytelne */
