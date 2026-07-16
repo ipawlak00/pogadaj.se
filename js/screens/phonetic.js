@@ -230,7 +230,7 @@ export function renderPhonetic(mount) {
       el('div.level-box', {}, [
         el('h2.display', { style: 'margin:0 0 8px;color:#14314f', text: 'Pominąć test wymowy?' }),
         el('p', { style: 'margin:0 0 20px;color:#46688c;font-size:1.02rem;line-height:1.6',
-          text: 'Spoko, nie musisz teraz. W każdej chwili w trakcie lekcji powiedz Izabeli „zróbmy test wymowy", a ona od razu go odpali. Wrócisz do niego, kiedy zechcesz.' }),
+          text: 'Spoko, nie musisz teraz. W każdej chwili w trakcie lekcji powiedz mi „zróbmy test wymowy", a od razu go odpalę. Wrócisz do niego, kiedy zechcesz.' }),
         el('div.stack', { style: 'gap:10px' }, [
           el('button.btn.btn--primary.btn--lg.btn--block', { style: 'color:#fff', onclick: close }, ['Wróć do testu']),
           el('button.btn.btn--block', {
