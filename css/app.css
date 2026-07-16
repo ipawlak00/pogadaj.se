@@ -1176,11 +1176,20 @@ body.on-lessons .cosmos { display: none; }
   .home-fs, .history-fs, .lessons-fs {
     display: flex !important; flex-direction: column !important;
     overflow-y: auto !important; -webkit-overflow-scrolling: touch;
-    /* JASNE tło pod zdjęciem — treść i dymek ładnie się wybijają */
-    background: #e7f0fa !important; padding-bottom: 96px;
+    /* KOSMICZNE tło pod zdjęciem — głęboki gradient + delikatne gwiazdki.
+       Białe dymki, jasna tablica czasu i przyciski ładnie się na nim wybijają. */
+    background:
+      radial-gradient(1.4px 1.4px at 18% 24%, rgba(255,255,255,.75) 50%, transparent 51%),
+      radial-gradient(1.4px 1.4px at 72% 58%, rgba(255,255,255,.55) 50%, transparent 51%),
+      radial-gradient(1px 1px at 42% 82%, rgba(200,220,255,.6) 50%, transparent 51%),
+      radial-gradient(1px 1px at 88% 30%, rgba(255,255,255,.5) 50%, transparent 51%),
+      radial-gradient(1.2px 1.2px at 30% 66%, rgba(255,255,255,.5) 50%, transparent 51%),
+      radial-gradient(ellipse at 50% 6%, #232c5e 0%, #121732 46%, #0a0e1f 100%) !important;
+    padding-bottom: 96px;
   }
-  /* na jasnym tle przyciski górnego paska w ciemniejszej ramce (widoczne) */
-  .lessons-fs__top { background: #dbe8f5; }
+  /* górny pasek: ciemny, półprzezroczysty; przyciski jasne i czytelne */
+  .lessons-fs__top { background: rgba(12,16,34,.55); }
+  .lessons-fs__tools .btn { color: #e8eefc; border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.06); }
   .home-fs::before, .history-fs::before, .lessons-fs::before { display: none !important; }
   /* Zdjęcie sceny — trochę wyższe (4:3), boki lekko przycięte (cover), dół
      zakrywa dymek-łącznik. Znaczek Gemini w rogu i tak znika pod dymkiem. */
