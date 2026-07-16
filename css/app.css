@@ -1339,7 +1339,7 @@ body.on-lessons .cosmos { display: none; }
 /* stopka wyśrodkowana względem lewej (kosmicznej) części ekranu, nie w rogu */
 .landing__footer {
   position: absolute; z-index: 4; left: 0; width: 52%; bottom: 24px; text-align: center;
-  color: var(--text-faint); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--text-faint); font-size: .58rem; letter-spacing: .16em; text-transform: uppercase;
 }
 .landing__footer b { color: var(--accent-bright); font-weight: 700; }
 
