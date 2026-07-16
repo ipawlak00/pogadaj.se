@@ -264,12 +264,38 @@ export function renderPhonetic(mount) {
   }
 
   async function finish() {
+    // Analiza tylko z REALNIE sprawdzonych słów (pominięte nie liczą się do profilu).
+    const skippedCount = results.filter((r) => r.skipped).length;
+    const analyzed = results.filter((r) => !r.skipped);
+    const allSkipped = results.length > 0 && analyzed.length === 0;
+    const someSkipped = skippedCount > 0 && analyzed.length > 0;
+
+    // Pominął WSZYSTKIE słowa: bez udawania analizy. Zaczepnie i z powrotem do testu.
+    if (allSkipped) {
+      speech.stopSpeaking();
+      store.patchKey('phonetic', { completed: true, skipped: true, profile: null });
+      store.patchKey('progress', { fullUnlocked: true });
+      auth.saveProfile({ skipped: true }).catch(() => {});
+      const line = 'Hola hola, przecież pominąłeś WSZYSTKIE słówka! No to dalej kompletnie nic nie wiem o Twojej wymowie, lol. Wróć do testu, jak będziesz gotowy, albo lecimy dalej, i tak Cię na tym złapię w trakcie gadania.';
+      screen.replaceChildren(el('div.card.center.stack', { style: 'max-width:520px;margin:9vh auto' }, [
+        el('h2.display', { style: 'color:#14314f', text: 'Ej, wszystko pominięte' }),
+        el('p.muted', { style: 'font-size:1.05rem;line-height:1.6', text: line }),
+        el('div.stack', { style: 'gap:10px;width:100%;max-width:340px;margin-top:6px' }, [
+          el('button.btn.btn--primary.btn--lg.btn--block', { style: 'color:#fff',
+            onclick: () => { store.patchKey('phonetic', { completed: false, skipped: false, profile: null }); navigate('#/phonetic'); } }, ['Zrób test od nowa']),
+          el('button.btn.btn--sq.btn--block', { onclick: () => navigate('#/home') }, ['Wchodzę na pokład']),
+        ]),
+      ]));
+      speech.speak(line, { lang: 'pl-PL' });
+      return;
+    }
+
     screen.replaceChildren(el('div.card.center.stack', { style: 'max-width:520px;margin:8vh auto' }, [
       el('div.spinner'),
       el('h2.display', { text: 'Chwila, składam Twój paszport…' }),
       el('p.muted', { text: 'Przesłuchuję wszystko jeszcze raz i notuję.' }),
     ]));
-    const profile = await ai.buildProfile({ results });
+    const profile = await ai.buildProfile({ results: analyzed });
     store.setPhoneticProfile(profile);
     // Zapis profilu do bazy (Firestore), Izabela pamięta problemy z wymową
     // między urządzeniami i sesjami, nie tylko w localStorage.
@@ -281,22 +307,29 @@ export function renderPhonetic(mount) {
     const chalList = (profile.challenges || []).slice(0, 4);
     const chalSpoken = chalList.map((c) => example[c] ? `${c}, jak w „${example[c]}"` : c);
 
-    const hello = pick([
-      'Mam Cię!',
-      'No i cyk, mam Cię rozgryzioną!',
-      'Misja zakończona, paszport wbity!',
-      'Cyk myk i po sprawie!',
-      'Ale farcik, przesłuchane w całości!',
-      'Mocne! Dobra robota z tym testem!',
-      'No to pozamiatane, znam Twój akcent!',
-    ]);
+    // Część pominięta -> zaczepnie „i tak mi to w końcu powiesz". Reszta jak dawniej.
+    const hello = someSkipped
+      ? pick([
+          'Część słówek pominąłeś, ale spokojnie, i tak w końcu mi to wyśpiewasz, hehe.',
+          'Kilka słówek Ci umknęło, chytralski. Nic to, w trakcie gadania i tak Cię na nich złapię.',
+          'Widzę, widzę, parę pominiętych. Spoko, prędzej czy później i tak mi je powiesz.',
+        ])
+      : pick([
+          'Mam Cię!',
+          'No i cyk, mam Cię rozgryzioną!',
+          'Misja zakończona, paszport wbity!',
+          'Cyk myk i po sprawie!',
+          'Ale farcik, przesłuchane w całości!',
+          'Mocne! Dobra robota z tym testem!',
+          'No to pozamiatane, znam Twój akcent!',
+        ]);
     const challengeLine = chalList.length
       ? `Na celowniku mamy: ${chalSpoken.join(', ')}. Będę Cię na tym łapać podczas gadania, oczywiście z miłością.`
       : '';
     // Wypowiedź jest podzielona na części, dymek zmienia się w trakcie mówienia,
     // pokazując aktualnie wypowiadaną kwestię. Puste części pomijamy.
     const parts = [
-      `${hello} Znam już Twoją wymowę od podszewki i wiem, nad czym możemy razem popracować.`,
+      someSkipped ? hello : `${hello} Znam już Twoją wymowę i wiem, nad czym możemy razem popracować.`,
       challengeLine,
       'A zanim ruszymy dalej, mam do Ciebie jedno pytanie.',
       'Powiedz mi albo napisz, co Tobie sprawia największą trudność w mówieniu po angielsku. Może czasy, może brakuje Ci słówek, a może stres, że powiesz coś źle?',
