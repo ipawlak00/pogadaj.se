@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Podgląd widoków — pogadaj.se</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0a0e18; color: #e7eefc;
+    font-family: 'Space Grotesk', system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; }
+  .bar { display: flex; align-items: center; gap: 14px; padding: 10px 16px;
+    background: #12172a; border-bottom: 1px solid rgba(255,255,255,.08); flex: none; }
+  .bar button { font: inherit; font-weight: 600; cursor: pointer; color: #e7eefc;
+    background: #1c2440; border: 1px solid rgba(255,255,255,.14); border-radius: 10px;
+    padding: 8px 14px; }
+  .bar button:hover { border-color: #5b8cff; }
+  .name { font-weight: 700; font-size: 1.05rem; min-width: 260px; }
+  .hint { color: #8a97bd; font-size: .85rem; margin-left: auto; }
+  .toggle { color: #8a97bd; font-size: .85rem; }
+  .stage { flex: 1; display: grid; place-items: center; overflow: auto; padding: 16px; }
+  iframe { border: 0; background: #000; box-shadow: 0 20px 60px rgba(0,0,0,.5); border-radius: 12px; }
+  .stage.desktop iframe { width: 100%; height: 100%; border-radius: 0; box-shadow: none; }
+  .stage.phone iframe { width: 390px; height: 780px; max-height: 100%; border: 10px solid #1c2440; border-radius: 28px; }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <button id="prev" title="Poprzedni (←)">← poprzedni</button>
+    <span class="name" id="name"></span>
+    <button id="next" title="Następny (→)">następny →</button>
+    <button id="dev" class="toggle">📱 / 🖥 widok</button>
+    <span class="hint">Przełączaj widoki strzałkami ← →</span>
+  </div>
+  <div class="stage desktop" id="stage">
+    <iframe id="app" src="about:blank"></iframe>
+  </div>
+
+<script>
+  const KEY = 'pogadajse.state.v1';
+  const user = { id:'demo', number:'000001', name:'Ala', email:'demo@pogadaj.se', token:'demo', provider:'pogadaj' };
+  const onboarding = { completed:true, goal:'fun', level:'B1' };
+  const phonetic = { completed:true, skipped:false, profile:{ challenges:['θ','r'], strengths:['w'] } };
+  const history = [
+    { id:'f1', kind:'full', startedAt:1, seconds:1500, summary:'Rozmawialiśmy o planach na weekend; ćwiczyłaś czas Present Continuous.' },
+    { id:'f2', kind:'full', startedAt:2, seconds:2400, summary:'Gadaliśmy o pracy i small talku; szlifowaliśmy pytania podtrzymujące rozmowę.' },
+  ];
+  const month = new Date().toISOString().slice(0,7);
+  const loggedProgress = { fullMonth: month, fullSecondsUsed: 1800, homeWelcomed:true, history, fullHistory:[], homeSceneIdx:0 };
+  const logged = { user, onboarding, phonetic, progress: loggedProgress, analyst: [] };
+  const guest = {};
+
+  const views = [
+    { name:'Strona główna (landing)', hash:'#/',            state: guest },
+    { name:'Logowanie',               hash:'#/login',        state: guest },
+    { name:'Rejestracja',             hash:'#/register',     state: guest },
+    { name:'Test fonetyczny',         hash:'#/phonetic',     state: { user, onboarding, phonetic:{ completed:false }, progress:{}, analyst:[] } },
+    { name:'Ekran główny (statek)',   hash:'#/home',         state: logged },
+    { name:'Historia lekcji',         hash:'#/history',      state: logged },
+    { name:'Lekcja',                  hash:'#/lesson/full',  state: logged },
+  ];
+
+  let i = 0;
+  const nameEl = document.getElementById('name');
+  const frame = document.getElementById('app');
+
+  function show() {
+    const v = views[i];
+    try { localStorage.setItem(KEY, JSON.stringify(v.state)); } catch (e) {}
+    nameEl.textContent = (i + 1) + '/' + views.length + '  ·  ' + v.name;
+    frame.src = 'index.html?_p=' + Date.now() + v.hash;   // przeładuj z właściwym stanem
+  }
+  function go(d) { i = (i + d + views.length) % views.length; show(); }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') go(1);
+    else if (e.key === 'ArrowLeft') go(-1);
+  });
+  document.getElementById('next').onclick = () => go(1);
+  document.getElementById('prev').onclick = () => go(-1);
+  document.getElementById('dev').onclick = () => {
+    document.getElementById('stage').classList.toggle('phone');
+    document.getElementById('stage').classList.toggle('desktop');
+  };
+
+  show();
+</script>
+</body>
+</html>
