@@ -1288,7 +1288,13 @@ body.on-lessons .cosmos { display: none; }
 }
 
 /* ================= Strona główna (landing) ================= */
-.landing { position: relative; min-height: 100vh; width: 100%; overflow: hidden; color: #eaf1ff; }
+/* pełnoekranowo (wychodzimy poza max-width #app), żeby zdjęcie sięgało krawędzi */
+.landing { position: fixed; inset: 0; z-index: 40; overflow-y: auto; color: #eaf1ff; }
+/* szary kosmiczny przycisk (spójny z ciemnymi przyciskami w apce) */
+.btn--cosmic { background: #1c1c26; color: #e8eefb; border: 1px solid rgba(255,255,255,.14); justify-content: center; }
+.btn--cosmic:hover { border-color: rgba(255,255,255,.28); }
+/* wszystkie przyciski na landingu maja wyśrodkowaną treść */
+.landing .btn { justify-content: center; text-align: center; }
 /* Zdjęcie Izabeli po prawej — lewa krawędź wtapia się w kosmos (maska) */
 .landing__hero {
   position: absolute; top: 0; right: 0; height: 100%; width: 62%;
@@ -1300,8 +1306,13 @@ body.on-lessons .cosmos { display: none; }
   position: relative; z-index: 4; display: flex; align-items: center;
   justify-content: space-between; padding: 22px 30px; gap: 12px;
 }
-.landing__logo { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; color: #eaf1ff; }
-.landing__logo .dot, .landing__logo .se { color: var(--accent-bright); }
+/* logo jak wszędzie w apce (gradient marki), tylko większe */
+.landing__logo {
+  font-family: var(--font-display); font-weight: 700; font-size: 2.1rem; letter-spacing: -0.03em;
+  background: var(--grad-brand); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.landing__logo .dot { color: var(--accent); }
+.landing__logo .se { color: inherit; }
 .landing__auth { display: flex; gap: 10px; }
 .landing__btn { padding: 10px 18px; font-size: .92rem; }
 .landing__brand { position: relative; z-index: 3; max-width: 620px; padding: 0 28px 0 42px; margin-top: 9vh; }
@@ -1348,3 +1359,13 @@ body.on-lessons .cosmos { display: none; }
   .landing__footer { position: static; order: 3; left: auto; text-align: center; margin: 20px auto 22px; }
   .landing__mark { display: none; }
 }
+
+/* Powrót na stronę główną z ekranu logowania/rejestracji */
+.auth-back {
+  position: fixed; top: 18px; left: 20px; z-index: 30;
+  background: rgba(28,28,38,.72); color: #cdd6ee; border: 1px solid rgba(255,255,255,.14);
+  border-radius: 10px; padding: 9px 14px; font-size: .85rem; cursor: pointer;
+  font-family: var(--font-body);
+}
+.auth-back:hover { border-color: var(--accent-bright); color: #fff; }
+@media (max-width: 760px) { .auth-back { font-size: .78rem; padding: 8px 11px; } }

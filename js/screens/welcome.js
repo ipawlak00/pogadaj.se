@@ -41,6 +41,9 @@ export function renderWelcome(mount) {
     ])
   );
 
+  // Powrót na stronę główną (lewy górny róg)
+  mount.append(el('button.auth-back', { onclick: () => navigate('#/') }, ['← Wróć na stronę główną']));
+
   // Z landingu „Stwórz konto" -> otwórz od razu w trybie rejestracji.
   if ((location.hash || '').includes('register')) toggleMode();
 

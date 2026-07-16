@@ -9,7 +9,7 @@ export function renderLanding(mount) {
     el('header.landing__top', {}, [
       el('div.landing__logo', { html: 'pogadaj<span class="dot">.</span><span class="se">se</span>' }),
       el('div.landing__auth', {}, [
-        el('button.btn.btn--ghost.landing__btn', { onclick: () => navigate('#/login') }, ['Zaloguj się']),
+        el('button.btn.btn--cosmic.landing__btn', { onclick: () => navigate('#/login') }, ['Zaloguj się']),
         el('button.btn.btn--primary.landing__btn', { style: 'color:#fff', onclick: () => navigate('#/register') }, ['Stwórz konto']),
       ]),
     ]),
@@ -24,7 +24,6 @@ export function renderLanding(mount) {
         el('span.landing__name', { text: 'Izabeli' }),
         ' i gadaj po angielsku już dzisiaj!',
       ]),
-      el('p.landing__sub', { text: 'Bez wkuwania, bez stresu. Po prostu wejdź na pokład i pogadaj se.' }),
       el('button.btn.btn--primary.btn--lg.landing__cta', { style: 'color:#fff', onclick: () => navigate('#/register') }, ['Zacznij za darmo']),
     ]),
 
