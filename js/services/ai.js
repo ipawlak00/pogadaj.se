@@ -12,6 +12,7 @@ import { IZABELA } from '../data/izabela.js';
 import { store } from '../state.js';
 import { toast } from '../ui.js';
 import { FULL_MONTH_MINUTES } from '../data/lessons.js';
+import { ENGLISH_CHEATSHEET } from '../data/english-ref.js';
 
 // Loguj błąd AI do konsoli (diagnostyka dla dewelopera). Techniczny toast
 // pokazujemy WYŁĄCZNIE w trybie deweloperskim z własnym kluczem, użytkownik
@@ -162,6 +163,7 @@ TRYB LEKCJI, prowadzisz interaktywną, DŁUGĄ lekcję mówienia (cel ~45 minut)
 - DŁUGOŚĆ WYPOWIEDZI: domyślnie mów KRÓTKO, 1, najwyżej 2 zdania, jak w normalnej rozmowie (reakcja, drobna podpowiedź, pytanie zwrotne). Tylko mniej więcej co DRUGĄ wypowiedź, gdy WPROWADZASZ nową frazę albo coś tłumaczysz, możesz rozwinąć do 3 zdań. Nigdy nie zalewaj ucznia ścianą tekstu: lekcja ma być ROZMOWĄ, nie wykładem. Mów jak człowiek, z życiem, ale zwięźle, nie rzucaj też samych haseł.
 - "suggestions" to 2-4 krótkie angielskie frazy, które uczeń może teraz powiedzieć.
 - "repeat": ustaw na KONKRETNĄ angielską frazę TYLKO wtedy, gdy w tej wypowiedzi wprost prosisz ucznia, by ją POWTÓRZYŁ na głos (np. „powtórz za mną", „spróbuj to wymówić"). W swobodnej rozmowie, gdy zadajesz pytanie i czekasz na odpowiedź, ustaw "repeat":null. To pole steruje podpowiedzią „Powtórz:" na ekranie, ma się pojawiać wyłącznie przy prośbie o powtórzenie.
+${ENGLISH_CHEATSHEET}
 Zwracaj WYŁĄCZNIE JSON:
 {"say":"...", "lang":"pl"|"en", "suggestions":["..."], "repeat":"fraza do powtórzenia"|null, "correction":{"spoken":"..."}|null, "mistake":{"bad":"...","good":"...","note":"...","tag":"grammar|vocab|pronunciation"}|null, "done":false}
 Ustaw "done":true dopiero, gdy lekcja naprawdę dobiega końca (po wielu ćwiczeniach).

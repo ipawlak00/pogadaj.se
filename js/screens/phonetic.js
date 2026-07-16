@@ -4,6 +4,7 @@ import { speech, splitSentences } from '../services/speech.js';
 import { ai } from '../services/ai.js';
 import { auth } from '../services/auth.js';
 import { PHONETIC_WORDS } from '../data/phonetic-words.js';
+import { dictionary } from '../services/dictionary.js';
 
 export function renderPhonetic(mount) {
   const words = PHONETIC_WORDS.slice(0, 12);   // 12 słówek wystarczy, 20 męczyło
@@ -45,8 +46,22 @@ export function renderPhonetic(mount) {
       el(`i${i < idx ? '.done' : i === idx ? '.active' : ''}`)));
   }
 
+  // Prawdziwe nagranie native speakera (Free Dictionary API); fallback = lektor.
+  async function playNativeWord() {
+    const ok = await dictionary.playNative(words[idx].word);
+    if (!ok) { toast('Nagrania native nie ma, czytam sama.', ''); speakWord(); }
+  }
+  // Zamień zapis IPA na PRAWDZIWY ze słownika (gdy dostępny), po cichu w tle.
+  async function enrichIpaFromDict(word, node) {
+    try {
+      const ipa = await dictionary.ipaOf(word);
+      if (ipa && node && node.isConnected) node.textContent = ipa;
+    } catch (e) { /* zostaje IPA wbudowane */ }
+  }
+
   function draw() {
     const w = words[idx];
+    const ipaEl = el('div.phonetic-ipa', { text: w.ipa });
     // Jedna sklejona karta: Izabela (z dymkiem) po lewej, test po prawej
     const izaSide = el('div.iza-card__stage', {}, [
       el('img', { src: 'assets/scenes/scene-05.jpg', alt: 'Izabela',
@@ -62,9 +77,12 @@ export function renderPhonetic(mount) {
         el('div.iza-card__main.center', { style: 'gap:12px' }, [
           el('p.muted', { style: 'margin:0', text: '1) Posłuchaj, jak czytam słowo.  2) Powtórz je do mikrofonu.' }),
           el('div.phonetic-word', { text: w.word }),
-          el('div.phonetic-ipa', { text: w.ipa }),
+          ipaEl,
           el('div.phonetic-pl', { text: w.pl }),
-          el('button.btn.btn--sq', { style: 'margin:0 auto', onclick: () => speakWord() }, ['Posłuchaj jeszcze raz']),
+          el('div.row', { style: 'justify-content:center;gap:8px;flex-wrap:wrap' }, [
+            el('button.btn.btn--sq', { onclick: () => speakWord() }, ['Posłuchaj jeszcze raz']),
+            el('button.btn.btn--sq', { title: 'Prawdziwe nagranie native speakera', onclick: playNativeWord }, ['Native speaker']),
+          ]),
           el('div.phonetic-hint', { text: w.hint }),
           el('div.spacer-sm'),
           micArea(),
@@ -78,6 +96,7 @@ export function renderPhonetic(mount) {
         ]),
       ]),
     );
+    enrichIpaFromDict(w.word, ipaEl);   // podmień na prawdziwe IPA ze słownika
     if (!audioMode && !speech.isRecognitionSupported()) {
       setStatus('Ta przeglądarka nie wspiera mikrofonu, możesz pomijać słowa.');
     }
