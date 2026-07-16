@@ -553,6 +553,8 @@ function forSpeech(text) {
   if (!text) return '';
   return String(text)
     .replace(/[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}‍️⃣]/gu, '')
+    // samotne „US" (wielkimi) TTS czytał jako „U S"; w lekcji to zaimek „us"
+    .replace(/\bUS\b/g, 'us')
     .replace(/\/(aś|eś|am|em|ą|a)(?![a-ząćęłńóśźż])/gi, '')   // resztki form „zrobiłeś/aś" — nie czytamy ukośnika
     .replace(/[—–]/g, ',')                     // myślnik = pauza, nie „minus"
     .replace(/…|\.{3,}/g, ',')                  // wielokropek = pauza, nie „yyy"
