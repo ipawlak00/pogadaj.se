@@ -1286,3 +1286,65 @@ body.on-lessons .cosmos { display: none; }
   .iza-card__bubble { font-size: .84rem; padding: 7px 10px; max-height: 40%; }
   .iza-card__stage { min-height: 210px; }
 }
+
+/* ================= Strona główna (landing) ================= */
+.landing { position: relative; min-height: 100vh; width: 100%; overflow: hidden; color: #eaf1ff; }
+/* Zdjęcie Izabeli po prawej — lewa krawędź wtapia się w kosmos (maska) */
+.landing__hero {
+  position: absolute; top: 0; right: 0; height: 100%; width: 62%;
+  object-fit: cover; object-position: 35% center; z-index: 1; pointer-events: none;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 26%, #000 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 26%, #000 100%);
+}
+.landing__top {
+  position: relative; z-index: 4; display: flex; align-items: center;
+  justify-content: space-between; padding: 22px 30px; gap: 12px;
+}
+.landing__logo { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; color: #eaf1ff; }
+.landing__logo .dot, .landing__logo .se { color: var(--accent-bright); }
+.landing__auth { display: flex; gap: 10px; }
+.landing__btn { padding: 10px 18px; font-size: .92rem; }
+.landing__brand { position: relative; z-index: 3; max-width: 620px; padding: 0 28px 0 42px; margin-top: 9vh; }
+.landing__headline {
+  font-family: var(--font-display); font-weight: 700; margin: 0 0 18px;
+  font-size: clamp(2rem, 5vw, 3.6rem); line-height: 1.08; text-shadow: 0 4px 24px rgba(3,8,24,.6);
+}
+.landing__name { color: var(--accent-bright); }
+.landing__sub {
+  font-size: clamp(1rem, 1.6vw, 1.22rem); color: #c2cee9; line-height: 1.5;
+  margin: 0 0 28px; max-width: 30ch; text-shadow: 0 2px 12px rgba(3,8,24,.6);
+}
+.landing__cta { padding: 16px 36px; font-size: 1.12rem; }
+/* Dwa dryfujące napisy IzabelaCode */
+.landing__mark {
+  position: absolute; z-index: 2; pointer-events: none; white-space: nowrap;
+  font-family: var(--font-display); font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase; color: rgba(150,180,255,.26); font-size: .8rem;
+}
+.landing__mark--1 { top: 30%; left: 13%; animation: iza-drift1 26s ease-in-out infinite; }
+.landing__mark--2 { bottom: 27%; left: 6%; font-size: .7rem; animation: iza-drift2 34s ease-in-out infinite; }
+@keyframes iza-drift1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(26px,-18px); } }
+@keyframes iza-drift2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-18px,22px); } }
+.landing__footer {
+  position: absolute; z-index: 4; left: 42px; bottom: 22px;
+  color: var(--text-faint); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase;
+}
+.landing__footer b { color: var(--accent-bright); font-weight: 700; }
+
+/* Telefon: pion — pasek, zdjęcie (band), treść, stopka */
+@media (max-width: 760px) {
+  .landing { display: flex; flex-direction: column; }
+  .landing__top { order: 0; padding: 16px; }
+  .landing__logo { font-size: 1.25rem; }
+  .landing__btn { padding: 8px 12px; font-size: .82rem; }
+  .landing__hero {
+    position: relative; order: 1; width: 100%; height: 40vh; object-position: 35% 28%;
+    -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+  }
+  .landing__brand { order: 2; margin-top: -5vh; padding: 0 22px; text-align: center; max-width: none; }
+  .landing__sub { margin-left: auto; margin-right: auto; }
+  .landing__cta { width: 100%; max-width: 360px; }
+  .landing__footer { position: static; order: 3; left: auto; text-align: center; margin: 20px auto 22px; }
+  .landing__mark { display: none; }
+}

@@ -41,6 +41,9 @@ export function renderWelcome(mount) {
     ])
   );
 
+  // Z landingu „Stwórz konto" -> otwórz od razu w trybie rejestracji.
+  if ((location.hash || '').includes('register')) toggleMode();
+
   function toggleMode() {
     mode = mode === 'login' ? 'signup' : 'login';
     const signup = mode === 'signup';

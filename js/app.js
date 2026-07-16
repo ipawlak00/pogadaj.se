@@ -17,6 +17,7 @@ import { renderHistory } from './screens/history.js';
 import { renderLessons } from './screens/lessons.js';
 import { renderConversation } from './screens/conversation.js';
 import { renderReset } from './screens/reset.js';
+import { renderLanding } from './screens/landing.js';
 
 const appEl = document.getElementById('app');
 
@@ -33,6 +34,11 @@ function resolve() {
   if (lessonMatch) return guarded(st, () => renderConversation(appEl, lessonMatch[1]));
 
   switch (hash) {
+    // Ekran logowania/rejestracji (z landingu). Zalogowanych odsyłamy dalej.
+    case '#/login':
+    case '#/register':
+      if (st.user) return redirect('#/');
+      return renderWelcome(appEl);
     case '#/onboarding': return renderOnboarding(appEl);
     case '#/intro':
       if (!st.user) return redirect('#/');       // film dopiero PO założeniu konta
@@ -49,8 +55,8 @@ function resolve() {
       return guarded(st, () => renderHistory(appEl));
     case '#/':
     default:
-      // Kolejność: konto → film → cel/poziom → paszport → lekcje
-      if (!st.user) return renderWelcome(appEl);
+      // Kolejność: strona główna → konto → film → cel/poziom → paszport → lekcje
+      if (!st.user) return renderLanding(appEl);
       if (!st.progress.introSeen) return redirect('#/intro');
       if (!st.onboarding.completed) return redirect('#/onboarding');
       if (!st.phonetic.completed) return redirect('#/phonetic');
@@ -77,7 +83,8 @@ function routeKey(hash, st) {
   if (hash === '#/intro') return 'intro';
   if (hash === '#/phonetic') return 'phonetic';
   if (hash === '#/lessons') return 'lessons';
-  return st.user ? 'lessons' : 'welcome';   // '#/' zależnie od logowania
+  if (hash === '#/login' || hash === '#/register') return 'welcome';
+  return st.user ? 'lessons' : 'welcome';   // '#/' (landing) też kosmos
 }
 
 function render() {
