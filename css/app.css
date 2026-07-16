@@ -1357,7 +1357,7 @@ body.on-lessons .cosmos { display: none; }
   .landing__brand { order: 2; margin-top: -5vh; padding: 0 22px; text-align: center; max-width: none; }
   .landing__sub { margin-left: auto; margin-right: auto; }
   .landing__cta { width: 100%; max-width: 360px; }
-  .landing__footer { position: static; order: 3; left: auto; text-align: center; margin: 20px auto 22px; }
+  .landing__footer { position: static; order: 3; left: auto; width: auto; text-align: center; margin: 44px auto 24px; }
   .landing__mark { display: none; }
 }
 
@@ -1378,7 +1378,7 @@ body.on-lessons .cosmos { display: none; }
      i każda informacja porozsuwana od siebie */
   .landing__brand { padding: 0 16px; }
   .landing__cta { margin-top: 56px; }
-  .landing__trust { margin-top: 26px; max-width: none; text-align: right; }
+  .landing__trust { margin-top: 40px; max-width: none; text-align: left; }
   .landing__ps { margin-top: 18px; }
   .landing__senkju { margin-top: 14px; }
 }
