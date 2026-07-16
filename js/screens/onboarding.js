@@ -21,7 +21,7 @@ const LEVELS = [
 
 // Kwestie Izabeli (mówione i w dymku), kolejność: imię → cel → poziom
 const BUBBLES = [
-  'No hej, dobrze Cię tu mieć! Zanim ruszymy w kosmos, powiedz mi, jak masz na imię i ile masz lat? Dzięki temu dobiorę wszystko pod Ciebie.',
+  'No hej, dobrze Cię tu mieć! Zanim ruszymy w podróż, powiedz mi, jak masz na imię i ile masz lat? Dzięki temu dobiorę wszystko pod Ciebie.',
   'Do czego potrzebujesz angielskiego? Dzięki temu dobiorę Ci tematy rozmów.',
   'Jak oceniasz swój poziom? Tylko bez stresu, i tak sprawdzę w praktyce.',
 ];
@@ -41,7 +41,15 @@ function fallbackReaction(name) {
     `No i git, ${name}. Miło Cię poznać!`,
     `${name}? Mocne imię.`,
     `O, ${name}! Czuję, że będzie z nami niezła jazda.`,
-    `${name}, brzmi jak ktoś, kto da radę.`,
+    `${name}, ale super, że jesteś na pokładzie!`,
+    `Cześć ${name}! Fajnie brzmi, pasuje tu do nas.`,
+    `${name}, oo, lubię to imię.`,
+    `No proszę, ${name}. Witaj w ekipie!`,
+    `${name}? Będzie się działo, czuję to.`,
+    `Miło mi, ${name}! Zapamiętam, obiecuję. Chyba że coś mnie rozproszy, haha.`,
+    `${name}, siemanko! Dobrze Cię mieć na statku.`,
+    `O, ${name}, ładnie. To co, lecimy?`,
+    `${name}, spoko imię. Będziemy się dogadywać.`,
   ]);
 }
 
