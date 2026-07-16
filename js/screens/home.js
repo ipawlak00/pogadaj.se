@@ -144,8 +144,8 @@ export function renderHome(mount) {
   // Dymek: sam tekst przewija się w rytm mowy (bez osobnego, stałego nagłówka).
   const bodyP = el('p', { style: 'margin:4px 0 0', text: hi });
   const bubble = el('div.scene-bubble', {
-    style: layout.bubble, title: 'Kliknij, a powtórzę',
-    onclick: () => playWelcome(),
+    style: layout.bubble, title: 'Kliknij, a pogadam dalej',
+    onclick: () => sayMore(),
   }, [
     el('div.scene-bubble__who', { text: 'Izabela' }),
     bodyP,
@@ -173,6 +173,20 @@ export function renderHome(mount) {
   function speakSeq(seq) {
     bodyP.textContent = seq[0] || '';
     speech.speakSequence(seq, { lang: 'pl-PL', onPart: (t, i) => { bodyP.textContent = seq[i] || t; } });
+  }
+
+  // Klik w dymek: Izabela nawija DALEJ — świeża, nowa kwestia (nie powtórka
+  // powitania). Ciągnie temat/gadkę, za każdym razem coś innego.
+  let moreBusy = false;
+  function sayMore() {
+    if (moreBusy) return; moreBusy = true;
+    speech.stopSpeaking();
+    speech.unlockAudio();
+    freshTidbit().then((t) => {
+      moreBusy = false;
+      if (!t) t = 'No dawaj, klikaj i gadamy dalej!';
+      speakSeq(splitSentences(t));
+    }).catch(() => { moreBusy = false; });
   }
 
   function playWelcome() {
