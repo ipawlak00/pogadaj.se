@@ -388,11 +388,27 @@ Max 2-3 krótkie zdania (będzie czytane na głos). Zwróć JSON: {"joke":"..."}
 
   // Świeża ciekawostka „z pokładu" na powitanie (zawsze nowa, w stylu Izabeli):
   // kosmos, statek, fizyka kwantowa, poruszanie się w kosmosie, czasem psoty kotów.
-  async spaceTidbit() {
+  async spaceTidbit(recent) {
     try {
-      const themes = ['kosmos i gwiazdy', 'nasz statek i podróż', 'fizyka kwantowa', 'poruszanie się w kosmosie', 'planety i księżyce', 'psota kotów Peji lub Kocina na pokładzie', 'ciekawostka o mózgu albo psychologii', 'magiczne kamienie i opal', 'zabawna polska kalka językowa (dosłowne tłumaczenie typu „thank you from the mountain") z podaniem poprawnej wersji'];
-      const theme = themes[Math.floor(Math.random() * themes.length)];
-      const contents = [{ role: 'user', parts: [{ text: `Powitaj się krótko z wracającym uczniem i od razu rzuć JEDNĄ świeżą, zaskakującą ciekawostkę na temat: ${theme}. Ma być ZA KAŻDYM RAZEM INNA, konkretna i naprawdę ciekawa (nie ogólnik). Mów po polsku, swoim luźnym, ciepłym stylem, jakbyś zdawała relację z podróży przez kosmos. Maksymalnie 2 krótkie zdania (będzie czytane na głos). Bez powtarzania utartych formułek. Zwróć JSON: {"say":"..."}` }] }];
+      const themes = [
+        'zaskakująca ciekawostka o kosmosie, gwiazdach albo czarnych dziurach',
+        'ciekawostka o naszej planecie, oceanach, wulkanach albo pogodzie',
+        'zaskakujący fakt o zwierzętach albo przyrodzie',
+        'zaskakujący fakt o ludzkim mózgu albo psychologii',
+        'ciekawostka z historii albo o dawnych czasach',
+        'coś dziwnego i fascynującego o świecie albo ludzkim ciele',
+        'ciekawostka o fizyce albo o poruszaniu się w kosmosie',
+        'ciekawostka o planetach i księżycach Układu Słonecznego',
+        'Twoja zabawna wpadka albo przygoda z pokładu (np. walnęłaś się w głowę i jesteś dziś nie na 100%, koty coś nabroiły, coś Ci odpłynęło w nieważkości) — z autoironią',
+        'ciekawostka o magicznych kamieniach, opalu albo astrologii',
+      ];
+      let theme = themes[Math.floor(Math.random() * themes.length)];
+      // kalki tylko sporadycznie — mniej więcej raz na 9 razy
+      if (Math.random() < 0.11) theme = 'zabawna polska kalka językowa (dosłowne tłumaczenie typu „thank you from the mountain") z podaniem poprawnej angielskiej wersji';
+      const avoid = (Array.isArray(recent) && recent.length)
+        ? `\nNIE POWTARZAJ tego, co już ostatnio mówiłaś (omijaj te treści i tematy):\n- ${recent.slice(-12).map((s) => String(s).slice(0, 90)).join('\n- ')}`
+        : '';
+      const contents = [{ role: 'user', parts: [{ text: `Powitaj krótko wracającego ucznia i od razu rzuć JEDNĄ świeżą rzecz na temat: ${theme}. Ma być ZA KAŻDYM RAZEM INNA, konkretna i naprawdę ciekawa albo zabawna (nie ogólnik, nie utarta formułka). Mów po polsku, swoim luźnym, ciepłym stylem.${avoid}\nMaksymalnie 2 krótkie zdania (będzie czytane na głos). Zwróć JSON: {"say":"..."}` }] }];
       const r = await this._callContents(contents, IZABELA.systemPrompt, CONFIG.GEMINI.fastModel);
       return (r.say || '').trim();
     } catch (e) { return ''; }

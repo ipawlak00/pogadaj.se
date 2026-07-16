@@ -36,6 +36,17 @@ const JOURNEY_TIDBITS = [
   'Tłumaczę Ci: gdybyś w kosmosie strzelił palcami, nikt by tego nie usłyszał. Za to światło leci tak szybko, że w sekundę okrążyłoby Ziemię siedem razy. Ogarniasz?',
 ];
 
+// Zabawne wpadki i przygody Izabeli (autoironia) — na luzie, ciepło.
+const FUNNY_MISHAPS = [
+  'Ej, dziś rano walnęłam się głową o właz od skafandra i jestem lekko nie na 100%. No ale kiedy ja w ogóle byłam na sto, co?',
+  'Szukałam kubka z kawą przez pół godziny, a on sobie dryfował pod sufitem. Nieważkość to jednak wredna sprawa.',
+  'Kocin zrzucił mi dziś doniczkę z opalem prosto na konsolę. Trochę iskrzyło, ale opal cały, więc wybaczone.',
+  'Miałam Ci powiedzieć coś mądrego i totalnie zapomniałam co. Zaraz mi wróci, na razie po prostu się cieszę, że jesteś.',
+  'Zasnęłam wczoraj przy pulpicie i obudziłam się z odciskiem guzika na policzku. Kapitański look, polecam.',
+  'Próbowałam usmażyć naleśniki w nieważkości. Nie pytaj. Ciasto do dziś gdzieś lata po pokładzie.',
+  'Weszłam dziś dziarsko na mostek i od razu potknęłam się o Peję. Ona nawet nie drgnęła, tylko zmierzyła mnie wzrokiem.',
+];
+
 // Poziomy do zmiany z pełnej wersji (te same co w onboardingu)
 const HOME_LEVELS = [
   { id: 'A1', title: 'A1, Początkujący', desc: 'Dopiero zaczynam, pojedyncze słowa.' },
@@ -143,9 +154,19 @@ export function renderHome(mount) {
   // Ciekawostka na powitanie wracającego: ZAWSZE świeża (AI), a gdy AI niedostępne
   // — z puli bez powtórek. Dobierana przy każdym odtworzeniu, więc nie nudzi.
   async function freshTidbit() {
+    const recent = store.get().progress.saidTidbits || [];   // co Izabela już mówiła temu userowi
     let t = '';
-    try { t = await ai.spaceTidbit(); } catch (e) { /* fallback niżej */ }
-    if (!t) t = pickFresh('homeTidbit', [...JOURNEY_TIDBITS, ...FUN_FACTS, ...KALKI_LINES]);
+    try { t = await ai.spaceTidbit(recent); } catch (e) { /* fallback niżej */ }
+    if (!t) {
+      // Fallback z puli: OMIJAMY to, co już padło (zero powtórek). Kalki tylko czasem.
+      let pool = [...JOURNEY_TIDBITS, ...FUN_FACTS, ...FUNNY_MISHAPS];
+      if (Math.random() < 0.11) pool = [...pool, ...KALKI_LINES];
+      pool = pool.filter((x) => !recent.includes(x));
+      t = pool.length ? pool[Math.floor(Math.random() * pool.length)]
+                      : pickFresh('homeTidbit', [...JOURNEY_TIDBITS, ...FUN_FACTS, ...FUNNY_MISHAPS]);
+    }
+    // Zapamiętaj, żeby nigdy nie powtórzyć temu samemu użytkownikowi (ostatnie 80).
+    if (t) store.patchKey('progress', { saidTidbits: [...recent, t].slice(-80) });
     return t;
   }
 
