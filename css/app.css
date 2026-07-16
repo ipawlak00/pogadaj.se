@@ -1379,3 +1379,7 @@ body.on-lessons .cosmos { display: none; }
   .landing__trust { margin: 26px auto 0; max-width: 92%; text-align: center; }
   .landing__cta { margin-top: 30px; }
 }
+
+/* druga linijka pod CTA: prośba o opinię + podziękowanie */
+.landing__ps { margin-top: 8px; }
+.landing__ps b { color: var(--accent-bright); font-weight: 700; }
