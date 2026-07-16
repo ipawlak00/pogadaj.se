@@ -1391,3 +1391,8 @@ body.on-lessons .cosmos { display: none; }
 
 /* Bez auto-powiększania tekstu przy obrocie telefonu (bug iOS Safari) */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+/* Landscape na telefonie: wyższa banda ze zdjęciem, żeby widać więcej Izabeli */
+@media (orientation: landscape) and (max-height: 620px) {
+  .landing__hero { height: 66vh; object-position: 35% 30%; }
+}
