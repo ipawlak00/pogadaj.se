@@ -24,12 +24,11 @@ export function renderLanding(mount) {
         el('span.landing__name', { text: 'Izabeli' }),
         ' i gadaj po angielsku już dzisiaj!',
       ]),
-      el('button.btn.btn--primary.btn--lg.landing__cta', { style: 'color:#fff', onclick: () => navigate('#/register') }, ['Zacznij za darmo']),
+      el('button.btn.btn--primary.btn--lg.landing__cta', { style: 'color:#fff', onclick: () => navigate('#/register') }, ['Wejdź na Statek']),
     ]),
 
-    // Dwa dryfujące napisy IzabelaCode
+    // Dryfujący napis IzabelaCode (subtelnie, w górnej części)
     el('span.landing__mark.landing__mark--1', { text: 'IzabelaCode' }),
-    el('span.landing__mark.landing__mark--2', { text: 'IzabelaCode' }),
 
     // Stopka
     el('div.landing__footer', { html: 'POWERED BY <b>IZABELACODE</b>' }),

@@ -1325,19 +1325,20 @@ body.on-lessons .cosmos { display: none; }
   font-size: clamp(1rem, 1.6vw, 1.22rem); color: #c2cee9; line-height: 1.5;
   margin: 0 0 28px; max-width: 30ch; text-shadow: 0 2px 12px rgba(3,8,24,.6);
 }
-.landing__cta { padding: 16px 36px; font-size: 1.12rem; }
+.landing__cta { padding: 16px 36px; font-size: 1.12rem; margin-top: 24px; }
 /* Dwa dryfujące napisy IzabelaCode */
 .landing__mark {
   position: absolute; z-index: 2; pointer-events: none; white-space: nowrap;
   font-family: var(--font-display); font-weight: 600; letter-spacing: .12em;
   text-transform: uppercase; color: rgba(150,180,255,.26); font-size: .8rem;
 }
-.landing__mark--1 { top: 30%; left: 13%; animation: iza-drift1 26s ease-in-out infinite; }
+.landing__mark--1 { top: 13%; left: 31%; animation: iza-drift1 26s ease-in-out infinite; }
 .landing__mark--2 { bottom: 27%; left: 6%; font-size: .7rem; animation: iza-drift2 34s ease-in-out infinite; }
 @keyframes iza-drift1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(26px,-18px); } }
 @keyframes iza-drift2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-18px,22px); } }
+/* stopka wyśrodkowana względem lewej (kosmicznej) części ekranu, nie w rogu */
 .landing__footer {
-  position: absolute; z-index: 4; left: 42px; bottom: 22px;
+  position: absolute; z-index: 4; left: 0; width: 52%; bottom: 24px; text-align: center;
   color: var(--text-faint); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase;
 }
 .landing__footer b { color: var(--accent-bright); font-weight: 700; }
