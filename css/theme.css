@@ -182,15 +182,21 @@ body:not([data-route="welcome"]) {
     url('../assets/scenes/scene-02.jpg') center/cover fixed no-repeat;
 }
 
-/* Onboarding i paszport: JASNY motyw jak w lekcjach (jedna spójna estetyka) */
+/* Onboarding i paszport: kosmiczne tło galaktyki, treść na jasnych kartach. */
 body[data-route="onboarding"],
 body[data-route="phonetic"] {
   --text: #14314f; --text-dim: #46688c; --text-faint: #7b96b3;
   --surface-border: rgba(100, 170, 225, .35);
-  background: linear-gradient(180deg, #e6f2fd 0%, #f7fbff 55%, #e9f5fe 100%);
+  background: var(--galaxy-bg) fixed;
 }
 body[data-route="onboarding"] .logo,
 body[data-route="phonetic"] .logo { text-shadow: none; }
+/* karty na tych trasach JASNE, żeby ciemny tekst był czytelny na galaktyce */
+body[data-route="onboarding"] .card,
+body[data-route="phonetic"] .card {
+  background: #fff; border-color: #cfe6f8; color: #14314f;
+  backdrop-filter: none; box-shadow: 0 16px 44px rgba(70,130,190,.2);
+}
 
 /* Chłodna paleta (błękit) zamiast pomarańczu na całej apce poza logowaniem */
 body:not([data-route="welcome"]) {

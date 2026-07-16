@@ -54,6 +54,7 @@
     { name:'Strona główna (landing)', hash:'#/',            state: guest },
     { name:'Logowanie',               hash:'#/login',        state: guest },
     { name:'Rejestracja',             hash:'#/register',     state: guest },
+    { name:'Onboarding (imię, wiek, poziom)', hash:'#/onboarding', state: { user, onboarding:{}, phonetic:{ completed:false }, progress:{}, analyst:[] } },
     { name:'Test fonetyczny',         hash:'#/phonetic',     state: { user, onboarding, phonetic:{ completed:false }, progress:{}, analyst:[] } },
     { name:'Ekran główny (statek)',   hash:'#/home',         state: logged },
     { name:'Historia lekcji',         hash:'#/history',      state: logged },
